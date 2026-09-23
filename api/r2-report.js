@@ -134,8 +134,9 @@ export default async function handler(req, res) {
     );
 
     const now = new Date().toLocaleString("es-AR", { timeZone: TZ });
-    const combined = `${sections.join("\n\n━━━━━━━━━━\n\n")}\n\n⏰ ${now}`;
-    const messages = combined.length <= TELEGRAM_LIMIT ? [combined] : sections.map((s, i) => (i === sections.length - 1 ? `${s}\n\n⏰ ${now}` : s));
+    const dashboardLink = "\n🎯 <b>Dashboard en vivo:</b> https://claude.ai/artifact/Vo7adGNUuWPc2Kkh5L8NwU (público)\nVé flota, roadmap, bitácora, documentación completa.\n";
+    const combined = `${dashboardLink}\n━━━━━━━━━━\n\n${sections.join("\n\n━━━━━━━━━━\n\n")}\n\n⏰ ${now}`;
+    const messages = combined.length <= TELEGRAM_LIMIT ? [combined] : sections.map((s, i) => (i === sections.length - 1 ? `${dashboardLink}\n━━━━━━━━━━\n\n${s}\n\n⏰ ${now}` : s));
     for (const message of messages) await sendTelegramMessage(message.slice(0, 4096));
 
     res.status(200).json({ success: true, agents: AGENTS.map((a) => a.name), messages: messages.length });
