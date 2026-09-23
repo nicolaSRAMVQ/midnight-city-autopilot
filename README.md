@@ -58,3 +58,5 @@ public URLs.
 - The profession-specific economics (what each agent sells, and where) are
   hardcoded per profession in `lib/agents.js` — only `hacker`, `miner` and
   `lumberjack` are wired up today.
+
+_Última sincronización: 2026-09-23 01:33 (hora local)_
