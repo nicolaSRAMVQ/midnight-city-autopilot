@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "functions": {
+    "api/r2-report.js": {
+      "memory": 128,
+      "maxDuration": 60
+    },
+    "api/r2-autopilot.js": {
+      "memory": 128,
+      "maxDuration": 60
+    }
+  }
+}

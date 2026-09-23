@@ -1,0 +1,50 @@
+name: Agent autopilot
+
+# Free replacement for a paid cron service: GitHub gives unlimited Actions
+# minutes to public repos, so this costs $0 as long as this repo stays public.
+# On a private repo the free tier is 2,000 min/month — our schedule below
+# (~148 runs/day) would exceed that and start incurring charges.
+#
+# To reuse this for your own agent(s): fork this repo (keep it public), then
+# set two repository variables (Settings -> Secrets and variables -> Actions
+# -> Variables) pointing at YOUR OWN Vercel deployment of api/r2-report.js
+# and api/r2-autopilot.js:
+#   AUTOPILOT_URL = https://<your-deployment>.vercel.app/api/r2-autopilot
+#   REPORT_URL    = https://<your-deployment>.vercel.app/api/r2-report
+# No secrets belong in this repo or this workflow — the game API token and
+# Telegram bot token live only in your Vercel project's environment
+# variables. Adjust the cron times below to your own timezone (they're UTC).
+
+on:
+  schedule:
+    - cron: "*/10 * * * *" # autopilot keep-alive, every 10 min
+    - cron: "0 12 * * *"   # report — 9am Argentina (UTC-3)
+    - cron: "0 16 * * *"   # report — 1pm Argentina
+    - cron: "0 21 * * *"   # report — 6pm Argentina
+    - cron: "0 0 * * *"    # report — 9pm Argentina
+  workflow_dispatch: # lets you fire either job manually from the Actions tab
+    inputs:
+      target:
+        description: "Which endpoint to call"
+        type: choice
+        options: [autopilot, report]
+        default: autopilot
+
+jobs:
+  autopilot:
+    if: >
+      github.event.schedule == '*/10 * * * *' ||
+      (github.event_name == 'workflow_dispatch' && inputs.target == 'autopilot')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Ping autopilot endpoint
+        run: curl -sf --max-time 55 "${{ vars.AUTOPILOT_URL }}"
+
+  report:
+    if: >
+      contains(fromJSON('["0 12 * * *","0 16 * * *","0 21 * * *","0 0 * * *"]'), github.event.schedule) ||
+      (github.event_name == 'workflow_dispatch' && inputs.target == 'report')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Telegram report
+        run: curl -sf --max-time 55 "${{ vars.REPORT_URL }}"

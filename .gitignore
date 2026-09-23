@@ -1,0 +1,12 @@
+# Secrets — never commit
+.env
+
+# Local/third-party — not ours to redistribute or not needed in the repo
+node_modules/
+.DS_Store
+.vercel
+.claude/
+SKILL.md
+references/
+scripts/
+r2-telegram-reporter.mjs
