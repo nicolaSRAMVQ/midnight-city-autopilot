@@ -134,7 +134,7 @@ export default async function handler(req, res) {
     );
 
     const now = new Date().toLocaleString("es-AR", { timeZone: TZ });
-    const dashboardLink = "\n🎯 <b>Dashboard en vivo:</b> https://claude.ai/artifact/Vo7adGNUuWPc2Kkh5L8NwU (público)\nVé flota, roadmap, bitácora, documentación completa.\n";
+    const dashboardLink = "\n🎯 <b>Dashboard en vivo:</b> https://dashboard-app-green-alpha.vercel.app\n✨ Estado real-time, flip cards, 8 tabs, protocolos, roadmap, documentación.\n";
     const combined = `${dashboardLink}\n━━━━━━━━━━\n\n${sections.join("\n\n━━━━━━━━━━\n\n")}\n\n⏰ ${now}`;
     const messages = combined.length <= TELEGRAM_LIMIT ? [combined] : sections.map((s, i) => (i === sections.length - 1 ? `${dashboardLink}\n━━━━━━━━━━\n\n${s}\n\n⏰ ${now}` : s));
     for (const message of messages) await sendTelegramMessage(message.slice(0, 4096));
