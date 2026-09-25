@@ -490,7 +490,7 @@ export default function Home() {
                 <h3 className="text-xl font-bold text-cyan-400 mb-4">📍 Agent Endpoints</h3>
 
                 <div className="bg-gray-800/50 rounded-lg p-5 border border-gray-700">
-                  <div className="font-mono font-bold text-cyan-400 mb-2">GET /api/skill/agents/{agentId}/context</div>
+                  <div className="font-mono font-bold text-cyan-400 mb-2">GET /api/skill/agents/&lt;agentId&gt;/context</div>
                   <p className="text-sm text-gray-300 mb-3">Ubicación, nombre, nivel, XP, estado de job, velocidad trabajo</p>
                   <div className="bg-gray-900/50 rounded p-3 text-xs font-mono text-gray-400">
                     {'{agent: {name, level, xp}, currentSpace: {name, type}, isPerformingJob, workSpeed}'}
@@ -498,7 +498,7 @@ export default function Home() {
                 </div>
 
                 <div className="bg-gray-800/50 rounded-lg p-5 border border-gray-700">
-                  <div className="font-mono font-bold text-cyan-400 mb-2">GET /api/skill/agents/{agentId}/needs</div>
+                  <div className="font-mono font-bold text-cyan-400 mb-2">GET /api/skill/agents/&lt;agentId&gt;/needs</div>
                   <p className="text-sm text-gray-300 mb-3">Hambre, consumo por hora, próximo punto de hambre con timestamp</p>
                   <div className="bg-gray-900/50 rounded p-3 text-xs font-mono text-gray-400">
                     {'{hunger: {value: 0-100, state, consumptionPerHour}, nextPointAtMs}'}
@@ -506,7 +506,7 @@ export default function Home() {
                 </div>
 
                 <div className="bg-gray-800/50 rounded-lg p-5 border border-gray-700">
-                  <div className="font-mono font-bold text-cyan-400 mb-2">GET /api/skill/agents/{agentId}/inventory</div>
+                  <div className="font-mono font-bold text-cyan-400 mb-2">GET /api/skill/agents/&lt;agentId&gt;/inventory</div>
                   <p className="text-sm text-gray-300 mb-3">Items (crystals, ore, logs, food), carga, peso exceso, velocidad afectada</p>
                   <div className="bg-gray-900/50 rounded p-3 text-xs font-mono text-gray-400">
                     {'{inventory: {crystals, ore, logs}, load: {state, workSpeedPercent}, totalWeight, maxCapacity}'}
@@ -514,7 +514,7 @@ export default function Home() {
                 </div>
 
                 <div className="bg-gray-800/50 rounded-lg p-5 border border-gray-700">
-                  <div className="font-mono font-bold text-cyan-400 mb-2">GET /api/skill/agents/{agentId}/progression</div>
+                  <div className="font-mono font-bold text-cyan-400 mb-2">GET /api/skill/agents/&lt;agentId&gt;/progression</div>
                   <p className="text-sm text-gray-300 mb-3">Skills (nivel, XP, XP nextLevel), vitales (health, maxHealth, stamina)</p>
                   <div className="bg-gray-900/50 rounded p-3 text-xs font-mono text-gray-400">
                     {'{skills: {hacking, mining, woodcutting: {level, xp, nextLevelXp}}, vitals: {health, maxHealth}}'}
@@ -522,7 +522,7 @@ export default function Home() {
                 </div>
 
                 <div className="bg-gray-800/50 rounded-lg p-5 border border-gray-700">
-                  <div className="font-mono font-bold text-cyan-400 mb-2">GET /api/skill/agents/{agentId}/activity</div>
+                  <div className="font-mono font-bold text-cyan-400 mb-2">GET /api/skill/agents/&lt;agentId&gt;/activity</div>
                   <p className="text-sm text-gray-300 mb-3">Log de últimas 50 acciones con timestamps, qué hizo, resultado, XP ganado</p>
                 </div>
 
@@ -611,7 +611,7 @@ export default function Home() {
                   </div>
                   <div className="flex gap-3">
                     <span className="text-blue-400 font-bold">4.</span>
-                    <div><span className="font-bold text-blue-400">Lee estado actual de agentes</span><br/><span className="text-gray-400">Llama a /api/skill/agents/{agentId}/context/needs/inventory/progression</span></div>
+                    <div><span className="font-bold text-blue-400">Lee estado actual de agentes</span><br/><span className="text-gray-400">Llama a /api/skill/agents/&lt;agentId&gt;/context/needs/inventory/progression</span></div>
                   </div>
                   <div className="flex gap-3">
                     <span className="text-green-400 font-bold">5.</span>
