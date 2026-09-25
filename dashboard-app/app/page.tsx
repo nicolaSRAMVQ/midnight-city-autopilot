@@ -80,7 +80,7 @@ export default function Home() {
 
   useEffect(() => {
     fetchAgentStatus();
-    const interval = setInterval(fetchAgentStatus, 30000);
+    const interval = setInterval(fetchAgentStatus, 300000);
     return () => clearInterval(interval);
   }, []);
 
@@ -159,7 +159,15 @@ export default function Home() {
             <span>|</span>
             <span>{loading ? '⟳ Cargando...' : `✓ ${timestamp.toLocaleTimeString('es-AR')}`}</span>
             <span>|</span>
-            <span>Auto-refresh: 30s</span>
+            <span>Auto-refresh: 5m</span>
+            <span>|</span>
+            <button
+              onClick={fetchAgentStatus}
+              disabled={loading}
+              className="px-3 py-1 bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-400 rounded text-xs font-semibold transition-colors disabled:opacity-50"
+            >
+              {loading ? '⟳ Actualizando...' : '🔄 Actualizar'}
+            </button>
           </div>
         </div>
 
