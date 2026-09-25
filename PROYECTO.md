@@ -1,4 +1,4 @@
-# 🌳 Cuadrilla Midnight — Namarie Micelio v3.6
+# 🌳 Cuadrilla Midnight — Namarie Micelio v3.8
 
 ## Estado Actual (2026-09-25)
 
@@ -16,6 +16,13 @@ C-3PO | Level 7 | Woodcutting L7 ⚒️   | ~1,900 crystals | Forest
 ```
 
 ### Cambios Implementados (Esta sesión)
+
+#### v3.8: Autonomy Threshold Optimization
+- **HUNGER_EAT_THRESHOLD**: 80 → 70 (comen más gradual, menos interrupciones de pánico)
+- **SLOW_ACTION_WAIT_MS**: 12s → 8s (33% menos latencia de ciclo)
+- **WOOD_SELL_THRESHOLD**: 100 → 150 logs (C-3PO hace -40% viajes a merchant)
+- **BB8_CRYSTAL_EMERGENCY**: 50 → 100 (minería preventiva, imposible quedar sin crystals)
+- Filosofía: Cada cambio = eliminar un punto de fricción
 
 #### v3.7: Flip-cards con descripciones Tolkien
 - Click en tarjeta agente = gira y muestra descripción literaria
