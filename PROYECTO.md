@@ -34,6 +34,12 @@ C-3PO | Level 7 | Woodcutting L7 ⚒️   | ~1,900 crystals | Forest
 - Cada agente explica su estrategia actual
 - Open-source decision making
 
+#### v3.7: Agent Autonomy — Food Batch Increase
+- FOOD_BATCH_SIZE: 3 → 6 smoothies por compra
+- CRYSTAL_BUFFER_TARGET: 60 → 120 crystals
+- Menos viajes a Central = más tiempo trabajando
+- Agentes más autónomos, menos friction
+
 #### v3.4: BB-8 Emergency Protocol
 - Si crystals <= 50 → FUERZA mining (sin esperar items)
 - Resuelve deadlock de desconexión sin recursos
