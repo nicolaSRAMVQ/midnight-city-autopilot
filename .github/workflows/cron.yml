@@ -17,7 +17,7 @@ name: Agent autopilot
 
 on:
   schedule:
-    - cron: "*/10 * * * *" # autopilot keep-alive, every 10 min
+    - cron: "*/5 * * * *" # autopilot keep-alive, every 5 min (Namarie micelio acceleration)
     - cron: "0 12 * * *"   # report — 9am Argentina (UTC-3)
     - cron: "0 16 * * *"   # report — 1pm Argentina
     - cron: "0 21 * * *"   # report — 6pm Argentina
