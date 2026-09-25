@@ -180,7 +180,8 @@ export default async function handler(req, res) {
       Math.abs(timeMinutes - a.center) < Math.abs(timeMinutes - b.center) ? a : b
     );
 
-    const header = `📜 <b>${closest.name}</b> — ${closest.desc}\n\n`;
+    const versionTag = `[v3.9-live]\n`; // FORCE REFRESH — Vercel cache buster
+    const header = `${versionTag}📜 <b>${closest.name}</b> — ${closest.desc}\n\n`;
 
     const dashboardLink = "🌟 <a href='https://dashboard-app-green-alpha.vercel.app'>Mirador de la Ciudad</a> · <i>Estado real-time, narrativas vivas, 9 capítulos</i>";
     const combined = `${header}${sections.join("\n\n")}\n\n━━━━━━━━━━\n${dashboardLink}\n⏰ ${now}`;
