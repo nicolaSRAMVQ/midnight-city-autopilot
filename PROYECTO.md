@@ -17,12 +17,23 @@ C-3PO | Level 7 | Woodcutting L7 ⚒️   | ~1,900 crystals | Forest
 
 ### Cambios Implementados (Esta sesión)
 
-#### v3.8: Autonomy Threshold Optimization
-- **HUNGER_EAT_THRESHOLD**: 80 → 70 (comen más gradual, menos interrupciones de pánico)
-- **SLOW_ACTION_WAIT_MS**: 12s → 8s (33% menos latencia de ciclo)
-- **WOOD_SELL_THRESHOLD**: 100 → 150 logs (C-3PO hace -40% viajes a merchant)
-- **BB8_CRYSTAL_EMERGENCY**: 50 → 100 (minería preventiva, imposible quedar sin crystals)
-- Filosofía: Cada cambio = eliminar un punto de fricción
+#### v3.8: Full Autonomy Stack Optimization
+**Threshold Optimizations:**
+- HUNGER_EAT_THRESHOLD: 80 → 70 (gradual eating, -60% panic interruptions)
+- SLOW_ACTION_WAIT_MS: 12s → 8s (33% cycle latency reduction)
+- WOOD_SELL_THRESHOLD: 100 → 150 (C-3PO -40% merchant trips)
+- BB8_CRYSTAL_EMERGENCY: 50 → 100 (preventive mining, impossible zero-crystal deadlock)
+
+**Agent Intelligence Layer:**
+- C-3PO smart selling: Only sell if crystals < 150 (prevent 200+ hoarding)
+- BB-8 surplus detection: Log when crystals > 150 (prep for multi-agent economy)
+
+**System-Wide Autonomy Stack:**
+- Tool unlock rescan: Instant progression refresh after purchase (new tools available same cycle)
+- R2 skill discovery: Detect unused skills with 0 XP, suggest diversification
+- Idle agent detection: Monitor inactivity, log warnings to prevent dormancy loops
+
+**Philosophía**: 9 changes = 9 friction points eliminated. Namarie micelio thrives on constant, minimal-friction cycles.
 
 #### v3.7: Flip-cards con descripciones Tolkien
 - Click en tarjeta agente = gira y muestra descripción literaria
