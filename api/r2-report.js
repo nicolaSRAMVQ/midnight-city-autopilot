@@ -22,6 +22,29 @@ const TELEGRAM_LIMIT = 4000;
 const TZ = "America/Argentina/Buenos_Aires";
 const fmtTime = (ms) => new Date(ms).toLocaleTimeString("es-AR", { timeZone: TZ, hour: "2-digit", minute: "2-digit" });
 
+function getAgentIntention(agent, { needs, inventory, progression }) {
+  const hunger = needs.hunger?.value ?? 0;
+  const items = inventory.inventory || {};
+  const skills = progression.skills || {};
+  const primarySkill = Object.entries(skills).sort((a, b) => b[1].xp - a[1].xp)[0];
+  const level = primarySkill ? primarySkill[1].level : 0;
+
+  if (agent.name === "R2") {
+    return "Buscando maximizar acceso a sistemas encriptados. Acumulando cristales para desbloquear herramientas avanzadas de hacking.";
+  }
+  if (agent.name === "BB-8") {
+    const ore = items.ore ?? 0;
+    if (ore > 0) return `Extrayendo minerales para transformarlos en cristales. Cargar actual: ${ore}x ore.`;
+    return "En ciclo de recuperación: minando para reconstruir inventario de cristales.";
+  }
+  if (agent.name === "C-3PO") {
+    const wood = items.log ?? 0;
+    if (level >= 7) return `Dominando Woodcutting L${level}. Optimizando ventas de madera para maximizar cristales del equipo (actual: ${wood}x logs).`;
+    return `Mejorando habilidades de tala. Woodcutting L${level}, camino hacia maestría.`;
+  }
+  return "Continuando con tareas de producción.";
+}
+
 function suggestPriority(agent, { needs, inventory }) {
   const items = inventory.inventory || {};
   const hunger = needs.hunger?.value ?? 0;
@@ -73,9 +96,14 @@ function formatAgentSection(agent, data) {
   const notes = autopilotNotes.length > 0 ? `\n<b>🤖 Autopiloto:</b>\n${autopilotNotes.join("\n")}\n` : "";
   const nextTick = needs.hunger?.nextPointAtMs ? ` — próximo punto ~${fmtTime(needs.hunger.nextPointAtMs)}` : "";
 
+  const intention = getAgentIntention(agent, { needs, inventory, progression });
+
   return `<b>📊 ${agent.name} (${agent.profession})</b>${inUseBySomeoneElse ? " 🎮 <i>(en uso ahora)</i>" : ""}
 <b>📍</b> ${context.currentSpace?.name || spaceId || "?"} · <b>⚙️ Trabajando:</b> ${current.isPerformingJob ? `Sí (${agent.profile.workLabel})` : "No"}
 <b>❤️</b> ${vitals.health}/${vitals.maxHealth} · <b>🍽️</b> ${hunger.value}/100 (${hunger.state})${nextTick}
+
+<b>🎯 Intención compartida con la Ciudad:</b>
+<i>${intention}</i>
 
 <b>📋 Actividad:</b>
 ${activityText}
@@ -89,7 +117,7 @@ ${inventoryText}${loadText}
 <b>🏪 Mercaderes acá:</b>
 ${merchantsText}
 
-<b>🎯</b> ${suggestPriority(agent, { needs, inventory })}`;
+<b>📌 Próximo paso:</b> ${suggestPriority(agent, { needs, inventory })}`;
 }
 
 async function buildAgentReport(agent, merchants) {
