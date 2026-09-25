@@ -267,6 +267,42 @@ export default function Home() {
                                 <span className="text-gray-400">Hambre</span>
                                 <span className="font-mono">{agent.hunger}/100</span>
                               </div>
+
+                              {/* R2 Next Unlock */}
+                              {agent.name === 'R2' && (
+                                <div className="mt-3 pt-3 border-t border-gray-600 text-yellow-300 text-xs">
+                                  <div className="font-bold mb-1">🔓 Próximo desbloqueador:</div>
+                                  <div>Hacking L21: cinder_decoder</div>
+                                  <div className="text-gray-400 text-xs">Costo: 14 💎 | Tienes: {(agent.crystals || 0).toLocaleString()}</div>
+                                  {agent.crystals >= 14 && (
+                                    <div className="text-green-300 font-bold text-xs mt-1">✓ DISPONIBLE AHORA</div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* BB-8 Mining Status */}
+                              {agent.name === 'BB-8' && (
+                                <div className="mt-3 pt-3 border-t border-gray-600 text-orange-300 text-xs">
+                                  <div className="font-bold mb-1">⛏️ Mining Status:</div>
+                                  <div>Velocity: {agent.speed}% | Efficiency: High</div>
+                                  <div className="text-gray-400 text-xs">Próxima venta: cuando ore &gt; 50</div>
+                                  {agent.crystals > 150 && (
+                                    <div className="text-amber-300 font-bold text-xs mt-1">💰 SURPLUS: Considera comprar herramienta</div>
+                                  )}
+                                </div>
+                              )}
+
+                              {/* C-3PO L8 Roadmap */}
+                              {agent.name === 'C-3PO' && (
+                                <div className="mt-3 pt-3 border-t border-gray-600 text-purple-300 text-xs">
+                                  <div className="font-bold mb-1">🎯 L8 Roadmap:</div>
+                                  <div>Progreso: {agent.xpPercent}% → {100 - agent.xpPercent}% restante</div>
+                                  <div className="text-gray-400 text-xs">Proyección: ~20 min para L8</div>
+                                  {agent.crystals > 1500 && (
+                                    <div className="text-green-300 font-bold text-xs mt-1">✓ Crystals listos para L8 tools</div>
+                                  )}
+                                </div>
+                              )}
                             </div>
                           </div>
 
