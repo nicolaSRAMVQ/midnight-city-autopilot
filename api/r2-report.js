@@ -60,64 +60,64 @@ function suggestPriority(agent, { needs, inventory }) {
   return `⛏️ Seguir con ${agent.profile.workLabel}.`;
 }
 
+function getTolkienNarrative(agent, { context, needs, inventory, progression, autopilotNotes }) {
+  const current = context?.agent || {};
+  const hunger = needs?.hunger?.value ?? 0;
+  const items = inventory?.inventory || {};
+  const skills = progression?.skills || {};
+  const primarySkill = Object.entries(skills).sort((a, b) => b[1].xp - a[1].xp)[0];
+  const level = primarySkill ? primarySkill[1].level : 0;
+  const notes = autopilotNotes.length > 0 ? autopilotNotes.join(" | ") : "En tránsito";
+
+  const storyMap = {
+    "R2": `<i>El Ingeniero Nómada viaja por circuitos encriptados</i>, buscando cristales y misterios tecnológicos. Nivel ${level}. Estado: ${notes}`,
+    "BB-8": `<i>El Explorador Incansable</i> bucea en minas cristalinas, transformando mineral bruto en poder. Hambre: ${hunger}/100. ${notes}`,
+    "C-3PO": `<i>El Diplomático Meticuloso</i> talador de bosques ancestrales, Maestría L${level}. Portando ${items.log || 0} troncos. ${notes}`,
+  };
+  return storyMap[agent.name] || `${agent.name} continúa su jornada...`;
+}
+
 function formatAgentSection(agent, data) {
   const { context, needs, inventory, progression, merchants, activityLog, autopilotNotes, inUseBySomeoneElse } = data;
+
+  // v3.9: Minimalist mode — if no data, return one-liner
   if (!context || !needs || !inventory || !progression) {
-    return `<b>📊 ${agent.name}</b>\n⚠️ Sin datos: ${autopilotNotes.join("; ") || "no se pudo leer el estado"}`;
+    return `<i>${agent.name}</i>: dormido en las tierras lejanas... (sin conexión).`;
   }
+
   const current = context.agent || {};
-  const vitals = progression.vitals || { health: 0, maxHealth: 100 };
-  const hunger = needs.hunger || { value: 0, state: "unknown" };
+  const hunger = needs.hunger?.value ?? 0;
   const items = inventory.inventory || {};
-  const spaceId = current.position?.spaceId;
+  const load = inventory.load || {};
+  const intention = getAgentIntention(agent, { needs, inventory, progression });
+  const narrative = getTolkienNarrative(agent, { context, needs, inventory, progression, autopilotNotes });
 
-  const inventoryText = Object.keys(items).length > 0
-    ? Object.entries(items).map(([id, q]) => `• ${id} (x${q})`).join("\n")
-    : "Sin ítems";
+  // v3.9: Newsletter format — short & literary
+  const statusLine = current.isPerformingJob
+    ? `⚒️ trabajando`
+    : `🏕️ descansando`;
 
-  const skillText = Object.entries(progression.skills || {})
+  const hungerLine = hunger > 70 ? `🍽️ hambriento (${hunger}/100)` : `✨ satisfecho`;
+
+  const mainSkills = Object.entries(progression.skills || {})
     .filter(([, s]) => s.xp > 0)
     .sort((a, b) => b[1].xp - a[1].xp)
-    .slice(0, 3)
-    .map(([name, s]) => `• ${name}: nivel ${s.level} (${s.xp}/${s.nextLevelXp} XP)`)
-    .join("\n") || "Sin XP todavía";
+    .slice(0, 1)
+    .map(([name, s]) => `${name} L${s.level}`)
+    .join(", ");
 
-  const nearby = (merchants || []).filter((m) => m.position?.spaceId === spaceId);
-  const merchantsText = nearby.length > 0 ? nearby.map((m) => `• ${m.name}: ${m.offer.summary}`).join("\n") : "Ninguno acá";
+  const criticalItems = Object.entries(items)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 2)
+    .map(([id, q]) => `${q}x ${id}`)
+    .join(", ");
 
-  const activityText = activityLog === null
-    ? "No disponible (en uso ahora mismo)"
-    : activityLog.length > 0 ? activityLog.join("\n") : "Sin eventos recientes";
+  return `<b>✨ ${agent.name}</b>${inUseBySomeoneElse ? " 🎮" : ""}
+<i>${narrative}</i>
 
-  const load = inventory.load || {};
-  const loadText = load.state && load.state !== "normal"
-    ? `\n<b>⚖️ Carga:</b> ${load.state} (velocidad ${load.workSpeedPercent}%)`
-    : "";
-  const notes = autopilotNotes.length > 0 ? `\n<b>🤖 Autopiloto:</b>\n${autopilotNotes.join("\n")}\n` : "";
-  const nextTick = needs.hunger?.nextPointAtMs ? ` — próximo punto ~${fmtTime(needs.hunger.nextPointAtMs)}` : "";
-
-  const intention = getAgentIntention(agent, { needs, inventory, progression });
-
-  return `<b>📊 ${agent.name} (${agent.profession})</b>${inUseBySomeoneElse ? " 🎮 <i>(en uso ahora)</i>" : ""}
-<b>📍</b> ${context.currentSpace?.name || spaceId || "?"} · <b>⚙️ Trabajando:</b> ${current.isPerformingJob ? `Sí (${agent.profile.workLabel})` : "No"}
-<b>❤️</b> ${vitals.health}/${vitals.maxHealth} · <b>🍽️</b> ${hunger.value}/100 (${hunger.state})${nextTick}
-
-<b>🎯 Intención compartida con la Ciudad:</b>
-<i>${intention}</i>
-
-<b>📋 Actividad:</b>
-${activityText}
-${notes}
-<b>📈 Skills:</b>
-${skillText}
-
-<b>🎒 Inventario:</b>
-${inventoryText}${loadText}
-
-<b>🏪 Mercaderes acá:</b>
-${merchantsText}
-
-<b>📌 Próximo paso:</b> ${suggestPriority(agent, { needs, inventory })}`;
+📍 ${context.currentSpace?.name || "?"} · ${statusLine} · ${hungerLine}
+${mainSkills ? `🎯 ${mainSkills}` : ""}
+${criticalItems ? `🎒 ${criticalItems}` : ""}`;
 }
 
 async function buildAgentReport(agent, merchants) {
@@ -162,9 +162,18 @@ export default async function handler(req, res) {
     );
 
     const now = new Date().toLocaleString("es-AR", { timeZone: TZ });
-    const dashboardLink = "\n🎯 <b>Dashboard en vivo:</b> https://dashboard-app-green-alpha.vercel.app\n✨ Estado real-time, flip cards, 8 tabs, protocolos, roadmap, documentación.\n";
-    const combined = `${dashboardLink}\n━━━━━━━━━━\n\n${sections.join("\n\n━━━━━━━━━━\n\n")}\n\n⏰ ${now}`;
-    const messages = combined.length <= TELEGRAM_LIMIT ? [combined] : sections.map((s, i) => (i === sections.length - 1 ? `${dashboardLink}\n━━━━━━━━━━\n\n${s}\n\n⏰ ${now}` : s));
+    const hour = new Date().getHours();
+
+    // v3.9: Tolkien-style newsletter header
+    let header = "";
+    if (hour >= 9 && hour < 13) header = "📜 <b>CRÓNICA MATINAL</b> — Los primeros rayos iluminan la Ciudad Medianoche.\n\n";
+    else if (hour >= 13 && hour < 18) header = "📜 <b>PARTE MERIDIANO</b> — El sol en su apogeo revela nuevos secretos.\n\n";
+    else if (hour >= 18 && hour < 21) header = "📜 <b>RELATO VESPERTINO</b> — Las sombras alargadas traen noticias del crepúsculo.\n\n";
+    else header = "📜 <b>SUSSURRO NOCTURNO</b> — En la oscuridad, tres corazones laten al ritmo de la Ciudad.\n\n";
+
+    const dashboardLink = "🌟 <a href='https://dashboard-app-green-alpha.vercel.app'>Mirador de la Ciudad</a> · <i>Estado real-time, narrativas vivas, 9 capítulos</i>";
+    const combined = `${header}${sections.join("\n\n")}\n\n━━━━━━━━━━\n${dashboardLink}\n⏰ ${now}`;
+    const messages = combined.length <= TELEGRAM_LIMIT ? [combined] : sections.map((s, i) => (i === sections.length - 1 ? `${header}${s}\n\n━━━━━━━━━━\n${dashboardLink}\n⏰ ${now}` : s));
     for (const message of messages) await sendTelegramMessage(message.slice(0, 4096));
 
     res.status(200).json({ success: true, agents: AGENTS.map((a) => a.name), messages: messages.length });
