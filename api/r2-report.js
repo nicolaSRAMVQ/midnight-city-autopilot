@@ -162,14 +162,25 @@ export default async function handler(req, res) {
     );
 
     const now = new Date().toLocaleString("es-AR", { timeZone: TZ });
-    const hour = new Date().getHours();
+    const nowDate = new Date();
+    const hour = nowDate.getHours();
+    const min = nowDate.getMinutes();
+    const timeMinutes = hour * 60 + min; // Convert to minutes for precision
 
-    // v3.9: Tolkien-style newsletter header
-    let header = "";
-    if (hour >= 9 && hour < 13) header = "📜 <b>CRÓNICA MATINAL</b> — Los primeros rayos iluminan la Ciudad Medianoche.\n\n";
-    else if (hour >= 13 && hour < 18) header = "📜 <b>PARTE MERIDIANO</b> — El sol en su apogeo revela nuevos secretos.\n\n";
-    else if (hour >= 18 && hour < 21) header = "📜 <b>RELATO VESPERTINO</b> — Las sombras alargadas traen noticias del crepúsculo.\n\n";
-    else header = "📜 <b>SUSSURRO NOCTURNO</b> — En la oscuridad, tres corazones laten al ritmo de la Ciudad.\n\n";
+    // v3.9: Flexible windows around scheduled times (±90 min = 1.5 hours)
+    // Scheduled: 9am, 1pm, 6pm, 9pm — elegir el más cercano
+    const windows = [
+      { center: 9 * 60, name: "CRÓNICA MATINAL", desc: "Los primeros rayos iluminan la Ciudad Medianoche." },
+      { center: 13 * 60, name: "PARTE MERIDIANO", desc: "El sol en su apogeo revela nuevos secretos." },
+      { center: 18 * 60, name: "RELATO VESPERTINO", desc: "Las sombras alargadas traen noticias del crepúsculo." },
+      { center: 21 * 60, name: "SUSSURRO NOCTURNO", desc: "En la oscuridad, tres corazones laten al ritmo de la Ciudad." },
+    ];
+
+    const closest = windows.reduce((a, b) =>
+      Math.abs(timeMinutes - a.center) < Math.abs(timeMinutes - b.center) ? a : b
+    );
+
+    const header = `📜 <b>${closest.name}</b> — ${closest.desc}\n\n`;
 
     const dashboardLink = "🌟 <a href='https://dashboard-app-green-alpha.vercel.app'>Mirador de la Ciudad</a> · <i>Estado real-time, narrativas vivas, 9 capítulos</i>";
     const combined = `${header}${sections.join("\n\n")}\n\n━━━━━━━━━━\n${dashboardLink}\n⏰ ${now}`;
