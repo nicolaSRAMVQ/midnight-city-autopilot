@@ -30,19 +30,19 @@ export default function Home() {
       bg: 'from-cyan-900 to-cyan-800',
       border: 'border-cyan-500',
       color: '#3ec6ff',
-      description: 'Especialista en hacking y extracción de datos. Busca acceso a sistemas y contraseñas para maximizar recursos. Ritmo: ~426 XP/h'
+      description: '🤖 El Ingeniero Nómada. Una esfera metálica de precisión absoluta, dotada de ingenio sin igual. R2 chirría en frecuencias que solo otros droides entienden, sus sensores recorren sistemas olvidados buscando secretos. Es el problemista legendario de Cuadrilla Midnight—donde hay un misterio, R2 lo resuelve. Su hacking L3 es apenas el comienzo de su verdadero poder.'
     },
     'BB-8': {
       bg: 'from-orange-900 to-orange-800',
       border: 'border-orange-500',
       color: '#ff9a4d',
-      description: 'Minero optimizado. Excava cristales y minerales. Umbral de sobrecarga: workSpeedPercent < 80%. Ritmo: ~200+ XP/h'
+      description: '⚙️ El Explorador Incansable. Pura energía contenida en forma esférica. BB-8 rueda sin descanso a través de valles y canales, su determinación inagotable brilla en cada cristal que extrae. Es el corazón vivo del autopilot—la fuerza motriz que nunca se detiene. En sus cavidades minerales late la vida de toda la operación. Mining L2 apenas contiene su verdadera esencia.'
     },
     'C-3PO': {
       bg: 'from-purple-900 to-purple-800',
       border: 'border-purple-500',
       color: '#c39bff',
-      description: 'Leñador experto. Cosecha madera de alta calidad. El más eficiente del equipo. Ritmo: ~4,407 XP/h'
+      description: '🌳 El Diplomático Meticuloso. Elegancia dorada, forma perfecta. C-3PO es el teórico, el que entiende el ritmo profundo de Midnight City. Su dominio en Woodcutting L7 no es solo habilidad—es maestría, la cúspide del arte. Es el corazón pensante del autopilot, la mano que une a todos, el verdadero mago de Cuadrilla Midnight.'
     }
   };
 
