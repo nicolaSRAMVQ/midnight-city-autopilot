@@ -24,6 +24,7 @@ export default function Home() {
   const [timestamp, setTimestamp] = useState(new Date());
   const [activeTab, setActiveTab] = useState<Tab>('estado');
   const [flipped, setFlipped] = useState<Record<string, boolean>>({});
+  const [buying, setBuying] = useState<string | null>(null);
 
   const AGENT_COLORS: Record<string, { bg: string; border: string; color: string; description: string }> = {
     R2: {
@@ -98,6 +99,26 @@ export default function Home() {
 
   const toggleFlip = (name: string) => {
     setFlipped({ ...flipped, [name]: !flipped[name] });
+  };
+
+  const quickBuyDecoder = async () => {
+    setBuying('R2');
+    try {
+      const response = await fetch('https://r2-telegram-reporter.vercel.app/api/r2-buy-decoder', {
+        method: 'POST'
+      });
+      const data = await response.json();
+      if (data.success) {
+        alert('✓ R2 compró cinder_decoder y retomó trabajo');
+        setTimeout(() => fetchAgentStatus(), 2000);
+      } else {
+        alert(`⚠️ ${data.message || 'Error en compra'}`);
+      }
+    } catch (err: any) {
+      alert(`Error: ${err.message}`);
+    } finally {
+      setBuying(null);
+    }
   };
 
   const downloadDoc = (title: string, content: string) => {
@@ -275,7 +296,15 @@ export default function Home() {
                                   <div>Hacking L21: cinder_decoder</div>
                                   <div className="text-gray-400 text-xs">Costo: 14 💎 | Tienes: {(agent.crystals || 0).toLocaleString()}</div>
                                   {agent.crystals >= 14 && (
-                                    <div className="text-green-300 font-bold text-xs mt-1">✓ DISPONIBLE AHORA</div>
+                                    <div className="mt-2">
+                                      <button
+                                        onClick={(e) => { e.stopPropagation(); quickBuyDecoder(); }}
+                                        disabled={buying === 'R2'}
+                                        className="bg-yellow-600 hover:bg-yellow-500 disabled:bg-gray-600 text-white px-3 py-1 rounded text-xs font-bold w-full transition"
+                                      >
+                                        {buying === 'R2' ? '⟳ Comprando...' : '🛒 Comprar ahora'}
+                                      </button>
+                                    </div>
                                   )}
                                 </div>
                               )}
