@@ -33,7 +33,7 @@ on:
 jobs:
   autopilot:
     if: >
-      github.event.schedule == '*/10 * * * *' ||
+      github.event.schedule == '*/5 * * * *' ||
       (github.event_name == 'workflow_dispatch' && inputs.target == 'autopilot')
     runs-on: ubuntu-latest
     steps:
