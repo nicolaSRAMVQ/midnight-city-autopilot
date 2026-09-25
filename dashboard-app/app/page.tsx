@@ -212,10 +212,10 @@ export default function Home() {
                   return (
                     <div
                       key={agent.name}
-                      className="flip-card h-96 cursor-pointer"
+                      className={`flip-card h-96 cursor-pointer ${isFlipped ? 'flipped' : ''}`}
                       onClick={() => toggleFlip(agent.name)}
                     >
-                      <div className={`flip-card-inner ${isFlipped ? 'flipped' : ''}`}>
+                      <div className="flip-card-inner">
                         {/* FRENTE */}
                         <div
                           className={`flip-card-front bg-gradient-to-br ${colors.bg} border-2 ${colors.border} rounded-xl p-6 flex flex-col justify-between`}

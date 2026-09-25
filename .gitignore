@@ -10,3 +10,4 @@ SKILL.md
 references/
 scripts/
 r2-telegram-reporter.mjs
+.env*
