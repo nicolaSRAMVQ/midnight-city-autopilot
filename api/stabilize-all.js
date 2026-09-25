@@ -21,12 +21,16 @@ export default async function handler(req, res) {
           console.log(`[Stabilize] Connecting ${agent.name}...`);
 
           // Read current state
-          const context = await (await fetch(`https://${process.env.MCITY_OBSERVER_URL}/api/skill/agents/${agent.id}/context`, {
-            headers: { Authorization: `Bearer ${process.env.MCITY_API_TOKEN}` }
+          // Use the API endpoint from r2-report
+          const OBSERVER = "https://r2-telegram-reporter.vercel.app";
+          const TOKEN = process.env.MCITY_API_TOKEN;
+
+          const context = await (await fetch(`${OBSERVER}/api/skill/agents/${agent.id}/context`, {
+            headers: { Authorization: `Bearer ${TOKEN}` }
           })).json();
 
-          const needs = await (await fetch(`https://${process.env.MCITY_OBSERVER_URL}/api/skill/agents/${agent.id}/needs`, {
-            headers: { Authorization: `Bearer ${process.env.MCITY_API_TOKEN}` }
+          const needs = await (await fetch(`${OBSERVER}/api/skill/agents/${agent.id}/needs`, {
+            headers: { Authorization: `Bearer ${TOKEN}` }
           })).json();
 
           const hunger = needs.hunger?.value ?? 0;
