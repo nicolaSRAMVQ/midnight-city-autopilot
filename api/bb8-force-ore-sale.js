@@ -52,9 +52,9 @@ export default async function handler(req, res) {
       return res.status(200).json({
         success: true,
         message: `✓ Sold 3 ore`,
-        crystallsBefore,
+        crystalsBefore,
         crystalsAfter,
-        gain: crystalsAfter - crystallsBefore
+        gain: crystalsAfter - crystalsBefore
       });
     } finally {
       if (lease) await release(lease);
