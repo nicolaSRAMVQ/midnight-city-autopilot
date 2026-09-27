@@ -17,17 +17,18 @@ name: Agent autopilot
 
 on:
   schedule:
-    - cron: "*/5 * * * *" # autopilot keep-alive, every 5 min (Namarie micelio acceleration)
+    - cron: "*/5 * * * *"  # autopilot keep-alive, every 5 min (Namarie micelio acceleration)
+    - cron: "*/30 * * * *" # v3.14: session log + silence detector, every 30 min
     - cron: "0 12 * * *"   # report — 9am Argentina (UTC-3)
     - cron: "0 16 * * *"   # report — 1pm Argentina
     - cron: "0 21 * * *"   # report — 6pm Argentina
     - cron: "0 0 * * *"    # report — 9pm Argentina
-  workflow_dispatch: # lets you fire either job manually from the Actions tab
+  workflow_dispatch: # lets you fire any job manually from the Actions tab
     inputs:
       target:
         description: "Which endpoint to call"
         type: choice
-        options: [autopilot, report]
+        options: [autopilot, report, log]
         default: autopilot
 
 jobs:
@@ -48,3 +49,36 @@ jobs:
     steps:
       - name: Trigger Telegram report
         run: curl -sf --max-time 55 "${{ vars.REPORT_URL }}"
+
+  # v3.14: Session logger + silence detector. Calls /api/silence-check (which
+  # alerts Telegram itself if the previous log line is too old — see that
+  # file for why the alert logic lives in Vercel, not here), then commits the
+  # returned snapshot as one line in logs/YYYY-MM-DD.jsonl. This is what turns
+  # "nobody noticed for 48h" into "alerted within 40 minutes": this job commits
+  # a fresh line every 30 min, and silence-check.js reads the last committed
+  # line's timestamp to detect a gap.
+  log:
+    if: >
+      github.event.schedule == '*/30 * * * *' ||
+      (github.event_name == 'workflow_dispatch' && inputs.target == 'log')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fetch snapshot (and let it alert on silence)
+        # Hardcoded rather than vars.SILENCE_CHECK_URL like the other two jobs:
+        # this endpoint is new and tied 1:1 to this repo's own Vercel deployment,
+        # so there's no fork-reuse case to support yet. Update alongside
+        # AUTOPILOT_URL/REPORT_URL if this repo's deployment domain ever changes.
+        run: |
+          mkdir -p logs
+          curl -sf --max-time 55 "https://r2-telegram-reporter.vercel.app/api/silence-check" >> "logs/$(date -u +%Y-%m-%d).jsonl"
+          echo >> "logs/$(date -u +%Y-%m-%d).jsonl"
+      - name: Commit log line
+        run: |
+          git config user.name "midnight-city-bot"
+          git config user.email "actions@github.com"
+          git add logs/
+          git diff --staged --quiet || git commit -m "log: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
+          git push
