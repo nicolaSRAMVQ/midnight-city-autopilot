@@ -15,7 +15,22 @@ interface Agent {
   skill: string;
 }
 
-type Tab = 'estado' | 'protocolos' | 'tecnologia' | 'historial' | 'api' | 'arquitectura' | 'ciudad' | 'documentacion' | 'dashboard-final';
+type Tab = 'estado' | 'actividad' | 'protocolos' | 'tecnologia' | 'historial' | 'api' | 'arquitectura' | 'ciudad' | 'documentacion' | 'dashboard-final';
+
+interface LogSnapshotAgent {
+  agent: string;
+  dormant: boolean;
+  isPerformingJob?: boolean | null;
+  hunger?: number | null;
+  crystal?: number;
+  xp?: number | null;
+}
+
+interface LogLine {
+  timestamp: string;
+  silence?: { lastTimestamp: string | null; silentForMinutes: number | null; alerted: boolean };
+  agents: LogSnapshotAgent[];
+}
 
 export default function Home() {
   const [agents, setAgents] = useState<Agent[] | null>(null);
@@ -25,6 +40,10 @@ export default function Home() {
   const [activeTab, setActiveTab] = useState<Tab>('estado');
   const [flipped, setFlipped] = useState<Record<string, boolean>>({});
   const [buying, setBuying] = useState<string | null>(null);
+  const [logLines, setLogLines] = useState<LogLine[]>([]);
+  const [logsLoading, setLogsLoading] = useState(true);
+  const [logsError, setLogsError] = useState<string | null>(null);
+  const [liveSilence, setLiveSilence] = useState<LogLine['silence'] | null>(null);
 
   const AGENT_COLORS: Record<string, { bg: string; border: string; color: string; description: string }> = {
     R2: {
@@ -49,6 +68,7 @@ export default function Home() {
 
   const tabs: { id: Tab; label: string }[] = [
     { id: 'estado', label: 'Estado' },
+    { id: 'actividad', label: '📡 Actividad' },
     { id: 'protocolos', label: 'Protocolos' },
     { id: 'tecnologia', label: 'Tecnología' },
     { id: 'historial', label: 'Historial' },
@@ -82,6 +102,70 @@ export default function Home() {
   useEffect(() => {
     fetchAgentStatus();
     const interval = setInterval(fetchAgentStatus, 300000);
+    return () => clearInterval(interval);
+  }, []);
+
+  // v3.14: Real activity history, read straight from the JSONL files the
+  // GitHub Actions "log" job commits every 10 min (see .github/workflows/cron.yml
+  // and api/silence-check.js). Replaces guessing "did anything happen today"
+  // with an actual timeline. Falls back to yesterday's file too, so the tab
+  // isn't empty right after UTC midnight.
+  const fetchActivityLogs = async () => {
+    setLogsLoading(true);
+    try {
+      const dateStr = (daysAgo: number) => {
+        const d = new Date();
+        d.setUTCDate(d.getUTCDate() - daysAgo);
+        return d.toISOString().slice(0, 10);
+      };
+      const base = 'https://raw.githubusercontent.com/nicolaSRAMVQ/midnight-city-autopilot/main/logs';
+      const results = await Promise.all(
+        [1, 0].map(async (daysAgo) => {
+          const res = await fetch(`${base}/${dateStr(daysAgo)}.jsonl?cachebust=${Date.now()}`);
+          if (!res.ok) return [];
+          const text = await res.text();
+          return text
+            .trim()
+            .split('\n')
+            .filter(Boolean)
+            .map((line) => {
+              try {
+                return JSON.parse(line) as LogLine;
+              } catch {
+                return null;
+              }
+            })
+            .filter((l): l is LogLine => l !== null);
+        }),
+      );
+      const combined = results.flat().sort((a, b) => a.timestamp.localeCompare(b.timestamp));
+      setLogLines(combined);
+      setLogsError(combined.length === 0 ? 'Sin datos todavía — el job de log corre cada 10 min, puede tardar en aparecer la primera línea.' : null);
+    } catch (err: any) {
+      setLogsError(err.message);
+    } finally {
+      setLogsLoading(false);
+    }
+  };
+
+  const fetchLiveSilence = async () => {
+    try {
+      const res = await fetch('https://r2-telegram-reporter.vercel.app/api/silence-check');
+      if (!res.ok) return;
+      const data = await res.json();
+      setLiveSilence(data.silence ?? null);
+    } catch {
+      // silent — this is a secondary indicator, not worth surfacing an error for
+    }
+  };
+
+  useEffect(() => {
+    fetchActivityLogs();
+    fetchLiveSilence();
+    const interval = setInterval(() => {
+      fetchActivityLogs();
+      fetchLiveSilence();
+    }, 300000);
     return () => clearInterval(interval);
   }, []);
 
@@ -376,6 +460,132 @@ export default function Home() {
                   );
                 })
               ) : null}
+            </div>
+          </div>
+        )}
+
+        {/* ACTIVIDAD TAB — v3.14: real data from logs/YYYY-MM-DD.jsonl, not hardcoded copy */}
+        {activeTab === 'actividad' && (
+          <div className="space-y-6">
+            <div
+              className={`rounded-lg p-6 border ${
+                liveSilence === null
+                  ? 'bg-gray-500/10 border-gray-500/30'
+                  : liveSilence.alerted
+                    ? 'bg-red-500/10 border-red-500/30'
+                    : liveSilence.silentForMinutes !== null && liveSilence.silentForMinutes > 15
+                      ? 'bg-yellow-500/10 border-yellow-500/30'
+                      : 'bg-green-500/10 border-green-500/30'
+              }`}
+            >
+              <h2 className="text-2xl font-bold mb-2">
+                {liveSilence === null
+                  ? '⏳ Chequeando estado del sistema...'
+                  : liveSilence.alerted
+                    ? '🔇 Silencio detectado'
+                    : '🟢 Sistema activo'}
+              </h2>
+              <p className="text-sm text-gray-300">
+                {liveSilence?.silentForMinutes !== null && liveSilence?.silentForMinutes !== undefined
+                  ? `Último log hace ${liveSilence.silentForMinutes} min.`
+                  : 'Sin log previo registrado todavía (primera corrida).'}
+                {liveSilence?.alerted && ' Se envió alerta a Telegram — revisar GitHub Actions / Vercel / AUTOPILOT_PAUSED.'}
+              </p>
+              <p className="text-xs text-gray-500 mt-2">
+                El job de log corre cada 10 min (.github/workflows/cron.yml) y alerta si pasan más de 25 min sin una línea nueva.
+              </p>
+            </div>
+
+            <div className="bg-gray-900/50 border border-gray-700 rounded-lg p-8">
+              <div className="flex items-center justify-between mb-6">
+                <h2 className="text-2xl font-bold text-cyan-400">📊 Historial real (últimas 48h)</h2>
+                <button
+                  onClick={fetchActivityLogs}
+                  className="text-xs px-3 py-1 bg-cyan-500/20 hover:bg-cyan-500/30 border border-cyan-500/50 rounded"
+                >
+                  🔄 Actualizar
+                </button>
+              </div>
+
+              {logsLoading && logLines.length === 0 && <p className="text-gray-400">Cargando logs desde GitHub...</p>}
+              {logsError && <p className="text-yellow-400 text-sm mb-4">⚠️ {logsError}</p>}
+
+              {logLines.length > 0 && (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+                    {['R2', 'BB-8', 'C-3PO'].map((name) => {
+                      const series = logLines
+                        .map((l) => l.agents.find((a) => a.agent === name))
+                        .filter((a): a is LogSnapshotAgent => !!a && !a.dormant && a.xp != null);
+                      const first = series[0]?.xp ?? null;
+                      const last = series[series.length - 1]?.xp ?? null;
+                      const gained = first !== null && last !== null ? last - first : null;
+                      const points = series.map((a) => a.xp as number);
+                      const min = points.length ? Math.min(...points) : 0;
+                      const max = points.length ? Math.max(...points) : 1;
+                      const range = max - min || 1;
+                      const path = points
+                        .map((v, i) => `${(i / Math.max(points.length - 1, 1)) * 100},${100 - ((v - min) / range) * 100}`)
+                        .join(' ');
+                      const color = AGENT_COLORS[name]?.color ?? '#fff';
+                      return (
+                        <div key={name} className="bg-black/30 border border-gray-700 rounded-lg p-4">
+                          <div className="font-bold mb-1" style={{ color }}>{name}</div>
+                          <div className="text-xs text-gray-400 mb-2">
+                            {gained !== null ? `+${gained.toLocaleString()} XP en el período` : 'Sin datos suficientes'}
+                          </div>
+                          {points.length > 1 && (
+                            <svg viewBox="0 0 100 40" className="w-full h-10">
+                              <polyline
+                                points={path.split(' ').map((p) => {
+                                  const [x, y] = p.split(',');
+                                  return `${x},${(parseFloat(y) * 0.4).toFixed(1)}`;
+                                }).join(' ')}
+                                fill="none"
+                                stroke={color}
+                                strokeWidth="2"
+                              />
+                            </svg>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+
+                  <details className="text-xs">
+                    <summary className="cursor-pointer text-gray-400 hover:text-gray-300 mb-2">
+                      Ver últimas {Math.min(logLines.length, 20)} lecturas crudas
+                    </summary>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left">
+                        <thead>
+                          <tr className="text-gray-500 border-b border-gray-700">
+                            <th className="py-1 pr-4">Timestamp (UTC)</th>
+                            <th className="py-1 pr-4">R2</th>
+                            <th className="py-1 pr-4">BB-8</th>
+                            <th className="py-1 pr-4">C-3PO</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {logLines.slice(-20).reverse().map((line, i) => (
+                            <tr key={i} className="border-b border-gray-800 text-gray-300">
+                              <td className="py-1 pr-4 font-mono">{line.timestamp?.slice(11, 19)}</td>
+                              {['R2', 'BB-8', 'C-3PO'].map((name) => {
+                                const a = line.agents.find((ag) => ag.agent === name);
+                                return (
+                                  <td key={name} className="py-1 pr-4 font-mono">
+                                    {!a || a.dormant ? '💤' : `H${a.hunger} · 💎${a.crystal}`}
+                                  </td>
+                                );
+                              })}
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  </details>
+                </>
+              )}
             </div>
           </div>
         )}
