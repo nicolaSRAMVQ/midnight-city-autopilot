@@ -1,9 +1,21 @@
 name: Agent autopilot
 
-# Free replacement for a paid cron service: GitHub gives unlimited Actions
-# minutes to public repos, so this costs $0 as long as this repo stays public.
-# On a private repo the free tier is 2,000 min/month — our schedule below
-# (~148 runs/day) would exceed that and start incurring charges.
+# v3.16: BACKUP pinger, not the primary trigger. Measuring this repo's own
+# workflow run history (23-27/9) showed GitHub's `schedule` trigger averaging
+# a 142min gap — up to 349min — against a 5-10min configured interval.
+# GitHub Actions `schedule` is explicitly best-effort with no SLA, and gets
+# silently dropped under platform-wide contention at high frequency. That's
+# not a config mistake on our end; it's a known limitation of the feature.
+#
+# The primary trigger is now an external cron service (cron-job.org) hitting
+# the same Vercel endpoints directly on a real schedule. This workflow keeps
+# running in parallel as a zero-cost second trigger — if cron-job.org's
+# account or free tier ever changes, this doesn't silently go to zero, it
+# just goes back to being irregular-but-nonzero like it is today.
+#
+# Free as long as this repo stays public (unlimited Actions minutes). On a
+# private repo the free tier is 2,000 min/month, which this schedule would
+# exceed.
 #
 # To reuse this for your own agent(s): fork this repo (keep it public), then
 # set two repository variables (Settings -> Secrets and variables -> Actions
@@ -11,9 +23,10 @@ name: Agent autopilot
 # and api/r2-autopilot.js:
 #   AUTOPILOT_URL = https://<your-deployment>.vercel.app/api/r2-autopilot
 #   REPORT_URL    = https://<your-deployment>.vercel.app/api/r2-report
-# No secrets belong in this repo or this workflow — the game API token and
-# Telegram bot token live only in your Vercel project's environment
-# variables. Adjust the cron times below to your own timezone (they're UTC).
+# No secrets belong in this repo or this workflow — the game API token,
+# Telegram bot token, and GitHub content-write token all live only in your
+# Vercel project's environment variables. Adjust the cron times below to
+# your own timezone (they're UTC).
 
 on:
   schedule:
@@ -50,38 +63,21 @@ jobs:
       - name: Trigger Telegram report
         run: curl -sf --max-time 55 "${{ vars.REPORT_URL }}"
 
-  # v3.14: Session logger + silence detector. Calls /api/silence-check (which
-  # alerts Telegram itself if the previous log line is too old — see that
-  # file for why the alert logic lives in Vercel, not here), then commits the
-  # returned snapshot as one line in logs/YYYY-MM-DD.jsonl. This is what turns
-  # "nobody noticed for 48h" into "alerted within ~25 minutes": this job
-  # commits a fresh line every 10 min, and silence-check.js reads the last
-  # committed line's timestamp to detect a gap. 10 min (not 30) because this
-  # repo is public — GitHub Actions minutes are unlimited here, so there's no
-  # budget reason to run it less often, only the cosmetic one of fewer commits
-  # in the log — and faster detection is the whole point of this job existing.
+  # v3.16: Backup pinger for the silence detector. api/silence-check.js now
+  # writes its own log line via the GitHub Contents API (using GITHUB_TOKEN
+  # configured in Vercel, not here) and sends the Telegram alert itself if the
+  # previous line is too old — this job doesn't need checkout, git, or repo
+  # write permissions at all anymore. It exists purely as a second caller in
+  # case cron-job.org (the primary trigger) misses a beat.
   log:
     if: >
       github.event.schedule == '*/10 * * * *' ||
       (github.event_name == 'workflow_dispatch' && inputs.target == 'log')
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     steps:
-      - uses: actions/checkout@v4
-      - name: Fetch snapshot (and let it alert on silence)
+      - name: Ping silence-check endpoint
         # Hardcoded rather than vars.SILENCE_CHECK_URL like the other two jobs:
         # this endpoint is new and tied 1:1 to this repo's own Vercel deployment,
         # so there's no fork-reuse case to support yet. Update alongside
         # AUTOPILOT_URL/REPORT_URL if this repo's deployment domain ever changes.
-        run: |
-          mkdir -p logs
-          curl -sf --max-time 55 "https://r2-telegram-reporter.vercel.app/api/silence-check" >> "logs/$(date -u +%Y-%m-%d).jsonl"
-          echo >> "logs/$(date -u +%Y-%m-%d).jsonl"
-      - name: Commit log line
-        run: |
-          git config user.name "midnight-city-bot"
-          git config user.email "actions@github.com"
-          git add logs/
-          git diff --staged --quiet || git commit -m "log: $(date -u +%Y-%m-%dT%H:%M:%SZ)"
-          git push
+        run: curl -sf --max-time 55 "https://r2-telegram-reporter.vercel.app/api/silence-check"

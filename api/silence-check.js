@@ -1,12 +1,16 @@
 /**
- * v3.14: Silence detector + snapshot, in one call so the GitHub Actions log
- * job (.github/workflows/cron.yml, "log") only needs one curl.
+ * v3.16: Silence detector + snapshot + self-contained log writer.
  *
- * Why this lives in Vercel instead of the workflow: Telegram secrets are
- * already configured here, and duplicating them into GitHub Actions secrets
- * is one more place credentials can leak or drift out of sync. The workflow
- * only needs git push access (which it already has via the default
- * GITHUB_TOKEN) to persist the log line this endpoint returns.
+ * v3.14/v3.15 relied on a GitHub Actions job to curl this endpoint AND git-
+ * commit the result. Turns out GitHub's `schedule` trigger is best-effort
+ * with no SLA — measuring this repo's own workflow runs showed a 142min
+ * average gap (up to 349min) against a 5-10min configured interval. Cron
+ * frequency that high gets silently dropped under GitHub's platform-wide
+ * contention. So GitHub Actions is now just a redundant backup pinger (see
+ * cron.yml); the real trigger is an external service (cron-job.org) hitting
+ * this endpoint directly, and THIS endpoint writes its own log line via the
+ * GitHub Contents API instead of depending on a workflow to do it — one less
+ * thing that can silently stop working.
  *
  * How it decides "quiet too long": reads the most recent line already
  * committed to logs/YYYY-MM-DD.jsonl (today, falling back to yesterday) from
@@ -15,9 +19,9 @@
  * zero log lines — instead of a human noticing days later.
  *
  * No dedupe/backoff on the alert itself: if the silence persists, this fires
- * again every time the log job runs (every 30 min by default). That's a
- * feature, not a bug — an unresolved outage should keep nagging, not go
- * silent after one Telegram message.
+ * again every time an external trigger calls it. That's a feature, not a
+ * bug — an unresolved outage should keep nagging, not go silent after one
+ * Telegram message.
  */
 
 import { AGENTS } from "../lib/agents.js";
@@ -25,7 +29,11 @@ import { tryReadWithoutConnecting } from "../lib/mcity-maintenance.js";
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
-const RAW_BASE = "https://raw.githubusercontent.com/nicolaSRAMVQ/midnight-city-autopilot/main/logs";
+const GITHUB_TOKEN = process.env.GITHUB_TOKEN;
+const REPO_OWNER = "nicolaSRAMVQ";
+const REPO_NAME = "midnight-city-autopilot";
+const REPO_BRANCH = "main";
+const RAW_BASE = `https://raw.githubusercontent.com/${REPO_OWNER}/${REPO_NAME}/${REPO_BRANCH}/logs`;
 const SILENCE_THRESHOLD_MS = 25 * 60 * 1000; // 25 min: survives one delayed/missed 10-min cycle
 
 async function sendTelegramAlert(text) {
@@ -41,6 +49,58 @@ function isoDateOffset(daysAgo) {
   const d = new Date();
   d.setUTCDate(d.getUTCDate() - daysAgo);
   return d.toISOString().slice(0, 10); // YYYY-MM-DD
+}
+
+// v3.16: Appends one JSONL line to logs/YYYY-MM-DD.jsonl via the GitHub
+// Contents API (read current sha+content, append, PUT). No retry on a 409
+// (sha conflict from a near-simultaneous write, e.g. the GitHub Actions
+// backup pinger landing at the same moment) — losing one log line to a race
+// isn't worth the complexity; the next call a few minutes later covers it.
+async function appendLogLine(dateStr, lineObj) {
+  if (!GITHUB_TOKEN) return { written: false, reason: "no_github_token" };
+  const path = `logs/${dateStr}.jsonl`;
+  const apiUrl = `https://api.github.com/repos/${REPO_OWNER}/${REPO_NAME}/contents/${path}`;
+  const headers = {
+    Authorization: `Bearer ${GITHUB_TOKEN}`,
+    Accept: "application/vnd.github+json",
+    "Content-Type": "application/json",
+  };
+
+  let existingContent = "";
+  let sha;
+  try {
+    const getRes = await fetch(`${apiUrl}?ref=${REPO_BRANCH}`, { headers });
+    if (getRes.ok) {
+      const data = await getRes.json();
+      sha = data.sha;
+      existingContent = Buffer.from(data.content, "base64").toString("utf-8");
+    } else if (getRes.status !== 404) {
+      return { written: false, reason: `github_read_${getRes.status}` };
+    }
+  } catch (err) {
+    return { written: false, reason: `github_read_error: ${err.message}` };
+  }
+
+  const newContent = existingContent + JSON.stringify(lineObj) + "\n";
+  try {
+    const putRes = await fetch(apiUrl, {
+      method: "PUT",
+      headers,
+      body: JSON.stringify({
+        message: `log: ${lineObj.timestamp}`,
+        content: Buffer.from(newContent, "utf-8").toString("base64"),
+        branch: REPO_BRANCH,
+        ...(sha ? { sha } : {}),
+      }),
+    });
+    if (!putRes.ok) {
+      const errText = await putRes.text();
+      return { written: false, reason: `github_write_${putRes.status}: ${errText.slice(0, 150)}` };
+    }
+    return { written: true };
+  } catch (err) {
+    return { written: false, reason: `github_write_error: ${err.message}` };
+  }
 }
 
 async function fetchLastLoggedTimestamp() {
@@ -98,9 +158,15 @@ export default async function handler(req, res) {
 
   const agents = await Promise.all(AGENTS.map(snapshot));
 
-  res.status(200).json({
+  const line = {
     timestamp: new Date().toISOString(),
     silence: { lastTimestamp: lastTimestamp ? new Date(lastTimestamp).toISOString() : null, silentForMinutes: silentForMs ? Math.round(silentForMs / 60000) : null, alerted: isSilent },
     agents,
+  };
+  const writeResult = await appendLogLine(isoDateOffset(0), line);
+
+  res.status(200).json({
+    ...line,
+    logWrite: writeResult,
   });
 }
