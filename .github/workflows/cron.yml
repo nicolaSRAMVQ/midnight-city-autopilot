@@ -18,7 +18,7 @@ name: Agent autopilot
 on:
   schedule:
     - cron: "*/5 * * * *"  # autopilot keep-alive, every 5 min (Namarie micelio acceleration)
-    - cron: "*/30 * * * *" # v3.14: session log + silence detector, every 30 min
+    - cron: "*/10 * * * *" # v3.14: session log + silence detector, every 10 min
     - cron: "0 12 * * *"   # report — 9am Argentina (UTC-3)
     - cron: "0 16 * * *"   # report — 1pm Argentina
     - cron: "0 21 * * *"   # report — 6pm Argentina
@@ -54,12 +54,15 @@ jobs:
   # alerts Telegram itself if the previous log line is too old — see that
   # file for why the alert logic lives in Vercel, not here), then commits the
   # returned snapshot as one line in logs/YYYY-MM-DD.jsonl. This is what turns
-  # "nobody noticed for 48h" into "alerted within 40 minutes": this job commits
-  # a fresh line every 30 min, and silence-check.js reads the last committed
-  # line's timestamp to detect a gap.
+  # "nobody noticed for 48h" into "alerted within ~25 minutes": this job
+  # commits a fresh line every 10 min, and silence-check.js reads the last
+  # committed line's timestamp to detect a gap. 10 min (not 30) because this
+  # repo is public — GitHub Actions minutes are unlimited here, so there's no
+  # budget reason to run it less often, only the cosmetic one of fewer commits
+  # in the log — and faster detection is the whole point of this job existing.
   log:
     if: >
-      github.event.schedule == '*/30 * * * *' ||
+      github.event.schedule == '*/10 * * * *' ||
       (github.event_name == 'workflow_dispatch' && inputs.target == 'log')
     runs-on: ubuntu-latest
     permissions:

@@ -26,7 +26,7 @@ import { tryReadWithoutConnecting } from "../lib/mcity-maintenance.js";
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
 const RAW_BASE = "https://raw.githubusercontent.com/nicolaSRAMVQ/midnight-city-autopilot/main/logs";
-const SILENCE_THRESHOLD_MS = 40 * 60 * 1000; // 40 min: survives one missed 30-min cycle
+const SILENCE_THRESHOLD_MS = 25 * 60 * 1000; // 25 min: survives one delayed/missed 10-min cycle
 
 async function sendTelegramAlert(text) {
   if (!TELEGRAM_BOT_TOKEN || !TELEGRAM_CHAT_ID) return;
