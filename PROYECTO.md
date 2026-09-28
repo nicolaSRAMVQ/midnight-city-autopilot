@@ -1,21 +1,40 @@
-# 🌳 Cuadrilla Midnight — Namarie Micelio v3.8
+# 🌳 Cuadrilla Midnight — Namarie Micelio v3.17
 
-## Estado Actual (2026-09-25)
+## Estado Actual (2026-09-28)
 
 ### Sistema
-- **Autopilot**: v3.6 (Namarie micelio protocol)
-- **Cron**: Cada 5 minutos (288 ciclos/día)
+- **Autopilot**: v3.17 (BB-8 Resilience Hardening)
+- **Cron**: Cada 5-10 minutos (Fallback: cron-job.org, Backup: GitHub Actions)
 - **Dashboard**: https://dashboard-app-green-alpha.vercel.app
 - **API Status**: https://r2-telegram-reporter.vercel.app/api/agent-status
 
 ### Tripulación
 ```
-R2    | Level 3 | Hacking L3           | ~1,700 crystals | Hacker House
-BB-8  | Level 2 | Mining L2 (emergencia)| 0 crystals      | Miners Cave (minando 3x ore)
-C-3PO | Level 7 | Woodcutting L7 ⚒️   | ~1,900 crystals | Forest
+R2    | Level 3 | Hacking L3              | ~1,804 crystals | Hacker House (manual play)
+BB-8  | Level 2 | Mining L2 (recuperado)  | 60 crystals     | Miners Cave (2x ore/venta) ✅
+C-3PO | Level 8 | Woodcutting L7 ⚒️      | ~2,354 crystals | Forest
 ```
 
 ### Cambios Implementados (Esta sesión)
+
+#### v3.17: BB-8 Resilience Hardening (Recuperación de Crisis)
+**Contexto**: BB-8 se quedó dormido (offline) con minería agotada, bajos crystales (60), sin comida
+**Soluciones implementadas**:
+1. **Fallback Timeout Acelerado (4s)**: Reduce timeout para fallback locations 8s → 4s
+   - Evita congelamiento si fallback también timeout
+   - Permite reintentos más rápidos en próximos ciclos
+   
+2. **Rescate Proactivo (100 crystales)**: Nuevo umbral de rescate ANTES de crisis
+   - Reactive: hunger >= 70 && !hasFood && crystals < 20 (original)
+   - Proactive: crystals < 100 (new, alineado con BB8_CRYSTAL_EMERGENCY)
+   - Evita cascada de hambre crítica
+   
+3. **Batch Size Minería (3 → 2 ore)**: Demanda de recursos más baja
+   - Ventas más frecuentes pero más pequeñas
+   - Flujo de crystales más estable
+   - Mejor compatibilidad con límites de ubicación
+
+**Resultado**: BB-8 reconectado y trabajando después de fuerza-activación manual
 
 #### v3.8: Full Autonomy Stack Optimization
 **Threshold Optimizations:**
