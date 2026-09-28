@@ -9,8 +9,6 @@
 import { AGENTS } from "../lib/agents.js";
 import {
   FOOD_ITEM_IDS,
-  FOOD_RESERVE_MIN,
-  HUNGER_EAT_THRESHOLD,
   attemptCrystalRescue,
   runConnectedMaintenance,
   tryReadWithoutConnecting,
@@ -54,28 +52,8 @@ async function runAgent(agent) {
         rescueState: toRescueState(agent, initial),
       };
     }
-    // Runs every 10 min, so don't even connect when there is nothing to do:
-    // working, fed, stocked with food, and light. Tool purchases wait for a
-    // cycle that connects anyway (hunger rises often enough).
-    const load = initial?.inventory?.load ?? {};
-    const overloaded = (load.workSpeedPercent ?? 100) < 100 || (load.excessWeight ?? 0) > 0;
-    const items = initial?.inventory?.inventory ?? {};
-    const foodCount = FOOD_ITEM_IDS.reduce((sum, id) => sum + (items[id] ?? 0), 0);
-    if (
-      initial !== null &&
-      initial.context.agent.isPerformingJob &&
-      (initial.needs.hunger?.value ?? 0) < HUNGER_EAT_THRESHOLD &&
-      !overloaded &&
-      foodCount >= FOOD_RESERVE_MIN
-    ) {
-      const sellable = Math.floor((initial.inventory?.inventory?.[agent.profile.sellItem] ?? 0) / agent.profile.batch);
-      return {
-        agent: agent.name,
-        skipped: true,
-        reason: "already_working",
-        rescueState: toRescueState(agent, { ...initial, sellableBatches: sellable, crystalsPerBatch: agent.profile.crystalsPerBatch }),
-      };
-    }
+    // v3.19: Always connect, even when the agent is already working: holding the
+    // control lease is what keeps it in the city between 5-min runs.
     const m = await runConnectedMaintenance(agent, {
       context: initial?.context ?? null,
       needs: initial?.needs ?? null,
