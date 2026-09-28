@@ -7,11 +7,16 @@ name: Agent autopilot
 # silently dropped under platform-wide contention at high frequency. That's
 # not a config mistake on our end; it's a known limitation of the feature.
 #
-# The primary trigger is now an external cron service (cron-job.org) hitting
-# the same Vercel endpoints directly on a real schedule. This workflow keeps
-# running in parallel as a zero-cost second trigger — if cron-job.org's
-# account or free tier ever changes, this doesn't silently go to zero, it
-# just goes back to being irregular-but-nonzero like it is today.
+# The primary trigger is pg_cron + pg_net in the Supabase project
+# "Suteki | Recetario" (set up 2026-09-28; cron-job.org was documented here
+# before but never actually configured, which let the agents fall asleep and
+# get removed from the city). Supabase jobs (see cron.job):
+#   midnight-autopilot-5min        */5  * * * *  -> /api/r2-autopilot
+#   midnight-silence-check-10min   */10 * * * *  -> /api/silence-check
+#   midnight-report-{9,13,18,21}h  daily         -> /api/r2-report
+# This workflow keeps running as a zero-cost backup for the autopilot and
+# silence-check. Reports are NOT scheduled here anymore (they'd duplicate);
+# use workflow_dispatch -> report to send one by hand.
 #
 # Free as long as this repo stays public (unlimited Actions minutes). On a
 # private repo the free tier is 2,000 min/month, which this schedule would
@@ -32,10 +37,6 @@ on:
   schedule:
     - cron: "*/5 * * * *"  # autopilot keep-alive, every 5 min (Namarie micelio acceleration)
     - cron: "*/10 * * * *" # v3.14: session log + silence detector, every 10 min
-    - cron: "0 12 * * *"   # report — 9am Argentina (UTC-3)
-    - cron: "0 16 * * *"   # report — 1pm Argentina
-    - cron: "0 21 * * *"   # report — 6pm Argentina
-    - cron: "0 0 * * *"    # report — 9pm Argentina
   workflow_dispatch: # lets you fire any job manually from the Actions tab
     inputs:
       target:
@@ -56,8 +57,7 @@ jobs:
 
   report:
     if: >
-      contains(fromJSON('["0 12 * * *","0 16 * * *","0 21 * * *","0 0 * * *"]'), github.event.schedule) ||
-      (github.event_name == 'workflow_dispatch' && inputs.target == 'report')
+      github.event_name == 'workflow_dispatch' && inputs.target == 'report'
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Telegram report
@@ -68,7 +68,7 @@ jobs:
   # configured in Vercel, not here) and sends the Telegram alert itself if the
   # previous line is too old — this job doesn't need checkout, git, or repo
   # write permissions at all anymore. It exists purely as a second caller in
-  # case cron-job.org (the primary trigger) misses a beat.
+  # case Supabase pg_cron (the primary trigger) misses a beat.
   log:
     if: >
       github.event.schedule == '*/10 * * * *' ||
