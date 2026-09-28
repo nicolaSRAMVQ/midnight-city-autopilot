@@ -44,7 +44,10 @@ function toRescueState(agent, { inventory, needs, sellableBatches, crystalsPerBa
 async function runAgent(agent) {
   try {
     const initial = await tryReadWithoutConnecting(agent.id);
-    if (initial !== null && initial.context.controlStatus !== null) {
+    // Our own lease from the previous run shows up as mode "browser_local"
+    // (renewing it is the point); only yield to other kinds of control.
+    const control = initial?.context.controlStatus ?? null;
+    if (control !== null && control.mode !== "browser_local") {
       return {
         agent: agent.name,
         skipped: true,
