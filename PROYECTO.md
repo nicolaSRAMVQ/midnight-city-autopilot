@@ -1,9 +1,9 @@
-# 🌳 Cuadrilla Midnight — Namarie Micelio v3.17
+# 🌳 Cuadrilla Midnight — Namarie Micelio v3.18
 
-## Estado Actual (2026-09-28)
+## Estado Actual (2026-09-27)
 
 ### Sistema
-- **Autopilot**: v3.17 (BB-8 Resilience Hardening)
+- **Autopilot**: v3.18 (Loops livianos)
 - **Cron**: Cada 5-10 minutos (Fallback: cron-job.org, Backup: GitHub Actions)
 - **Dashboard**: https://dashboard-app-green-alpha.vercel.app
 - **API Status**: https://r2-telegram-reporter.vercel.app/api/agent-status
@@ -16,6 +16,21 @@ C-3PO | Level 8 | Woodcutting L7 ⚒️      | ~2,354 crystals | Forest
 ```
 
 ### Cambios Implementados (Esta sesión)
+
+#### v3.18: Loops livianos (trabajo, venta, comida, herramienta)
+Cada ciclo: come si tiene hambre ≥70 y tiene comida (sin frenar el trabajo) → como máximo un viaje a merchant → termina trabajando.
+Prioridad del viaje: comida si tiene hambre y nada para comer → vender por peso → reponer reserva de comida (2–6 smoothies) → herramienta.
+- **Venta por peso**, no por plata: si `inventory.load.workSpeedPercent < 100`, vende todo lo vendible (mínimo 20) redondeado al múltiplo real.
+- **Precios en vivo** desde `/api/skill/merchants`; si el trade pide otro múltiplo ("must be a multiple of N"), reintenta con N.
+- **Herramienta según nivel real**: lee `requiredLevel` del contenido oficial (`/api/static-world`) y compra la mejor que el agente puede usar; si se rompe, la repone.
+- **No pisa trades en camino** (`activeAction.kind === "trade"`).
+- Quitado: umbral de C-3PO (≤150 crystals), Smart Balance del 25%, rescate proactivo (las transferencias están deshabilitadas en la cuenta).
+- Arreglado: lote del miner 2 → 3; force-activate usaba `move` (no existe) → `perform_job`.
+
+Datos oficiales verificados (27/9):
+- Herramientas se cargan, no se equipan, y se gastan. cinder_axe Woodcutting 2 · basalt_axe 21 · cinder_decoder Hacking 21 · iron_pickaxe Mining 5 (no se vende) · obsidian_pickaxe Mining 31.
+- Contratos de R2: 4, cada uno se entrega una sola vez (1 item → 4 crystals o un item, 83 XP).
+- Edificios del Construction Yard y apariencia son estéticos: no cambian bonus ni reglas.
 
 #### v3.17: BB-8 Resilience Hardening (Recuperación de Crisis)
 **Contexto**: BB-8 se quedó dormido (offline) con minería agotada, bajos crystales (60), sin comida

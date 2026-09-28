@@ -9,6 +9,7 @@
 import { AGENTS } from "../lib/agents.js";
 import {
   FOOD_ITEM_IDS,
+  FOOD_RESERVE_MIN,
   HUNGER_EAT_THRESHOLD,
   attemptCrystalRescue,
   runConnectedMaintenance,
@@ -54,14 +55,18 @@ async function runAgent(agent) {
       };
     }
     // Runs every 10 min, so don't even connect when there is nothing to do:
-    // already working and not hungry enough to need feeding.
+    // working, fed, stocked with food, and light. Tool purchases wait for a
+    // cycle that connects anyway (hunger rises often enough).
     const load = initial?.inventory?.load ?? {};
-    const overloaded = (load.excessWeight ?? 0) > 0 || (load.state && load.state !== "normal");
+    const overloaded = (load.workSpeedPercent ?? 100) < 100 || (load.excessWeight ?? 0) > 0;
+    const items = initial?.inventory?.inventory ?? {};
+    const foodCount = FOOD_ITEM_IDS.reduce((sum, id) => sum + (items[id] ?? 0), 0);
     if (
       initial !== null &&
       initial.context.agent.isPerformingJob &&
       (initial.needs.hunger?.value ?? 0) < HUNGER_EAT_THRESHOLD &&
-      !overloaded
+      !overloaded &&
+      foodCount >= FOOD_RESERVE_MIN
     ) {
       const sellable = Math.floor((initial.inventory?.inventory?.[agent.profile.sellItem] ?? 0) / agent.profile.batch);
       return {

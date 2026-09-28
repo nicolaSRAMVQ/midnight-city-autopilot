@@ -14,11 +14,11 @@ export default async function handler(req, res) {
           body: JSON.stringify({ agentId: agent.id, clientInstanceId: `force-activate:${agent.id}`, modelId: null }),
         });
 
-        // Send move command to wake them
+        // Opening the session is what wakes the agent; put it straight back to work.
         await requestJson("/api/actions", {
           method: "POST",
           headers: { Authorization: `Bearer ${session.token}`, "Content-Type": "application/json" },
-          body: JSON.stringify({ agentId: agent.id, kind: "move", spaceId: agent.spaceId || "Central" }),
+          body: JSON.stringify({ agentId: agent.id, kind: "perform_job" }),
         });
 
         // Release session
