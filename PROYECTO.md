@@ -4,7 +4,7 @@
 
 ### Sistema
 - **Autopilot**: v3.18 (Loops livianos)
-- **Cron**: Cada 5-10 minutos (Fallback: cron-job.org, Backup: GitHub Actions)
+- **Cron**: Supabase pg_cron (proyecto "Suteki | Recetario"): autopilot cada 5 min, silence-check cada 10 min, reportes 9/13/18/21 hs. Backup: GitHub Actions (autopilot + silence-check)
 - **Dashboard**: https://dashboard-app-green-alpha.vercel.app
 - **API Status**: https://r2-telegram-reporter.vercel.app/api/agent-status
 
