@@ -1,7 +1,7 @@
 # Cuadrilla Midnight — Proyecto
 
 Fuente única de verdad del proyecto. Si otro documento contradice este, vale este.
-Última actualización: 2026-09-28 (autopilot v3.21).
+Última actualización: 2026-09-28 (autopilot v3.22).
 
 ## Qué es
 
@@ -63,7 +63,7 @@ Midnight City API → https://midnight.city/observer  (el /observer es obligator
 | `scripts/mcity-control.mjs` | Helper oficial de la skill (lee `.env`, no `.env.local`) |
 | `SKILL.md`, `references/` | Documentación oficial de la skill (versión 2026-09-16; hay una más nueva) |
 
-### El ciclo del autopilot (v3.21)
+### El ciclo del autopilot (v3.22)
 
 Por agente, cada 5 minutos:
 
@@ -78,11 +78,12 @@ Por agente, cada 5 minutos:
    - hambre y sin comida → comprar comida (o vender si no tiene crystals);
    - velocidad < 100% → vender la pila más grande de cualquier item con
      comprador (mínimo 20 unidades), redondeada al múltiplo real;
+   - BB-8 junta 30+ ore (`sellAtQuantity` en `lib/agents.js`) → vender aunque no esté lento;
    - menos de 2 smoothies → reponer hasta 6;
    - le falta la mejor herramienta que su nivel permite usar y le sobra plata → comprarla.
 6. Termina siempre trabajando (`perform_job`). Si el puesto está lleno, recolecta
-   en una fuente alternativa cuyo producto se venda (hoy: `tree_stand`/logs) y
-   evita las fuentes de un solo nodo.
+   en una fuente alternativa cuyo producto se venda (hoy: `tree_stand`/logs). No usa
+   el puesto de otro agente salvo que tenga 5+ nodos (los árboles sí, la terminal de R2 no).
 7. Rescate: si un agente queda con hambre ≥70, sin comida y sin crystals, el más
    rico (que conserve ≥200) le transfiere 150.
 
@@ -167,14 +168,21 @@ Reglas aprendidas:
 - **Construction Yard:** 1.000.000 crystals más alquiler diario. Es estético.
 - **Pacing oficial:** ~720 horas de trabajo para llevar una skill de 1 a 99.
 
+## Medido el 28/9 (07:15–13:10 UTC, 72 corridas por agente)
+
+- Los tres subieron un nivel en 8 h: R2 Hacking 4, BB-8 Mining 3, C-3PO Woodcutting 9.
+- La cuadrilla ganó 2.761 crystals (R2 +1.684, C-3PO +780, BB-8 +297).
+- Dormidos en el 11% de las corridas (antes de v3.19, ~50%). El autopilot los despierta en la corrida siguiente.
+- A C-3PO se le rompe el cinder_axe cada 45–60 min (0,27% por tala, ~500 talas/h) y lo repone: unos 17 crystals/h. Es esperado.
+- `net._http_response` de Supabase guarda solo 6 h de respuestas.
+
 ## Pendientes
 
-- Confirmar en los logs de Supabase (`net._http_response`) que con v3.21 los
-  agentes ya no quedan dormidos. El 28/9 hubo 3 corridas seguidas sin dormidos.
+- Bajar el 11% de corridas con agentes dormidos.
 - Reparar el deploy automático GitHub → Vercel.
 - Sumar los contratos al ciclo (XP gratis, una vez).
 - Actualizar la skill al bundle 2026-09-17 (ver `latestSkillVersion` en `context`).
-- Umbral de venta por cantidad para BB-8 (hoy vende solo cuando pierde velocidad).
+- R2 junta encrypted_packet sin comprador (1.459 al 28/9). Hoy no lo frena; vigilar la carga.
 - Evaluar la ruta del iron_pickaxe para BB-8 (lenta: ~1.700 fundiciones hasta Smithing 5).
 
 ## Fuentes no confiables
@@ -186,6 +194,7 @@ del cinder_axe. Verificar siempre contra `SKILL.md`, `references/` y
 
 ## Historial
 
+- **v3.22:** BB-8 vende al juntar 30 ore; el respaldo no usa la terminal de R2; sin aviso repetido de skills.
 - **v3.21:** reporte con todas las métricas y % de XP; el autopilot ya no se saltea a sí mismo.
 - **v3.20:** con el puesto lleno, trabaja algo vendible; vende cualquier pila con comprador.
 - **v3.19:** no suelta el control y se conecta en todas las corridas.

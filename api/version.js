@@ -4,7 +4,7 @@
 
 export default function handler(req, res) {
   res.status(200).json({
-    version: "v3.21-live",
+    version: "v3.22-live",
     timestamp: new Date().toISOString(),
     format: "Tolkien Newsletter",
     headers: ["CRÓNICA MATINAL", "PARTE MERIDIANO", "RELATO VESPERTINO", "SUSSURRO NOCTURNO"],
