@@ -178,6 +178,7 @@ Reglas aprendidas:
 
 ## Pendientes
 
+- **Desplegar v3.22** (está en `main`, producción sigue en v3.21). El 28/9 Vercel rechazó el deploy por el límite del plan gratuito: 100 deploys por día (`api-deployments-free-per-day`). Reintentar desde el 29/9 con el procedimiento de "Desplegar".
 - Bajar el 11% de corridas con agentes dormidos.
 - Reparar el deploy automático GitHub → Vercel.
 - Sumar los contratos al ciclo (XP gratis, una vez).
