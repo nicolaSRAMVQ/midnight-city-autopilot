@@ -7,7 +7,7 @@
  * average gap (up to 349min) against a 5-10min configured interval. Cron
  * frequency that high gets silently dropped under GitHub's platform-wide
  * contention. So GitHub Actions is now just a redundant backup pinger (see
- * cron.yml); the real trigger is an external service (cron-job.org) hitting
+ * cron.yml); the real trigger is Supabase pg_cron (project "Suteki | Recetario") hitting
  * this endpoint directly, and THIS endpoint writes its own log line via the
  * GitHub Contents API instead of depending on a workflow to do it — one less
  * thing that can silently stop working.
