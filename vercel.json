@@ -12,6 +12,14 @@
     "api/agent-status.js": {
       "memory": 128,
       "maxDuration": 30
+    },
+    "api/training-worker.js": {
+      "memory": 128,
+      "maxDuration": 60
+    },
+    "api/silence-check.js": {
+      "memory": 128,
+      "maxDuration": 30
     }
   },
   "headers": [
