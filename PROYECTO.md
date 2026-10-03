@@ -1,7 +1,7 @@
 # Cuadrilla Midnight — Proyecto
 
 Fuente única de verdad del proyecto. Si otro documento contradice este, vale este.
-Última actualización: 2026-10-03 (autopilot v3.24, pendiente de deploy).
+Última actualización: 2026-10-03 (autopilot v3.24).
 
 ## Qué es
 
@@ -192,9 +192,15 @@ Reglas aprendidas:
 - A C-3PO se le rompe el cinder_axe cada 45–60 min (0,27% por tala, ~500 talas/h) y lo repone: unos 17 crystals/h. Es esperado.
 - `net._http_response` de Supabase guarda solo 6 h de respuestas.
 
+## Medido el 3/10 (primeros minutos del modo entrenamiento)
+
+- El worker encadena 10–14 recolecciones por minuto (R2, BB-8). Un nivel secundario (144 recolecciones) ≈ 15–20 min.
+- En ~6 min: R2 infiltration 58% → L2, BB-8 scavenging 53%, C-3PO fishing 22% (la pesca rinde menos por minuto).
+
 ## Pendientes
 
-- **Desplegar v3.24** cuando Vercel libere cupo; después crear el job `midnight-training-worker-1min` (`*/1 * * * *` → `/api/training-worker`) y reactivar el job 2 (`midnight-silence-check-10min`, pausado el 3/10 para cortar los commits de log).
+- Medir cuánto tarda cada nivel secundario y cuánta producción principal cuesta el turno diario.
+- El autopilot (cada 5 min) le corta ~1 min por ciclo al worker al reconectarse. Si molesta, que el autopilot no se conecte a agentes en entrenamiento salvo para comer o vender.
 - Vercel gratis permite 100 deploys por día (`api-deployments-free-per-day`); si se pasa, esperar al día siguiente.
 - BB-8 podría usar el iron_pickaxe (Mining 5) pero hay que forjarlo (Smithing 5).
 - Bajar el 11% de corridas con agentes dormidos.
@@ -213,7 +219,7 @@ del cinder_axe. Verificar siempre contra `SKILL.md`, `references/` y
 
 ## Historial
 
-- **v3.24 (3/10):** modo entrenamiento de skills secundarias (worker por minuto + estado en Supabase); silence-check deja de commitear logs (cada commit gastaba 2 deploys del cupo de Vercel).
+- **v3.24 (3/10, desplegada 15:22 UTC):** modo entrenamiento de skills secundarias (worker por minuto + estado en Supabase); silence-check deja de commitear logs (cada commit gastaba 2 deploys del cupo de Vercel).
 - **v3.23 (3/10):** compra de herramientas en otro distrito: viaja primero y compra al llegar (el Basalt Axe de C-3PO se reintentó más de una hora sin éxito). La guarda tampoco interrumpe viajes.
 - **3/10:** la API del juego devolvió HTML entre 08:00 y 12:35 UTC (caída de Midnight City); el autopilot se recuperó solo.
 - **v3.22:** BB-8 vende al juntar 30 ore; el respaldo no usa la terminal de R2; sin aviso repetido de skills.
