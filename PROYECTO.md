@@ -108,9 +108,10 @@ múltiplo ("must be a multiple of N"), lo toma del error y reintenta una vez.
 
 ## Desplegar
 
-La integración automática GitHub → Vercel no dispara desde v3.14 (pendiente
-revisar en Vercel → Settings → Git). Mientras tanto, a mano, desde una copia
-limpia del commit (así no se suben `.env*` ni archivos sueltos):
+Los deploys por git están desactivados a propósito (`git.deploymentEnabled: false` en
+`vercel.json` y `dashboard-app/vercel.json`): cada push gastaba 2 deploys del cupo de
+100/día y todos salían cancelados. Se despliega a mano, desde una copia limpia del
+commit (así no se suben `.env*` ni archivos sueltos):
 
 ```bash
 git push origin main
@@ -195,6 +196,7 @@ Reglas aprendidas:
 ## Medido el 3/10 (primeros minutos del modo entrenamiento)
 
 - El worker encadena 10–14 recolecciones por minuto (R2, BB-8). Un nivel secundario (144 recolecciones) ≈ 15–20 min.
+- R2 llegó a Infiltration 2 en ~15 min y volvió solo a la terminal (ciclo completo verificado).
 - En ~6 min: R2 infiltration 58% → L2, BB-8 scavenging 53%, C-3PO fishing 22% (la pesca rinde menos por minuto).
 
 ## Pendientes
@@ -204,7 +206,7 @@ Reglas aprendidas:
 - Vercel gratis permite 100 deploys por día (`api-deployments-free-per-day`); si se pasa, esperar al día siguiente.
 - BB-8 podría usar el iron_pickaxe (Mining 5) pero hay que forjarlo (Smithing 5).
 - Bajar el 11% de corridas con agentes dormidos.
-- Deploy automático GitHub → Vercel: la integración está conectada (también para el proyecto dashboard-app), pero los deploys salen cancelados. Revisar el "Ignored Build Step" en Vercel.
+- **v3.25 pendiente de deploy** (reporte con línea de entrenamiento): Vercel sin cupo el 3/10; quedó un reintento automático cada 15 min.
 - Sumar los contratos al ciclo (XP gratis, una vez).
 - Actualizar la skill al bundle 2026-09-17 (ver `latestSkillVersion` en `context`).
 - R2 junta encrypted_packet sin comprador (1.459 al 28/9). Hoy no lo frena; vigilar la carga.
@@ -219,6 +221,7 @@ del cinder_axe. Verificar siempre contra `SKILL.md`, `references/` y
 
 ## Historial
 
+- **v3.25 (3/10):** el reporte de Telegram muestra el entrenamiento por agente. Deploys por git desactivados.
 - **v3.24 (3/10, desplegada 15:22 UTC):** modo entrenamiento de skills secundarias (worker por minuto + estado en Supabase); silence-check deja de commitear logs (cada commit gastaba 2 deploys del cupo de Vercel).
 - **v3.23 (3/10):** compra de herramientas en otro distrito: viaja primero y compra al llegar (el Basalt Axe de C-3PO se reintentó más de una hora sin éxito). La guarda tampoco interrumpe viajes.
 - **3/10:** la API del juego devolvió HTML entre 08:00 y 12:35 UTC (caída de Midnight City); el autopilot se recuperó solo.
