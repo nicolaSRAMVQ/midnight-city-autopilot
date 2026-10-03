@@ -1,7 +1,7 @@
 # Cuadrilla Midnight — Proyecto
 
 Fuente única de verdad del proyecto. Si otro documento contradice este, vale este.
-Última actualización: 2026-10-03 (autopilot v3.23).
+Última actualización: 2026-10-03 (autopilot v3.24, pendiente de deploy).
 
 ## Qué es
 
@@ -47,9 +47,13 @@ Entre el 28/9 y el 3/10 la cuadrilla pasó de 7.341 a ~44.100 crystals.
 ```
 Supabase pg_cron (proyecto "Suteki | Recetario")
   ├─ */5  min → GET /api/r2-autopilot     (mantenimiento de los 3 agentes)
-  ├─ */10 min → GET /api/silence-check    (log + alerta si el autopilot se calla)
+  ├─ */1  min → GET /api/training-worker  (encadena recolecciones de los agentes en entrenamiento)
+  ├─ */10 min → GET /api/silence-check    (alerta si no hay corrida OK del autopilot en 25 min)
+  ├─ */5  min → midnight.archive_responses() (guarda todas las respuestas en midnight.log)
   └─ 9/13/18/21 h ART → GET /api/r2-report (reporte a Telegram)
 GitHub Actions (.github/workflows/cron.yml) = respaldo, corre cada 1–2 h en la práctica
+Supabase, schema `midnight`: `log` (historial permanente) y `agent_training` (estado del entrenamiento).
+  Vercel accede solo vía RPC `public.midnight_*` con la clave publicable (SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY).
 Vercel, proyecto r2-telegram-reporter → https://r2-telegram-reporter.vercel.app
 Midnight City API → https://midnight.city/observer  (el /observer es obligatorio)
 ```
@@ -61,6 +65,8 @@ Midnight City API → https://midnight.city/observer  (el /observer es obligator
 | `api/r2-autopilot.js` | Corre el ciclo para los 3 agentes en paralelo + rescate de crystals |
 | `api/r2-report.js` | Reporte de Telegram: intro narrativa + todas las métricas y % de XP |
 | `api/force-activate.js` | Despierta a los 3 abriendo sesión y mandando `perform_job` |
+| `api/training-worker.js` | Modo entrenamiento: encadena `gather` ~45 s por minuto hasta que la skill sube un nivel |
+| `lib/training.js` | Elige skill y fuente de entrenamiento; lee/escribe el estado en Supabase |
 | `api/version.js` | Versión desplegada (verificar después de cada deploy) |
 | `scripts/mcity-control.mjs` | Helper oficial de la skill (lee `.env`, no `.env.local`) |
 | `SKILL.md`, `references/` | Documentación oficial de la skill (versión 2026-09-16; hay una más nueva) |
@@ -88,7 +94,13 @@ Por agente, cada 5 minutos:
 6. Termina siempre trabajando (`perform_job`). Si el puesto está lleno, recolecta
    en una fuente alternativa cuyo producto se venda (hoy: `tree_stand`/logs). No usa
    el puesto de otro agente salvo que tenga 5+ nodos (los árboles sí, la terminal de R2 no).
-7. Rescate: si un agente queda con hambre ≥70, sin comida y sin crystals, el más
+7. Modo entrenamiento (v3.24): si el puesto está lleno, en vez de una recolección suelta,
+   entrena la skill de menor nivel de su `trainingPlan` (en `lib/agents.js`) hasta subirla un
+   nivel; tope de 2 h. Además, un turno forzado por día (campaña). Mientras entrena, el autopilot
+   sigue con comida y ventas, pero no lo devuelve a la profesión: eso lo hace el worker al terminar.
+   Planes: R2 woodcutting → infiltration → agility · BB-8 woodcutting → scavenging → energy ·
+   C-3PO fishing → farming. `gather` es UNA recolección (verificado 3/10); `perform_job` sí se repite.
+8. Rescate: si un agente queda con hambre ≥70, sin comida y sin crystals, el más
    rico (que conserve ≥200) le transfiere 150.
 
 Precios: se leen en vivo de `/api/skill/merchants`. Si el trade exige otro
@@ -182,10 +194,11 @@ Reglas aprendidas:
 
 ## Pendientes
 
+- **Desplegar v3.24** cuando Vercel libere cupo; después crear el job `midnight-training-worker-1min` (`*/1 * * * *` → `/api/training-worker`) y reactivar el job 2 (`midnight-silence-check-10min`, pausado el 3/10 para cortar los commits de log).
 - Vercel gratis permite 100 deploys por día (`api-deployments-free-per-day`); si se pasa, esperar al día siguiente.
 - BB-8 podría usar el iron_pickaxe (Mining 5) pero hay que forjarlo (Smithing 5).
 - Bajar el 11% de corridas con agentes dormidos.
-- Reparar el deploy automático GitHub → Vercel.
+- Deploy automático GitHub → Vercel: la integración está conectada (también para el proyecto dashboard-app), pero los deploys salen cancelados. Revisar el "Ignored Build Step" en Vercel.
 - Sumar los contratos al ciclo (XP gratis, una vez).
 - Actualizar la skill al bundle 2026-09-17 (ver `latestSkillVersion` en `context`).
 - R2 junta encrypted_packet sin comprador (1.459 al 28/9). Hoy no lo frena; vigilar la carga.
@@ -200,6 +213,7 @@ del cinder_axe. Verificar siempre contra `SKILL.md`, `references/` y
 
 ## Historial
 
+- **v3.24 (3/10):** modo entrenamiento de skills secundarias (worker por minuto + estado en Supabase); silence-check deja de commitear logs (cada commit gastaba 2 deploys del cupo de Vercel).
 - **v3.23 (3/10):** compra de herramientas en otro distrito: viaja primero y compra al llegar (el Basalt Axe de C-3PO se reintentó más de una hora sin éxito). La guarda tampoco interrumpe viajes.
 - **3/10:** la API del juego devolvió HTML entre 08:00 y 12:35 UTC (caída de Midnight City); el autopilot se recuperó solo.
 - **v3.22:** BB-8 vende al juntar 30 ore; el respaldo no usa la terminal de R2; sin aviso repetido de skills.
