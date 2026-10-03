@@ -14,6 +14,7 @@ import {
   runConnectedMaintenance,
   tryReadWithoutConnecting,
 } from "../lib/mcity-maintenance.js";
+import { getTrainingRows } from "../lib/training.js";
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
@@ -68,13 +69,24 @@ function agentMetrics(agent, data, gameContent) {
     primaryName,
     primary,
     others,
+    secondary: Object.fromEntries(others.map((o) => [o.name, o.p])),
     tools: tools.map((t) => ({ id: t.id, skill: t.tool.skill, requiredLevel: t.tool.requiredLevel, usable: (skills[t.tool.skill]?.level ?? 1) >= t.tool.requiredLevel })),
     inventory: Object.entries(items).filter(([id, q]) => id !== "crystal" && q > 0).sort((a, b) => b[1] - a[1]),
     contractsOpen: (progression.capabilities?.contracts ?? []).filter((c) => !c.completed && c.failureReason === null).length,
   };
 }
 
-function formatAgentSection(m, notes, externallyControlled) {
+function trainingLine(m, row) {
+  if (!row) return null;
+  if (row.active) {
+    const p = m.secondary?.[row.skill];
+    return `🎓 Entrenando ${esc(row.skill)} L${row.start_level} → L${row.target_level}${p?.pct != null ? ` (${p.pct}%)` : ""} en ${esc(row.source_id)}`;
+  }
+  const when = row.finished_at ? new Date(row.finished_at).toLocaleString("es-AR", { timeZone: TZ, day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : "?";
+  return `🎓 Último entrenamiento: ${esc(row.last_note ?? row.skill)} (terminó ${when})`;
+}
+
+function formatAgentSection(m, notes, externallyControlled, trainingRow) {
   const doing = m.working ? `⚒️ ${esc(m.activity ?? "trabajando")}` : `🏕️ ${m.activity ? esc(m.activity) : "sin trabajo"} (${esc(m.status)})`;
   const hungerIcon = m.hunger >= HUNGER_EAT_THRESHOLD ? "🍽️" : "🥤";
   const loadLine = `⚖️ Velocidad ${m.load.workSpeedPercent ?? "?"}% · carga ${esc(m.load.state ?? "?")}${m.load.excessWeight ? ` (exceso ${num(m.load.excessWeight)}, lo más pesado: ${esc(m.load.heaviestItem)})` : ""}`;
@@ -93,16 +105,19 @@ function formatAgentSection(m, notes, externallyControlled) {
     toolLine,
     `🎒 ${m.inventory.length ? m.inventory.map(([id, q]) => `${num(q)} ${esc(id)}`).join(", ") : "vacío"}`,
     m.contractsOpen ? `📜 ${m.contractsOpen} contrato(s) disponibles` : null,
+    trainingLine(m, trainingRow),
     notes.length ? `🤖 ${notes.map(esc).join(" | ")}` : null,
   ];
   return lines.filter(Boolean).join("\n");
 }
 
-function crewIntro(window, all) {
+function crewIntro(window, all, trainingRows) {
+  const trainingOf = (a) => trainingRows.find((r) => r.agent_id === a.agent.id && r.active);
   const up = all.filter((a) => a.metrics);
   const total = up.reduce((sum, a) => sum + a.metrics.crystals, 0);
-  const working = up.filter((a) => a.metrics.working).map((a) => a.metrics.agent.name);
-  const resting = up.filter((a) => !a.metrics.working).map((a) => a.metrics.agent.name);
+  const working = up.filter((a) => a.metrics.working && !trainingOf(a)).map((a) => a.metrics.agent.name);
+  const training = up.filter((a) => trainingOf(a)).map((a) => `${a.metrics.agent.name} (${trainingOf(a).skill})`);
+  const resting = up.filter((a) => !a.metrics.working && !trainingOf(a)).map((a) => a.metrics.agent.name);
   const asleep = all.filter((a) => !a.metrics).map((a) => a.agent.name);
   const best = up
     .filter((a) => a.metrics.primary?.pct != null)
@@ -118,6 +133,7 @@ function crewIntro(window, all) {
     working.length ? `${listEs(working)} ${working.length > 1 ? "trabajan" : "trabaja"}` : "Nadie está trabajando ahora",
   ];
   let sentence = parts[1];
+  if (training.length) sentence += `; ${listEs(training)} ${training.length > 1 ? "entrenan" : "entrena"} una skill nueva`;
   if (resting.length) sentence += `; ${listEs(resting)} ${resting.length > 1 ? "esperan" : "espera"} su turno`;
   if (asleep.length) sentence += `; ${listEs(asleep)} ${asleep.length > 1 ? "duermen" : "duerme"}`;
   const closing = worries.length
@@ -160,6 +176,7 @@ const WINDOWS = [
 
 export async function buildReport() {
   const gameContent = await fetchGameContent().catch(() => null);
+  const trainingRows = await getTrainingRows().catch(() => []);
   const all = await Promise.all(
     AGENTS.map(async (agent) => {
       try {
@@ -177,10 +194,10 @@ export async function buildReport() {
   const gap = (w) => Math.min(Math.abs(minutes - w.center), 1440 - Math.abs(minutes - w.center));
   const window = WINDOWS.reduce((a, b) => (gap(a) <= gap(b) ? a : b));
 
-  const header = `📜 <b>${window.name}</b>\n<i>${crewIntro(window, all)}</i>`;
+  const header = `📜 <b>${window.name}</b>\n<i>${crewIntro(window, all, trainingRows)}</i>`;
   const sections = all.map((a) =>
     a.metrics
-      ? formatAgentSection(a.metrics, a.notes ?? [], a.externallyControlled)
+      ? formatAgentSection(a.metrics, a.notes ?? [], a.externallyControlled, trainingRows.find((r) => r.agent_id === a.agent.id))
       : `<b>✨ ${esc(a.agent.name)}</b>\n💤 Sin datos${a.error ? `: ${esc(a.error)}` : " (dormido)"}`,
   );
   const footer = `━━━━━━━━━━\n🌟 <a href='https://dashboard-app-green-alpha.vercel.app'>Mirador de la Ciudad</a>\n⏰ ${new Date().toLocaleString("es-AR", { timeZone: TZ })}`;
