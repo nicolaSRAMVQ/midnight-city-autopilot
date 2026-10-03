@@ -1,7 +1,7 @@
 # Cuadrilla Midnight — Proyecto
 
 Fuente única de verdad del proyecto. Si otro documento contradice este, vale este.
-Última actualización: 2026-09-28 (autopilot v3.22).
+Última actualización: 2026-10-03 (autopilot v3.23).
 
 ## Qué es
 
@@ -27,13 +27,15 @@ desde un navegador en este setup.
 3. `git log --oneline -15` para ver los últimos cambios.
 4. Si hay que operar un agente a mano, ver "Operar a mano" más abajo.
 
-## Estado al 2026-09-28 05:15 UTC
+## Estado al 2026-10-03 14:30 UTC
 
 | Agente | Nivel | Crystals | Herramienta | Notas |
 |---|---|---|---|---|
-| R2 | Hacking 3 (54%) | ~2.478 | cinder_decoder (sirve desde Hacking 21) | Lleva ~900 encrypted_packet sin comprador |
-| BB-8 | Mining 2 (48%) | ~52 | obsidian_pickaxe (sirve desde Mining 31) | Su mina tiene un solo nodo y suele estar llena |
-| C-3PO | Woodcutting 8 (67%) | ~2.050 | cinder_axe ✅ activa | El más productivo |
+| R2 | Hacking 7 (97%) | ~25.700 | cinder_decoder (sirve desde Hacking 21) | Lleva ~7.000 encrypted_packet y ~460 etched_* sin comprador |
+| BB-8 | Mining 8 (68%) | ~10.350 | obsidian_pickaxe (sirve desde Mining 31) | iron_pickaxe ya sería usable (Mining 5), pero no se vende |
+| C-3PO | Woodcutting 22 (96%) | ~8.040 | basalt_axe ✅ activa (comprada el 3/10) | Lleva ~7.800 de cada madera nueva (copperleaf_sap, ironwood_*, etc.) sin comprador; no lo frena |
+
+Entre el 28/9 y el 3/10 la cuadrilla pasó de 7.341 a ~44.100 crystals.
 
 - Los tres tienen el cuarto mejorado (lo hizo el dueño desde la app el 28/9:
   R2 360, C-3PO 246 y BB-8 340 crystals). La API no expone el cuarto ni sus efectos.
@@ -81,6 +83,8 @@ Por agente, cada 5 minutos:
    - BB-8 junta 30+ ore (`sellAtQuantity` en `lib/agents.js`) → vender aunque no esté lento;
    - menos de 2 smoothies → reponer hasta 6;
    - le falta la mejor herramienta que su nivel permite usar y le sobra plata → comprarla.
+     Si el merchant está en otro distrito, frena el trabajo, viaja (`travel_to_district`,
+     instantáneo) y compra ahí: el trade con ruteo automático desde lejos se abandona a mitad de camino.
 6. Termina siempre trabajando (`perform_job`). Si el puesto está lleno, recolecta
    en una fuente alternativa cuyo producto se venda (hoy: `tree_stand`/logs). No usa
    el puesto de otro agente salvo que tenga 5+ nodos (los árboles sí, la terminal de R2 no).
@@ -178,7 +182,8 @@ Reglas aprendidas:
 
 ## Pendientes
 
-- **Desplegar v3.22** (está en `main`, producción sigue en v3.21). El 28/9 Vercel rechazó el deploy por el límite del plan gratuito: 100 deploys por día (`api-deployments-free-per-day`). Reintentar desde el 29/9 con el procedimiento de "Desplegar".
+- Vercel gratis permite 100 deploys por día (`api-deployments-free-per-day`); si se pasa, esperar al día siguiente.
+- BB-8 podría usar el iron_pickaxe (Mining 5) pero hay que forjarlo (Smithing 5).
 - Bajar el 11% de corridas con agentes dormidos.
 - Reparar el deploy automático GitHub → Vercel.
 - Sumar los contratos al ciclo (XP gratis, una vez).
@@ -195,6 +200,8 @@ del cinder_axe. Verificar siempre contra `SKILL.md`, `references/` y
 
 ## Historial
 
+- **v3.23 (3/10):** compra de herramientas en otro distrito: viaja primero y compra al llegar (el Basalt Axe de C-3PO se reintentó más de una hora sin éxito). La guarda tampoco interrumpe viajes.
+- **3/10:** la API del juego devolvió HTML entre 08:00 y 12:35 UTC (caída de Midnight City); el autopilot se recuperó solo.
 - **v3.22:** BB-8 vende al juntar 30 ore; el respaldo no usa la terminal de R2; sin aviso repetido de skills.
 - **v3.21:** reporte con todas las métricas y % de XP; el autopilot ya no se saltea a sí mismo.
 - **v3.20:** con el puesto lleno, trabaja algo vendible; vende cualquier pila con comprador.
