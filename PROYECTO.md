@@ -220,6 +220,8 @@ del cinder_axe. Verificar siempre contra `SKILL.md`, `references/` y
 
 ## Historial
 
+- **v3.27 (4/10):** el worker renueva el control de los agentes que no entrenan (C-3PO estaba dormido ~30%).
+- **v3.26 (4/10):** experimento de una semana con 4 fases de entrenamiento; snapshot con XP secundario; sección en el reporte.
 - **v3.25 (3/10, en producción desde 15:37 UTC):** el reporte de Telegram muestra el entrenamiento por agente. Deploys por git desactivados.
 - **v3.24 (3/10, desplegada 15:22 UTC):** modo entrenamiento de skills secundarias (worker por minuto + estado en Supabase); silence-check deja de commitear logs (cada commit gastaba 2 deploys del cupo de Vercel).
 - **v3.23 (3/10):** compra de herramientas en otro distrito: viaja primero y compra al llegar (el Basalt Axe de C-3PO se reintentó más de una hora sin éxito). La guarda tampoco interrumpe viajes.
