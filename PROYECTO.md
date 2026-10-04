@@ -1,7 +1,7 @@
 # Cuadrilla Midnight — Proyecto
 
 Fuente única de verdad del proyecto. Si otro documento contradice este, vale este.
-Última actualización: 2026-10-03 (autopilot v3.24).
+Última actualización: 2026-10-04 (autopilot v3.27).
 
 ## Qué es
 
@@ -116,7 +116,7 @@ commit (así no se suben `.env*` ni archivos sueltos):
 ```bash
 git push origin main
 D=$(mktemp -d) && git archive HEAD | tar -x -C "$D" && mkdir -p "$D/.vercel" \
-  && cp .vercel/project.json "$D/.vercel/" && (cd "$D" && vercel deploy --prod --yes)
+  && cp .vercel/project.json "$D/.vercel/" && (cd "$D" && vercel deploy --prod --yes --scope nicolasramvqs-projects)
 curl -s https://r2-telegram-reporter.vercel.app/api/version   # debe mostrar la versión nueva
 ```
 
@@ -198,6 +198,26 @@ Reglas aprendidas:
 - El worker encadena 10–14 recolecciones por minuto (R2, BB-8). Un nivel secundario (144 recolecciones) ≈ 15–20 min.
 - R2 llegó a Infiltration 2 en ~15 min y volvió solo a la terminal (ciclo completo verificado).
 - En ~6 min: R2 infiltration 58% → L2, BB-8 scavenging 53%, C-3PO fishing 22% (la pesca rinde menos por minuto).
+
+## Experimento de una semana (3/10 → 10/10): entrenamiento contra ingreso
+
+Pregunta: cuánto entrenamiento de skills secundarias conviene, contra cuánto ingreso cuesta.
+Las fases viven en `midnight.experiment_phase` (se editan en Supabase, sin deploy):
+
+| Fase | UTC | Regla |
+|---|---|---|
+| A | 3/10 15:22 → 5/10 15:00 | Libre: con el puesto lleno entrena y encadena |
+| B | 5/10 15:00 → 7/10 03:00 | Pausa de 3 h entre entrenamientos |
+| C | 7/10 03:00 → 8/10 15:00 | Secundarias con tope en nivel 5 |
+| D | 8/10 15:00 → 10/10 03:00 | Solo turno diario |
+
+- Medición: `public.midnight_experiment_summary()` calcula por fase y agente crystals netos/h, XP/h principal,
+  XP/h secundario y % dormido, a partir de los snapshots de silence-check (cada 10 min). Sale en cada reporte.
+- Línea de base sin entrenamiento: los logs de GitHub `logs/2026-09-28.jsonl` a `logs/2026-10-03.jsonl`
+  (crystals y XP principal cada 10 min). Calcularla para el informe final del 10/10.
+- Primeras 10 h de la fase A: R2 ~21 💎/h y 107 XP/h principal; BB-8 ~25 💎/h y 39 XP/h; C-3PO ~15 💎/h y 11.862 XP/h.
+  Antes del entrenamiento (28/9→3/10) R2 hacía ~180 💎/h.
+- Al terminar: elegir la fase ganadora y dejarla fija (o mezclar).
 
 ## Pendientes
 
