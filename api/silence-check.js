@@ -45,6 +45,7 @@ async function snapshot(agent) {
     hunger: data.needs?.hunger?.value ?? null,
     crystal: items.crystal ?? 0,
     xp: skillId ? (data.progression?.skills?.[skillId]?.xp ?? null) : null,
+    xpSecondary: Object.entries(data.progression?.skills ?? {}).filter(([name]) => name !== skillId).reduce((sum, [, sk]) => sum + (sk.xp ?? 0), 0),
   };
 }
 

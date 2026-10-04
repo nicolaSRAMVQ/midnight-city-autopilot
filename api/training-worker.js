@@ -21,6 +21,7 @@ import {
   TRAINING_MAX_MS,
   chooseTraining,
   finishTraining,
+  getTrainingPolicy,
   getTrainingRows,
   startTraining,
 } from "../lib/training.js";
@@ -37,10 +38,10 @@ async function trainAgent(agent, row, shared) {
   if (!active) {
     const lastShift = row?.finished_at ? Date.parse(row.finished_at) : 0;
     if (Date.now() - lastShift < DAILY_SHIFT_EVERY_MS || !initial) return { agent: agent.name, idle: true };
-    const [gameContent, merchants] = await shared;
-    const choice = chooseTraining(agent, initial.progression, gameContent, merchants);
+    const [gameContent, merchants, policy] = await shared;
+    const choice = chooseTraining(agent, initial.progression, gameContent, merchants, policy.maxLevel);
     if (!choice) return { agent: agent.name, idle: true, note: "sin skill de entrenamiento disponible" };
-    await startTraining(agent, choice, "turno diario de la campaña");
+    await startTraining(agent, choice, `turno diario · fase ${policy.id ?? "libre"}`);
     active = { ...choice, skill: choice.skill, source_id: choice.sourceId, target_level: choice.targetLevel, started_at: new Date().toISOString() };
   }
 
@@ -103,7 +104,7 @@ export default async function handler(req, res) {
   } catch (error) {
     return res.status(200).json({ worker: true, error: error.message });
   }
-  const shared = Promise.all([fetchGameContent().catch(() => null), fetchMerchants()]);
+  const shared = Promise.all([fetchGameContent().catch(() => null), fetchMerchants(), getTrainingPolicy()]);
   const results = await Promise.all(
     AGENTS.map((agent) =>
       trainAgent(agent, rows.find((r) => r.agent_id === agent.id), shared).catch((error) => ({ agent: agent.name, error: error.message })),

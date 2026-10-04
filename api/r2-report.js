@@ -15,6 +15,7 @@ import {
   tryReadWithoutConnecting,
 } from "../lib/mcity-maintenance.js";
 import { getTrainingRows } from "../lib/training.js";
+import { rpc } from "../lib/supabase.js";
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
@@ -111,6 +112,21 @@ function formatAgentSection(m, notes, externallyControlled, trainingRow) {
   return lines.filter(Boolean).join("\n");
 }
 
+// One-week training experiment (midnight.experiment_phase): current phase and,
+// per phase so far, each agent net crystals/h, main and secondary XP/h, % asleep.
+async function experimentSection() {
+  const [phaseRows, summary] = await Promise.all([rpc("midnight_current_phase").catch(() => []), rpc("midnight_experiment_summary").catch(() => [])]);
+  const phase = phaseRows?.[0];
+  if (!phase && !summary?.length) return null;
+  const until = phase ? new Date(phase.ends_at).toLocaleString("es-AR", { timeZone: TZ, day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }) : null;
+  const lines = [phase ? `🧪 <b>Experimento · fase ${phase.id}</b>: ${esc(phase.label)} (hasta ${until})` : "🧪 <b>Experimento terminado</b>"];
+  for (const id of [...new Set((summary ?? []).map((r) => r.phase))]) {
+    const rows = summary.filter((r) => r.phase === id);
+    lines.push(`<b>${id}</b> (${rows[0].hours} h): ` + rows.map((r) => `${esc(r.agent)} ${num(r.crystals_per_h)}💎/h · ${num(r.main_xp_per_h)} XP/h ppal · ${num(r.secondary_xp_per_h)} XP/h sec · 💤${r.dormant_pct}%`).join(" | "));
+  }
+  return lines.join("\n");
+}
+
 function crewIntro(window, all, trainingRows) {
   const trainingOf = (a) => trainingRows.find((r) => r.agent_id === a.agent.id && r.active);
   const up = all.filter((a) => a.metrics);
@@ -202,6 +218,8 @@ export async function buildReport() {
   );
   const footer = `━━━━━━━━━━\n🌟 <a href='https://dashboard-app-green-alpha.vercel.app'>Mirador de la Ciudad</a>\n⏰ ${new Date().toLocaleString("es-AR", { timeZone: TZ })}`;
 
+  const experiment = await experimentSection().catch(() => null);
+  if (experiment) sections.push(experiment);
   const combined = `${header}\n\n${sections.join("\n\n")}\n\n${footer}`;
   const messages = combined.length <= TELEGRAM_LIMIT
     ? [combined]
