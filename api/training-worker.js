@@ -26,7 +26,7 @@ import {
   startTraining,
 } from "../lib/training.js";
 
-const LOOP_BUDGET_MS = 45_000;
+const LOOP_BUDGET_MS = 50_000;
 const PULL_WAIT_MS = 20_000;
 
 async function trainAgent(agent, row, shared) {
@@ -93,8 +93,23 @@ async function trainAgent(agent, row, shared) {
       pulls += 1;
       continue;
     }
-    lastReason = r.reason;
-    break; // still walking to the node (timeout) or rejected: next minute continues
+    if (r.failed) {
+      lastReason = r.reason;
+      break; // rejected: the next minute (or the autopilot) sorts it out
+    }
+    // Timeout: each node gives ~5 pulls and then regenerates, so the agent is walking
+    // to a fresh node. Breaking here wasted the rest of the minute (3/10: BB-8 averaged
+    // ~1 pull in those minutes vs ~11 otherwise); let the pull land and keep going.
+    let walking = (await read("context")).agent.activeAction;
+    while (walking?.kind === "gather" && Date.now() + 3_000 < deadline) {
+      await new Promise((resolve) => setTimeout(resolve, 3_000));
+      walking = (await read("context")).agent.activeAction;
+    }
+    if (walking?.kind === "gather") {
+      lastReason = "timeout";
+      break;
+    }
+    pulls += 1;
   }
   return { agent: agent.name, skill: active.skill, level, target: active.target_level, pulls, stop: lastReason };
 }
