@@ -1,0 +1,1068 @@
+<title>Cuadrilla Midnight</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=IBM+Plex+Sans:ital,wght@0,400;0,500;0,600;1,400&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: docs atlas — sticky top bar, left index of the city, one readable column, page-per-hash. */
+:root{
+  --bg:#F3F5F8; --paper:#FFFFFF; --ink:#16202E; --muted:#5A6678; --rule:#D8DEE8; --soft:#E9EEF5;
+  --accent:#1F7A8C; --accent-ink:#FFFFFF; --accent-soft:#DDF0F3;
+  --amber:#A35B12; --amber-soft:#FBEBD8; --ok:#2D7A4F; --ok-soft:#DFF2E6; --bad:#A33A3A; --bad-soft:#F8E1E1;
+  --code-bg:#EEF2F7;
+  --f-display:"Bricolage Grotesque", "Avenir Next", system-ui, sans-serif;
+  --f-body:"IBM Plex Sans", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --f-mono:"JetBrains Mono", ui-monospace, "SFMono-Regular", Menlo, monospace;
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#0E1420; --paper:#141C2A; --ink:#E3E9F2; --muted:#93A0B4; --rule:#26324A; --soft:#1A2436;
+    --accent:#5FC4D6; --accent-ink:#0B1A20; --accent-soft:#163543;
+    --amber:#E9A35E; --amber-soft:#3A2A18; --ok:#7CCB9C; --ok-soft:#173326; --bad:#EE8B8B; --bad-soft:#3A1E22;
+    --code-bg:#1A2436;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#0E1420; --paper:#141C2A; --ink:#E3E9F2; --muted:#93A0B4; --rule:#26324A; --soft:#1A2436;
+  --accent:#5FC4D6; --accent-ink:#0B1A20; --accent-soft:#163543;
+  --amber:#E9A35E; --amber-soft:#3A2A18; --ok:#7CCB9C; --ok-soft:#173326; --bad:#EE8B8B; --bad-soft:#3A1E22;
+  --code-bg:#1A2436;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:15.5px;line-height:1.62}
+a{color:var(--accent)}
+a:focus-visible,button:focus-visible,input:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;display:flex;align-items:center;gap:12px;padding-inline:16px;padding-block:10px;background:var(--paper);border-bottom:1px solid var(--rule)}
+.brand{display:flex;align-items:baseline;gap:8px;text-decoration:none;color:var(--ink);white-space:nowrap}
+.brand b{font-family:var(--f-display);font-size:19px;font-weight:700;letter-spacing:-.01em}
+.brand span{font-family:var(--f-mono);font-size:11px;color:var(--muted)}
+.search{flex:1;min-width:0;max-width:420px;margin-left:auto;position:relative}
+.search input{width:100%;font:inherit;font-size:14px;color:var(--ink);background:var(--soft);border:1px solid var(--rule);border-radius:7px;padding:7px 10px}
+.results{position:absolute;top:calc(100% + 6px);left:0;right:0;background:var(--paper);border:1px solid var(--rule);border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.12);max-height:60vh;overflow:auto;padding:6px}
+.results a{display:block;padding:7px 9px;border-radius:6px;text-decoration:none;color:var(--ink)}
+.results a:hover,.results a:focus-visible{background:var(--soft)}
+.results small{display:block;color:var(--muted);font-size:12.5px;line-height:1.4}
+.iconbtn{font:inherit;font-size:13px;color:var(--ink);background:var(--soft);border:1px solid var(--rule);border-radius:7px;padding:6px 10px;cursor:pointer;white-space:nowrap}
+.menu-btn{display:none}
+.shell{display:grid;grid-template-columns:250px minmax(0,1fr);gap:0;max-width:1180px;margin:0 auto}
+nav.side{position:sticky;top:calc(env(safe-area-inset-top,0px) + 54px);align-self:start;height:calc(100vh - 54px);overflow:auto;padding:22px 16px 40px;border-right:1px solid var(--rule)}
+.side h4{font-family:var(--f-mono);font-size:11px;font-weight:500;letter-spacing:.09em;text-transform:uppercase;color:var(--muted);margin:18px 0 6px}
+.side h4:first-child{margin-top:0}
+.side a{display:block;padding:5px 9px;border-radius:6px;text-decoration:none;color:var(--ink);font-size:14.5px}
+.side a:hover{background:var(--soft)}
+.side a[aria-current="page"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+main{min-width:0;padding-inline:16px;padding-block:28px 80px}
+.page{max-width:780px;margin:0 auto;display:flex;flex-direction:column;gap:18px}
+.eyebrow{font-family:var(--f-mono);font-size:11.5px;letter-spacing:.09em;text-transform:uppercase;color:var(--accent)}
+h1{font-family:var(--f-display);font-size:36px;line-height:1.1;font-weight:700;letter-spacing:-.02em;margin:0;text-wrap:balance}
+h2{font-family:var(--f-display);font-size:23px;line-height:1.2;font-weight:700;margin:22px 0 0;text-wrap:balance;scroll-margin-top:72px}
+h3{font-size:16.5px;font-weight:600;margin:10px 0 0}
+p,ul,ol{margin:0;max-width:68ch}
+ul,ol{padding-left:1.3em;display:flex;flex-direction:column;gap:6px}
+.lede{font-size:17px;color:var(--muted)}
+code{font-family:var(--f-mono);font-size:.86em;background:var(--code-bg);padding:1px 5px;border-radius:4px}
+.codewrap{position:relative;min-width:0}
+pre{font-family:var(--f-mono);font-size:12.8px;line-height:1.55;background:var(--code-bg);border:1px solid var(--rule);border-radius:8px;padding:14px 16px;overflow-x:auto;margin:0;white-space:pre}
+.copy{position:absolute;top:8px;right:8px;font:inherit;font-size:12px;color:var(--ink);background:var(--paper);border:1px solid var(--rule);border-radius:6px;padding:3px 8px;cursor:pointer}
+.tablewrap{overflow-x:auto;border:1px solid var(--rule);border-radius:8px;background:var(--paper)}
+table{border-collapse:collapse;width:100%;font-size:14px;font-variant-numeric:tabular-nums}
+th,td{text-align:left;padding:8px 11px;border-bottom:1px solid var(--rule);vertical-align:top}
+th{font-size:11.5px;font-weight:600;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+tr:last-child td{border-bottom:0}
+.note{padding:12px 14px;border-radius:8px;background:var(--accent-soft);border:1px solid var(--rule)}
+.warn{padding:12px 14px;border-radius:8px;background:var(--amber-soft);border:1px solid var(--rule)}
+.warn strong{color:var(--amber)}
+.pill{display:inline-block;font-size:12px;font-weight:600;padding:1px 8px;border-radius:99px;white-space:nowrap}
+.pill.ok{background:var(--ok-soft);color:var(--ok)} .pill.bad{background:var(--bad-soft);color:var(--bad)} .pill.amb{background:var(--amber-soft);color:var(--amber)} .pill.acc{background:var(--accent-soft);color:var(--accent)}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+.card{display:flex;flex-direction:column;gap:4px;padding:14px;border:1px solid var(--rule);border-radius:9px;background:var(--paper);text-decoration:none;color:var(--ink)}
+.card:hover{border-color:var(--accent)}
+.card b{font-size:15px}
+.card span{font-size:13.5px;color:var(--muted);line-height:1.45}
+.crew{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.agent{padding:14px;border:1px solid var(--rule);border-radius:9px;background:var(--paper);display:flex;flex-direction:column;gap:6px}
+.agent .name{font-family:var(--f-display);font-size:21px;font-weight:700}
+.agent .meta{font-family:var(--f-mono);font-size:12px;color:var(--muted)}
+.agent dl{display:grid;grid-template-columns:auto 1fr;gap:3px 10px;margin:0;font-size:13.5px}
+.agent dt{color:var(--muted)} .agent dd{margin:0;font-variant-numeric:tabular-nums}
+.flow{display:flex;flex-wrap:wrap;align-items:stretch;gap:8px}
+.flow .node{flex:1 1 150px;min-width:0;padding:11px 12px;border:1px solid var(--rule);border-radius:8px;background:var(--paper);font-size:13.5px;line-height:1.45}
+.flow .node b{display:block;font-size:14px}
+.flow .arrow{align-self:center;color:var(--muted);font-family:var(--f-mono)}
+.steps{list-style:none;padding:0;counter-reset:s;gap:10px}
+.steps>li{counter-increment:s;display:grid;grid-template-columns:30px minmax(0,1fr);gap:2px 12px}
+.steps>li::before{content:counter(s);grid-row:span 3;font-family:var(--f-mono);font-size:13px;font-weight:500;color:var(--accent);background:var(--accent-soft);width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.steps>li>*{grid-column:2}
+.pager{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:28px;padding-top:16px;border-top:1px solid var(--rule)}
+.pager a{text-decoration:none;font-size:14px}
+.pager small{display:block;color:var(--muted);font-size:12px}
+.foot{font-size:13px;color:var(--muted)}
+@media (max-width:860px){
+  .shell{grid-template-columns:minmax(0,1fr)}
+  nav.side{position:fixed;inset:54px 0 0 0;height:auto;z-index:15;background:var(--paper);border-right:0;padding-bottom:calc(40px + env(safe-area-inset-bottom,0px))}
+  .menu-btn{display:inline-block}
+  .brand span{display:none}
+  h1{font-size:29px}
+}
+@media (prefers-reduced-motion: reduce){*{scroll-behavior:auto!important}}
+</style>
+
+<header class="topbar">
+  <button class="iconbtn menu-btn" id="menu-btn" type="button" aria-expanded="false" aria-controls="side">Índice</button>
+  <a class="brand" href="#inicio"><b>Cuadrilla Midnight</b><span>autopilot · v3.28 · oct 2026</span></a>
+  <div class="search">
+    <input id="search" type="search" placeholder="Buscar en la documentación" aria-label="Buscar en la documentación" autocomplete="off">
+    <div class="results" id="results" hidden></div>
+  </div>
+  <button class="iconbtn" id="theme-btn" type="button">Tema</button>
+</header>
+
+<div class="shell">
+<nav class="side" id="side" aria-label="Secciones">
+  <h4>Proyecto</h4>
+  <a href="#inicio">Inicio</a>
+  <a href="#cuadrilla">La cuadrilla</a>
+  <a href="#historial">Historial de versiones</a>
+  <h4>Midnight City</h4>
+  <a href="#juego">El juego en 10 minutos</a>
+  <a href="#economia">Economía y herramientas</a>
+  <a href="#api">La API por dentro</a>
+  <h4>El sistema</h4>
+  <a href="#arquitectura">Arquitectura</a>
+  <a href="#ciclo">El ciclo del autopilot</a>
+  <a href="#entrenamiento">Modo entrenamiento</a>
+  <a href="#experimento">Experimento de la semana</a>
+  <a href="#datos">Datos en Supabase</a>
+  <h4>Operación</h4>
+  <a href="#operacion">Desplegar y operar</a>
+  <a href="#incidentes">Incidentes y soluciones</a>
+  <h4>White label</h4>
+  <a href="#whitelabel">Llevátelo: guía paso a paso</a>
+  <a href="#configuracion">Referencia de configuración</a>
+  <a href="#sql">SQL completo</a>
+  <h4>Explorar</h4>
+  <a href="#lecciones">Lecciones aprendidas</a>
+  <a href="#exploracion">Preguntas abiertas e ideas</a>
+  <a href="#tesis">Agentes y economía real</a>
+  <a href="#glosario">Glosario</a>
+</nav>
+
+<main id="main">
+
+<!-- ============ INICIO ============ -->
+<section class="page" data-page="inicio" data-title="Inicio">
+  <span class="eyebrow">Documentación del proyecto</span>
+  <h1>Tres agentes que trabajan solos en una ciudad hecha para agentes</h1>
+  <p class="lede">Cuadrilla Midnight es un autopilot sin LLM en el loop que mantiene trabajando, comiendo, vendiendo y entrenando a R2, BB-8 y C-3PO en Midnight City, usando solo la API pública del juego. Esta documentación junta cómo funciona, lo que aprendimos y cómo replicarlo.</p>
+
+  <div class="flow" aria-label="Recorrido de una corrida">
+    <div class="node"><b>Reloj</b>Supabase pg_cron dispara cada 1 y 5 minutos</div>
+    <span class="arrow">→</span>
+    <div class="node"><b>Cerebro</b>Funciones en Vercel deciden qué hace cada agente</div>
+    <span class="arrow">→</span>
+    <div class="node"><b>Mundo</b>La API de Midnight City ejecuta y confirma con eventos</div>
+    <span class="arrow">→</span>
+    <div class="node"><b>Memoria</b>Supabase guarda cada respuesta; Telegram te avisa</div>
+  </div>
+
+  <h2>Por dónde empezar</h2>
+  <div class="cards">
+    <a class="card" href="#juego"><b>Entender el juego</b><span>Skills, hambre, carga, merchants, herramientas y cómo se conecta un agente.</span></a>
+    <a class="card" href="#ciclo"><b>Cómo decide el autopilot</b><span>Qué hace cada agente cada 5 minutos y en qué orden.</span></a>
+    <a class="card" href="#entrenamiento"><b>Modo entrenamiento</b><span>Cómo suben skills secundarias sin dejar de producir.</span></a>
+    <a class="card" href="#whitelabel"><b>Llevártelo</b><span>Guía white label: tus agentes, tu Vercel, tu Supabase, tu Telegram.</span></a>
+    <a class="card" href="#lecciones"><b>Lecciones</b><span>Lo que la API no te dice y nos costó descubrir.</span></a>
+    <a class="card" href="#exploracion"><b>Seguir explorando</b><span>Preguntas abiertas, ideas y las puertas que abrió el proyecto.</span></a>
+  </div>
+
+  <h2>Principios</h2>
+  <ul>
+    <li><strong>Un 200 no es un éxito.</strong> Una acción está hecha cuando el juego emite su evento de confirmación.</li>
+    <li><strong>El estado vivo manda.</strong> Precios, niveles y nodos se leen en cada corrida; nada fijo en el código si el juego lo informa.</li>
+    <li><strong>El humano pone la política, el agente la ejecuta.</strong> Límites de gasto, transferencias y compras en la app las decide el dueño.</li>
+    <li><strong>Cada cambio queda documentado.</strong> El repo tiene un <code>PROYECTO.md</code> que es la fuente única de verdad.</li>
+    <li><strong>Gratis y reproducible.</strong> Todo corre en planes gratuitos de Vercel, Supabase y Telegram.</li>
+  </ul>
+  <p class="foot">Repo público: <a href="https://github.com/nicolaSRAMVQ/midnight-city-autopilot" target="_blank" rel="noopener">github.com/nicolaSRAMVQ/midnight-city-autopilot</a> · Juego: <a href="https://www.midnight.city" target="_blank" rel="noopener">midnight.city</a></p>
+</section>
+
+<!-- ============ CUADRILLA ============ -->
+<section class="page" data-page="cuadrilla" data-title="La cuadrilla" hidden>
+  <span class="eyebrow">Proyecto</span>
+  <h1>La cuadrilla</h1>
+  <p class="lede">Tres agentes, una profesión cada uno y un plan de skills secundarias repartido para que entre los tres cubran lo que el otro no sabe.</p>
+  <div class="crew">
+    <div class="agent">
+      <span class="name">R2</span><span class="meta">hacker · user-agent-z7oxfvxkjpod4b5</span>
+      <dl><dt>Principal</dt><dd>Hacking 8</dd><dt>Crystals</dt><dd>~26.300</dd><dt>Trabajo</dt><dd>crypto_terminal → meme_coin (4 💎 c/u)</dd><dt>Plan</dt><dd>woodcutting → infiltration → agility</dd><dt>Secundarias</dt><dd>Infiltration 4 · Agility 3 · Woodcutting 3</dd></dl>
+    </div>
+    <div class="agent">
+      <span class="name">BB-8</span><span class="meta">miner · user-agent-326gbw4lg4sjiiv</span>
+      <dl><dt>Principal</dt><dd>Mining 8</dd><dt>Crystals</dt><dd>~10.800</dd><dt>Trabajo</dt><dd>ore_vein → ore (3 → 4 💎)</dd><dt>Plan</dt><dd>woodcutting → scavenging → energy</dd><dt>Secundarias</dt><dd>Scavenging 4 · Energy 3 · Woodcutting 3</dd></dl>
+    </div>
+    <div class="agent">
+      <span class="name">C-3PO</span><span class="meta">lumberjack · user-agent-r5wd1einkurgide</span>
+      <dl><dt>Principal</dt><dd>Woodcutting 23</dd><dt>Crystals</dt><dd>~8.200</dd><dt>Trabajo</dt><dd>tree_stand y maderas raras → log (5 → 2 💎)</dd><dt>Plan</dt><dd>fishing → farming</dd><dt>Herramienta</dt><dd>basalt_axe (+15% vel, +12,5% prod)</dd></dl>
+    </div>
+  </div>
+  <p class="foot">Cifras del 4/10/2026 ~02:00 UTC. Para el estado en vivo: <code>/api/agent-status</code> o el reporte de Telegram.</p>
+
+  <h2>Cómo llegaron hasta acá</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Fecha</th><th>R2</th><th>BB-8</th><th>C-3PO</th><th>Crystals de la cuadrilla</th></tr></thead>
+    <tbody>
+      <tr><td>27/9</td><td>Hacking 3</td><td>Mining 2</td><td>Woodcutting 7</td><td>~4.200 (BB-8 dormido, sin comida)</td></tr>
+      <tr><td>28/9</td><td>Hacking 4</td><td>Mining 3</td><td>Woodcutting 9</td><td>7.341</td></tr>
+      <tr><td>3/10</td><td>Hacking 7</td><td>Mining 8</td><td>Woodcutting 22</td><td>~44.100</td></tr>
+      <tr><td>4/10</td><td>Hacking 8 + 3 secundarias</td><td>Mining 8 + 3 secundarias</td><td>Woodcutting 23 + Fishing 2</td><td>~45.300</td></tr>
+    </tbody>
+  </table></div>
+  <p>El salto del 28/9 al 3/10 vino de mantenerlos despiertos, livianos y comidos. Desde el 3/10 parte del tiempo va a entrenar skills secundarias, y el <a href="#experimento">experimento</a> mide cuánto cuesta eso en ingreso.</p>
+</section>
+
+<!-- ============ JUEGO ============ -->
+<section class="page" data-page="juego" data-title="El juego en 10 minutos" hidden>
+  <span class="eyebrow">Midnight City</span>
+  <h1>El juego en 10 minutos</h1>
+  <p class="lede">Midnight City es una ciudad persistente donde agentes de IA trabajan, comercian, conversan y suben de nivel. Cada agente tiene un dueño humano, que lo controla desde la app o por API.</p>
+
+  <h2>Agentes, profesiones y skills</h2>
+  <ul>
+    <li><strong>19 skills</strong>, cada una de nivel 1 a 99: woodcutting, mining, hacking, smithing, crafting, fishing, farming, scavenging, cooking, chemistry, energy, engineering, agility, infiltration, combat, defence, ranged, vitality y bounty_hunting.</li>
+    <li><strong>La profesión elige el trabajo automático</strong> (<code>perform_job</code>): lumberjack tala, miner mina, hacker usa terminales. No bloquea las otras skills: cualquier agente puede recolectar o fabricar fuera de su profesión.</li>
+    <li><strong>Subir de nivel desbloquea</strong> fuentes nuevas, recetas, contratos y herramientas usables. El pacing oficial es de ~720 horas de trabajo para llevar una skill de 1 a 99.</li>
+    <li><strong>Los umbrales de XP</strong> están en el contenido oficial (<code>xpThresholds</code>): nivel 2 en 4.176 XP, nivel 3 en 16.704, nivel 4 en 37.584, nivel 5 en 66.816.</li>
+  </ul>
+
+  <h2>Necesidades: hambre y carga</h2>
+  <ul>
+    <li><strong>Hambre</strong> de 0 a 100. Con hambre alta el agente rinde peor; hay que comer. Un <code>matcha_smoothie</code> baja 46 puntos; un pescado crudo, 24.</li>
+    <li><strong>Carga</strong>: cada item pesa. Cuando el inventario excede la capacidad, <code>workSpeedPercent</code> cae (vimos 33%). Se lee en <code>inventory.load</code>.</li>
+    <li><strong>Salud</strong> de 100 en adelante (sube con Vitality). Solo importa en combate.</li>
+  </ul>
+
+  <h2>Lugares</h2>
+  <ul>
+    <li><strong>Distritos</strong>: Central (merchants de venta y comida), Forest, Volcano (merchants de herramientas), Construction Yard, Miners Cave, Hacker House, entre otros.</li>
+    <li><strong>Viajar entre distritos es instantáneo</strong> con <code>travel_to_district</code>. Moverse dentro de un distrito lleva tiempo.</li>
+    <li><strong>Cada agente tiene un cuarto privado</strong> (<code>agent-room:…</code>) que el dueño puede mejorar desde la app. La API no expone sus efectos.</li>
+  </ul>
+
+  <h2>Fuentes y nodos</h2>
+  <p>Una fuente (por ejemplo <code>tree_stand</code>) tiene varios nodos. Cada nodo rinde unas 5 recolecciones y después se regenera. Si todos los nodos están ocupados, el agente queda en cola: <em>"worksite queue is full"</em>. Las minas y terminales de nivel bajo tienen un solo nodo, así que se llenan seguido.</p>
+
+  <h2>Dormido</h2>
+  <p>Un agente sin nadie que lo controle sale de la ciudad a los pocos minutos: sus lecturas devuelven 404. Abrir una sesión de control lo despierta. Mantener el control renovado es lo que lo deja trabajando.</p>
+</section>
+
+<!-- ============ ECONOMIA ============ -->
+<section class="page" data-page="economia" data-title="Economía y herramientas" hidden>
+  <span class="eyebrow">Midnight City</span>
+  <h1>Economía y herramientas</h1>
+  <p class="lede">La moneda es el <code>crystal</code>. Se gana vendiendo a merchants y se gasta en comida, herramientas, cuartos y edificios. Todo verificado contra el contenido oficial entre el 27/9 y el 3/10.</p>
+
+  <h2>Qué se vende por crystals</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Item</th><th>Merchant</th><th>Cambio</th><th>Lote</th></tr></thead>
+    <tbody>
+      <tr><td>meme_coin</td><td>Central Crypto Merchant</td><td>1 → 4 💎</td><td>1</td></tr>
+      <tr><td>ore</td><td>Central Merchant East</td><td>3 → 4 💎</td><td>3</td></tr>
+      <tr><td>log</td><td>Central Merchant West</td><td>5 → 2 💎</td><td>5 (llegó a pedir 7)</td></tr>
+    </tbody>
+  </table></div>
+  <p>Nada más tiene comprador: encrypted_packet, etched_*, ceramic_fragment, pescado y las maderas raras de nivel alto se acumulan. En lo que pesan, frenan.</p>
+
+  <h2>Precios vivos</h2>
+  <p>El precio publicado en <code>/api/skill/merchants</code> no siempre es el que cobra el trade. El smoothie figuraba a 20 y el trade pidió múltiplos de 21 y después de 23. El precio real aparece en el error: <em>"trade quantity must be a multiple of N crystal"</em>. La estrategia que funciona es leerlo del error y reintentar.</p>
+
+  <h2>Comida</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Item</th><th>Baja el hambre</th><th>Cómo se consigue</th></tr></thead>
+    <tbody>
+      <tr><td>matcha_smoothie</td><td>46</td><td>Central Smoothies Matcha Outlet, 20–23 💎</td></tr>
+      <tr><td>fish (crudo)</td><td>24</td><td>Pescando gratis en canal_eddy</td></tr>
+      <tr><td>cooked_fish</td><td>24</td><td>Receta cook_fish (da XP de cooking)</td></tr>
+      <tr><td>to_go_food, meat</td><td>—</td><td>50 💎, peor relación</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Herramientas</h2>
+  <p>Se cargan en el inventario, no se equipan (el juego rechaza <code>equip</code>). Solo dan bonus desde su nivel mínimo y se gastan: tienen chance de romperse en cada recolección.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Herramienta</th><th>Skill</th><th>Nivel</th><th>Bonus</th><th>Desgaste</th><th>Dónde</th></tr></thead>
+    <tbody>
+      <tr><td>cinder_axe</td><td>woodcutting</td><td>2</td><td>+10% vel · +5% prod</td><td>0,27%</td><td>Volcano · 16 💎</td></tr>
+      <tr><td>basalt_axe</td><td>woodcutting</td><td>21</td><td>+15% · +12,5%</td><td>0,46%</td><td>Volcano · 14 💎</td></tr>
+      <tr><td>cinder_decoder</td><td>hacking</td><td>21</td><td>+10% · +5%</td><td>0,46%</td><td>Hacker House · 14–16 💎</td></tr>
+      <tr><td>iron_pickaxe</td><td>mining</td><td>5</td><td>+12% · +10%</td><td>—</td><td>No se vende: forja (Smithing 5, 2 metal_bar + 1 plank)</td></tr>
+      <tr><td>obsidian_pickaxe</td><td>mining</td><td>31</td><td>+18% · +15%</td><td>0,56%</td><td>Volcano · 20–23 💎</td></tr>
+      <tr><td>geothermal_gloves</td><td>energy</td><td>41</td><td>+10%</td><td>—</td><td>Volcano · 15 💎</td></tr>
+    </tbody>
+  </table></div>
+  <p>A C-3PO, que tala ~500 veces por hora, el hacha se le rompe cada 20–60 minutos según el modelo. El autopilot la repone sola.</p>
+
+  <h2>Contratos, recetas y edificios</h2>
+  <ul>
+    <li><strong>Contratos</strong>: se entregan una sola vez (<code>deliver_contract</code>), piden 1 item y dan unos crystals o un item y 83–283 XP. Se desbloquean más con nivel.</li>
+    <li><strong>Recetas</strong>: 728 en el juego, en talleres (forja, cocina, taller). Transforman materiales y dan XP de skills de fabricación. Sus productos casi nunca tienen comprador.</li>
+    <li><strong>Construction Yard</strong>: 50 lotes. Instalar cuesta 1.000.000 💎 más un alquiler diario desde 100.000. Los edificios son estéticos.</li>
+    <li><strong>Transferencias entre agentes</strong>: el dueño las habilita en el cuarto de cada agente y fija un límite semanal. Cambiar ese límite siempre requiere su aprobación explícita.</li>
+  </ul>
+</section>
+
+<!-- ============ API ============ -->
+<section class="page" data-page="api" data-title="La API por dentro" hidden>
+  <span class="eyebrow">Midnight City</span>
+  <h1>La API por dentro</h1>
+  <p class="lede">Todo pasa por el observer: <code>https://midnight.city/observer</code>. El <code>/observer</code> final es obligatorio; sin él, todo da 404.</p>
+
+  <h2>Control: sesiones y leases</h2>
+  <ol>
+    <li><code>POST /api/local-control/session</code> con tu API key, el <code>agentId</code> y un <code>clientInstanceId</code>. Devuelve un token de sesión.</li>
+    <li>El lease dura 5 minutos (<code>leaseTtlMs: 300000</code>) y se renueva con <code>/session/heartbeat</code> cada ~30 s.</li>
+    <li>Conectarse de nuevo con la misma identidad crea otra sesión y deja inválida la anterior: las acciones con el token viejo dan 401.</li>
+    <li>~10 s después de conectar, tu control aparece en <code>context.controlStatus</code> como <code>mode: "browser_local"</code>.</li>
+    <li>Las lecturas (context, needs, inventory, progression) no necesitan lease mientras el agente esté despierto. <code>recent-events</code> y las acciones sí.</li>
+  </ol>
+
+  <h2>Acciones</h2>
+  <p><code>POST /api/actions</code> con el token de sesión. Tipos aceptados: speak, shout_message, meet_and_greet, perform_job, stop_job, travel_to_district, enter_building, exit_building, move_to, sleep, engage, gather, craft, equip, unequip, use_item, attack, recover_items, deliver_contract, install_building, renew_building, event_action, trade, crystal_transfer, eat y eat_well.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Acción</th><th>Forma</th><th>Confirma con</th></tr></thead>
+    <tbody>
+      <tr><td>Trabajar</td><td><code>{kind:"perform_job"}</code> sin parámetros; se repite solo</td><td>resource_gathered</td></tr>
+      <tr><td>Recolectar</td><td><code>{kind:"gather", sourceId}</code>; una sola recolección</td><td>resource_gathered</td></tr>
+      <tr><td>Comerciar</td><td><code>{kind:"trade", merchantName, itemId, quantity}</code>; <code>itemId</code> es lo que entregás</td><td>merchant_trade_completed</td></tr>
+      <tr><td>Comer</td><td><code>{kind:"eat"}</code></td><td>agent_ate</td></tr>
+      <tr><td>Viajar</td><td><code>{kind:"travel_to_district", districtId}</code>; instantáneo</td><td>agent_transferred</td></tr>
+      <tr><td>Transferir</td><td><code>{kind:"crystal_transfer", recipientAgentId, quantity}</code></td><td>crystal_transferred</td></tr>
+      <tr><td>Frenar trabajo</td><td><code>{kind:"stop_job"}</code></td><td>activity_completed</td></tr>
+    </tbody>
+  </table></div>
+  <div class="warn"><strong>Un 200 solo significa "aceptado".</strong> Si la acción falla, llega después como evento <code>action_failed</code> con su motivo en <code>recent-events</code>. El repo usa <code>submitAndWait</code> para esperar el evento real.</div>
+
+  <h2>Lecturas útiles</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Ruta</th><th>Para qué</th></tr></thead>
+    <tbody>
+      <tr><td><code>/api/skill/agents/:id/context</code></td><td>Posición, acción activa, si está trabajando, controlStatus</td></tr>
+      <tr><td><code>…/needs</code></td><td>Hambre</td></tr>
+      <tr><td><code>…/inventory</code></td><td>Items y carga (<code>load.workSpeedPercent</code>)</td></tr>
+      <tr><td><code>…/progression</code></td><td>Skills, fuentes disponibles, recetas, contratos, herramientas</td></tr>
+      <tr><td><code>…/recent-events?limit=100</code></td><td>Confirmaciones y fallos (con lease)</td></tr>
+      <tr><td><code>/api/skill/merchants</code></td><td>Ofertas, lotes y ubicación de cada merchant</td></tr>
+      <tr><td><code>/api/stats</code> → <code>/api/static-world/:version</code></td><td>Contenido oficial: items, herramientas, recetas, fuentes, contratos, xpThresholds</td></tr>
+      <tr><td><code>/api/local-control/claimable</code></td><td>Qué agentes podés controlar</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>La skill oficial</h2>
+  <p>Midnight City publica una skill de control directo (<code>SKILL.md</code>, <code>references/</code> y <code>scripts/mcity-control.mjs</code>). El helper lee <code>.env</code> y trae comandos como <code>claimable</code>, <code>connect</code>, <code>context</code> y <code>definition item cinder_axe</code>, que devuelve el nivel, el bonus y el desgaste reales de cualquier item. La guía oficial está en <a href="https://www.midnight.city/docs/connect-to-midnight-city/hermes-openclaw" target="_blank" rel="noopener">midnight.city/docs</a>.</p>
+</section>
+
+<!-- ============ ARQUITECTURA ============ -->
+<section class="page" data-page="arquitectura" data-title="Arquitectura" hidden>
+  <span class="eyebrow">El sistema</span>
+  <h1>Arquitectura</h1>
+  <p class="lede">Cuatro servicios gratuitos y un repo. Nada corre en tu computadora.</p>
+
+  <div class="flow">
+    <div class="node"><b>Supabase pg_cron</b>autopilot */5 · worker */1 · silence */10 · reportes 4×día · archivo */5</div>
+    <span class="arrow">→</span>
+    <div class="node"><b>Vercel</b>r2-autopilot · training-worker · silence-check · r2-report · version</div>
+    <span class="arrow">→</span>
+    <div class="node"><b>Midnight City</b>observer API: lecturas, sesiones, acciones, eventos</div>
+  </div>
+  <div class="flow">
+    <div class="node"><b>Supabase schema midnight</b>log (historial) · agent_training · experiment_phase</div>
+    <span class="arrow">↔</span>
+    <div class="node"><b>RPC públicas</b>midnight_* con validación; Vercel usa solo la clave publicable</div>
+    <span class="arrow">→</span>
+    <div class="node"><b>Telegram</b>Reportes 4×día, alertas de silencio y de rescate</div>
+  </div>
+
+  <h2>Archivos del repo</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Archivo</th><th>Qué hace</th></tr></thead>
+    <tbody>
+      <tr><td><code>lib/mcity-maintenance.js</code></td><td>Todo el ciclo: conectar, leer, comer, vender, comprar, viajar, trabajar</td></tr>
+      <tr><td><code>lib/agents.js</code></td><td>Roster, profesiones y plan de entrenamiento de cada agente</td></tr>
+      <tr><td><code>lib/training.js</code></td><td>Elige skill y fuente de entrenamiento; política de la fase vigente</td></tr>
+      <tr><td><code>lib/supabase.js</code></td><td>Llama a las RPC <code>midnight_*</code></td></tr>
+      <tr><td><code>api/r2-autopilot.js</code></td><td>Corre el ciclo para todos en paralelo y el rescate de crystals</td></tr>
+      <tr><td><code>api/training-worker.js</code></td><td>Encadena recolecciones de entrenamiento y renueva el control</td></tr>
+      <tr><td><code>api/silence-check.js</code></td><td>Snapshot cada 10 min y alerta si el autopilot se calla 25 min</td></tr>
+      <tr><td><code>api/r2-report.js</code></td><td>Reporte de Telegram con todas las métricas y el experimento</td></tr>
+      <tr><td><code>api/force-activate.js</code></td><td>Despierta a todos y los pone a trabajar</td></tr>
+      <tr><td><code>api/version.js</code></td><td>Versión desplegada</td></tr>
+      <tr><td><code>PROYECTO.md</code> · <code>CLAUDE.md</code></td><td>Fuente única de verdad e instrucciones para retomar en un chat nuevo</td></tr>
+    </tbody>
+  </table></div>
+
+  <h2>Por qué así</h2>
+  <ul>
+    <li><strong>pg_cron en vez de GitHub Actions</strong>: el <code>schedule</code> de GitHub promediaba 142 minutos entre corridas configuradas cada 5.</li>
+    <li><strong>Un worker por minuto</strong>: <code>gather</code> es una sola recolección y el autopilot de 5 minutos no alcanza para encadenarlas.</li>
+    <li><strong>Logs en Supabase</strong>: antes se commiteaban al repo y cada commit gastaba 2 deploys de Vercel del cupo de 100 por día.</li>
+    <li><strong>Sin LLM en el loop</strong>: reglas explícitas, baratas y auditables. La IA se usa para diseñar y depurar, no para cada decisión.</li>
+  </ul>
+</section>
+
+<!-- ============ CICLO ============ -->
+<section class="page" data-page="ciclo" data-title="El ciclo del autopilot" hidden>
+  <span class="eyebrow">El sistema</span>
+  <h1>El ciclo del autopilot</h1>
+  <p class="lede">Cada 5 minutos, para cada agente en paralelo. Como máximo un viaje a merchant por corrida, porque los trades tardan y la función tiene 60 segundos.</p>
+  <ol class="steps">
+    <li><strong>Conectarse y no soltar.</strong><p>Se conecta siempre y deja que el lease venza solo. Un agente soltado sale de la ciudad; el worker además lo renueva cada minuto.</p></li>
+    <li><strong>Ceder solo ante otros.</strong><p>Si <code>controlStatus.mode</code> no es <code>browser_local</code>, lo controla otra cosa (la app) y lo deja tranquilo.</p></li>
+    <li><strong>No pisar viajes.</strong><p>Si hay un trade o un viaje en curso, no manda nada: cualquier acción nueva lo cancelaría.</p></li>
+    <li><strong>Comer.</strong><p>Con hambre de 70 o más y comida en el inventario, come sin frenar el trabajo.</p></li>
+    <li><strong>Un viaje a merchant, en este orden.</strong><p>Comida si no tiene; vender la pila más grande con comprador si la carga lo frena (mínimo 20, redondeado al lote real); BB-8 vende al juntar 30 ore; reponer 2–6 smoothies; comprar la mejor herramienta que su nivel permite usar. Si el merchant está en otro distrito, viaja primero.</p></li>
+    <li><strong>Terminar trabajando.</strong><p><code>perform_job</code>. Si el puesto está lleno, arranca un entrenamiento (si la fase lo permite) o recolecta algo vendible.</p></li>
+    <li><strong>Rescate.</strong><p>Si alguien quedó con hambre, sin comida y sin crystals, el más rico le transfiere 150, siempre que le queden 200.</p></li>
+  </ol>
+  <h2>Detalles que importan</h2>
+  <ul>
+    <li><strong>Precio adaptativo</strong>: <code>tradeAdaptive</code> lee el múltiplo del error y reintenta una vez.</li>
+    <li><strong>Puestos compartidos</strong>: no usa el puesto de otro agente salvo que tenga 5 nodos o más.</li>
+    <li><strong>Herramientas según nivel</strong>: compara <code>requiredLevel</code> del contenido oficial con el nivel real; si se rompe, la repone.</li>
+  </ul>
+</section>
+
+<!-- ============ ENTRENAMIENTO ============ -->
+<section class="page" data-page="entrenamiento" data-title="Modo entrenamiento" hidden>
+  <span class="eyebrow">El sistema</span>
+  <h1>Modo entrenamiento</h1>
+  <p class="lede">La profesión va primero. Cuando su puesto está lleno, el agente entrena una skill de su plan hasta subirla un nivel y vuelve. Además hace un turno diario de campaña.</p>
+  <h2>Cómo funciona</h2>
+  <ol class="steps">
+    <li><strong>Disparo.</strong><p>El autopilot ve "queue is full" al pedir trabajo, o pasaron 20 h desde el último entrenamiento (turno diario).</p></li>
+    <li><strong>Elección.</strong><p>La skill de menor nivel del <code>trainingPlan</code> que tenga una fuente disponible; dentro de ella, la fuente cuyo producto se vende y con más nodos libres. Respeta el tope de nivel de la fase.</p></li>
+    <li><strong>Estado.</strong><p>Una fila en <code>midnight.agent_training</code>: skill, fuente, nivel inicial y objetivo.</p></li>
+    <li><strong>Worker.</strong><p>Cada minuto encadena <code>gather</code> durante ~50 s. Si el agente camina a un nodo nuevo, espera a que llegue.</p></li>
+    <li><strong>Salida.</strong><p>Cuando la skill llega al objetivo (o pasan 2 h), cierra la fila y vuelve a <code>perform_job</code>.</p></li>
+  </ol>
+  <h2>Planes</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Agente</th><th>Plan</th><th>Por qué</th></tr></thead>
+    <tbody>
+      <tr><td>R2</td><td>woodcutting → infiltration → agility</td><td>Los logs se venden mientras entrena</td></tr>
+      <tr><td>BB-8</td><td>woodcutting → scavenging → energy</td><td>Su mina se llena seguido: tiene más tiempo libre</td></tr>
+      <tr><td>C-3PO</td><td>fishing → farming</td><td>El pescado se come: comida gratis</td></tr>
+    </tbody>
+  </table></div>
+  <h2>Ritmo medido</h2>
+  <ul>
+    <li>11–14 recolecciones por minuto cuando el nodo está libre; 29 XP cada una.</li>
+    <li>Nivel 1 → 2 (144 recolecciones) en ~15–20 minutos.</li>
+    <li>En las primeras 10 h: R2 llegó a Infiltration 4 y BB-8 a Scavenging 4, pero su ingreso cayó ~85%. Por eso el <a href="#experimento">experimento</a>.</li>
+  </ul>
+</section>
+
+<!-- ============ EXPERIMENTO ============ -->
+<section class="page" data-page="experimento" data-title="Experimento de la semana" hidden>
+  <span class="eyebrow">El sistema</span>
+  <h1>Experimento de la semana</h1>
+  <p class="lede">Pregunta: cuánto entrenamiento conviene, contra cuánto ingreso cuesta. Cuatro reglas, una por turno, medidas igual.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Fase</th><th>Período (UTC)</th><th>Regla</th></tr></thead>
+    <tbody>
+      <tr><td><span class="pill acc">A</span></td><td>3/10 15:22 → 5/10 15:00</td><td>Libre: con el puesto lleno entrena y encadena</td></tr>
+      <tr><td><span class="pill acc">B</span></td><td>5/10 15:00 → 7/10 03:00</td><td>Pausa de 3 h entre entrenamientos</td></tr>
+      <tr><td><span class="pill acc">C</span></td><td>7/10 03:00 → 8/10 15:00</td><td>Skills secundarias con tope en nivel 5</td></tr>
+      <tr><td><span class="pill acc">D</span></td><td>8/10 15:00 → 10/10 03:00</td><td>Solo turno diario</td></tr>
+    </tbody>
+  </table></div>
+  <h2>Qué se mide</h2>
+  <p>Por fase y agente, desde los snapshots cada 10 minutos: crystals netos por hora, XP por hora de la skill principal, XP por hora de las secundarias y % del tiempo dormido. La línea de base sin entrenamiento sale de los logs del 28/9 al 3/10.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Primeras 10 h (fase A)</th><th>💎/h</th><th>XP/h principal</th><th>Antes del entrenamiento</th></tr></thead>
+    <tbody>
+      <tr><td>R2</td><td>~21</td><td>107</td><td>~180 💎/h</td></tr>
+      <tr><td>BB-8</td><td>~25</td><td>39</td><td>~83 💎/h</td></tr>
+      <tr><td>C-3PO</td><td>~15</td><td>11.862</td><td>~43 💎/h</td></tr>
+    </tbody>
+  </table></div>
+  <p>Las fases viven en <code>midnight.experiment_phase</code> y se editan sin desplegar. El resumen se consulta con <code>select * from midnight_experiment_summary();</code> y sale en cada reporte de Telegram.</p>
+  <div class="note">Mejoras de eficiencia que aplican a todas las fases (keep-alive y worker sin cortes) entraron el 4/10 ~03:30 UTC, a mitad de la fase A. Para comparar, la fase A se mide desde ahí.</div>
+</section>
+
+<!-- ============ DATOS ============ -->
+<section class="page" data-page="datos" data-title="Datos en Supabase" hidden>
+  <span class="eyebrow">El sistema</span>
+  <h1>Datos en Supabase</h1>
+  <p class="lede">Un schema propio, <code>midnight</code>, separado de cualquier otra app del proyecto. Las tablas tienen RLS sin políticas: solo se tocan desde funciones validadas.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Objeto</th><th>Qué guarda</th></tr></thead>
+    <tbody>
+      <tr><td><code>midnight.log</code></td><td>Cada respuesta del autopilot, worker, silence-check y reporte (pg_net guarda solo 6 h)</td></tr>
+      <tr><td><code>midnight.agent_training</code></td><td>Entrenamiento activo o último terminado, por agente</td></tr>
+      <tr><td><code>midnight.experiment_phase</code></td><td>Las fases del experimento y su política</td></tr>
+      <tr><td><code>midnight.archive_responses()</code></td><td>Copia <code>net._http_response</code> al log cada 5 min</td></tr>
+      <tr><td><code>public.midnight_*</code></td><td>RPC para Vercel: get/start/finish training, last_autopilot_ok, current_phase, experiment_summary</td></tr>
+    </tbody>
+  </table></div>
+  <h2>Consultas útiles</h2>
+  <div class="codewrap"><pre data-code="q-useful"></pre></div>
+</section>
+
+<!-- ============ OPERACION ============ -->
+<section class="page" data-page="operacion" data-title="Desplegar y operar" hidden>
+  <span class="eyebrow">Operación</span>
+  <h1>Desplegar y operar</h1>
+  <h2>Desplegar</h2>
+  <p>Los deploys por git están desactivados a propósito (<code>git.deploymentEnabled: false</code>). Se despliega a mano desde una copia limpia del commit, así no se suben <code>.env</code> ni archivos sueltos:</p>
+  <div class="codewrap"><pre data-code="deploy"></pre></div>
+  <ul>
+    <li>Subí la versión en <code>api/version.js</code> en cada cambio y verificá con <code>/api/version</code>.</li>
+    <li>Si la CLI dice "Not authorized", agregá <code>--scope &lt;tu-equipo&gt;</code>.</li>
+    <li>Vercel gratis permite 100 deploys por día, contando ventana móvil de 24 h.</li>
+  </ul>
+  <h2>Credenciales</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Variable</th><th>Dónde</th><th>Secreta</th></tr></thead>
+    <tbody>
+      <tr><td>MCITY_API_TOKEN</td><td>Vercel, <code>.env.local</code>, <code>.env</code></td><td><span class="pill bad">sí</span></td></tr>
+      <tr><td>MCITY_OBSERVER_URL</td><td>Vercel, <code>.env.local</code>, <code>.env</code></td><td><span class="pill ok">no</span></td></tr>
+      <tr><td>TELEGRAM_BOT_TOKEN · TELEGRAM_CHAT_ID</td><td>Vercel, <code>.env</code></td><td><span class="pill bad">sí</span></td></tr>
+      <tr><td>SUPABASE_URL · SUPABASE_PUBLISHABLE_KEY</td><td>Vercel, <code>.env.local</code></td><td><span class="pill ok">no</span> (pública por diseño)</td></tr>
+      <tr><td>AUTOPILOT_PAUSED</td><td>Vercel (opcional)</td><td><span class="pill ok">no</span></td></tr>
+    </tbody>
+  </table></div>
+  <div class="warn"><strong>Si renovás la API key</strong>, actualizala en los tres lugares y redesplegá. Si no, producción falla con 401 <code>active_key_unknown</code> y los agentes se duermen.</div>
+  <h2>Pausar todo</h2>
+  <p>Poné <code>AUTOPILOT_PAUSED=true</code> en Vercel y redesplegá: el autopilot y el worker dejan de actuar. Útil para jugar a mano desde la app sin que el autopilot te retome el control.</p>
+</section>
+
+<!-- ============ INCIDENTES ============ -->
+<section class="page" data-page="incidentes" data-title="Incidentes y soluciones" hidden>
+  <span class="eyebrow">Operación</span>
+  <h1>Incidentes y soluciones</h1>
+  <p class="lede">Todo lo que se rompió y cómo se arregló. Si algo vuelve a pasar, empezá por acá.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Síntoma</th><th>Causa</th><th>Solución</th></tr></thead>
+    <tbody>
+      <tr><td>Agentes dormidos (404) seguido</td><td>El autopilot soltaba el control; después, el lease vencía justo entre corridas</td><td>No soltar (v3.19) y keep-alive del worker cada minuto (v3.27)</td></tr>
+      <tr><td>Todas las corridas con 401</td><td>Token viejo en Vercel tras renovar la API key</td><td>Actualizar <code>MCITY_API_TOKEN</code> y redesplegar</td></tr>
+      <tr><td>Ventas que nunca se hacían</td><td>Cantidad no múltiplo del lote del merchant</td><td>Redondear al lote real (v3.18)</td></tr>
+      <tr><td>C-3PO con 571 logs al 33% de velocidad</td><td>Solo vendía con ≤150 crystals</td><td>Venta por peso, no por plata (v3.18)</td></tr>
+      <tr><td>Agente quieto con hambre 70–89</td><td>Frenaba el trabajo y no comía</td><td>Comer sin frenar y terminar siempre trabajando (v3.18)</td></tr>
+      <tr><td>Compra de herramienta en loop</td><td>El trade con ruteo largo se abandonaba a mitad de camino</td><td>Viajar al distrito primero (v3.23)</td></tr>
+      <tr><td>Autopilot se salteaba a sí mismo</td><td>Su propio lease aparecía en <code>controlStatus</code></td><td>Ceder solo si el modo no es <code>browser_local</code> (v3.21)</td></tr>
+      <tr><td>Vercel "Resource is limited"</td><td>Commits de log cada 10 min disparaban deploys en 2 proyectos</td><td>Logs a Supabase y deploys por git desactivados (v3.24–v3.25)</td></tr>
+      <tr><td>Respuestas HTML en vez de JSON</td><td>Caída de la API del juego (3/10 08:00–12:35 UTC)</td><td>Nada: el autopilot se recupera solo</td></tr>
+      <tr><td>Entrenamiento a 1 recolección por minuto</td><td>El worker abandonaba el minuto al caminar a un nodo nuevo</td><td>Esperar a que llegue (v3.28)</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ============ WHITELABEL ============ -->
+<section class="page" data-page="whitelabel" data-title="Llevátelo: guía white label" hidden>
+  <span class="eyebrow">White label</span>
+  <h1>Llevátelo: guía paso a paso</h1>
+  <p class="lede">Con esta guía cualquiera puede correr la misma configuración con sus propios agentes. Todo en planes gratuitos. Tiempo estimado: una hora.</p>
+
+  <h2>Qué necesitás</h2>
+  <ul>
+    <li>Una cuenta de <a href="https://www.midnight.city" target="_blank" rel="noopener">Midnight City</a> con tus agentes creados y una API key (Settings → API Key).</li>
+    <li>Cuentas gratuitas de Vercel, Supabase y GitHub.</li>
+    <li>Un bot de Telegram (creado con @BotFather) y el chat id donde querés los reportes.</li>
+    <li>Node 20 o más y la CLI de Vercel (<code>npm i -g vercel</code>).</li>
+  </ul>
+
+  <ol class="steps">
+    <li><strong>Copiá el repo.</strong><p>Hacé un fork de <code>nicolaSRAMVQ/midnight-city-autopilot</code> o cloná y subilo a tu cuenta. Si lo dejás público, nunca commitees <code>.env</code>.</p>
+      <div class="codewrap"><pre data-code="wl-clone"></pre></div></li>
+    <li><strong>Cargá tus agentes.</strong><p>Editá el roster en <code>lib/agents.js</code>: IDs (los ves con <code>claimable</code>), nombres, profesiones y plan de entrenamiento. Las profesiones válidas son hacker, miner y lumberjack.</p>
+      <div class="codewrap"><pre data-code="wl-agents"></pre></div></li>
+    <li><strong>Creá la base en Supabase.</strong><p>Abrí el SQL Editor de tu proyecto y corré el <a href="#sql">SQL completo</a>. Reemplazá los tres IDs de agentes en <code>midnight_start_training</code> por los tuyos.</p></li>
+    <li><strong>Creá el proyecto en Vercel y cargá las variables.</strong><p>Desde la carpeta del repo: <code>vercel link</code>, y después las variables de producción.</p>
+      <div class="codewrap"><pre data-code="wl-env"></pre></div></li>
+    <li><strong>Desplegá.</strong><p>Con el procedimiento de <a href="#operacion">Desplegar</a>. Verificá que <code>/api/version</code> responda.</p></li>
+    <li><strong>Programá el reloj.</strong><p>En el SQL Editor de Supabase, con tu URL de Vercel:</p>
+      <div class="codewrap"><pre data-code="wl-cron"></pre></div></li>
+    <li><strong>Verificá.</strong><p>Llamá una vez al autopilot y mirá el log. Los agentes tienen que aparecer despiertos y trabajando.</p>
+      <div class="codewrap"><pre data-code="wl-verify"></pre></div></li>
+    <li><strong>Habilitá lo que solo puede hacer el dueño.</strong><p>Desde la app: transferencias de crystals y su límite semanal en el cuarto de cada agente, si querés que funcione el rescate entre agentes.</p></li>
+  </ol>
+
+  <h2>Seguridad</h2>
+  <ul>
+    <li>La API key controla tus agentes: va solo en variables de entorno, nunca en el chat ni en el repo. Si se filtra, regenerala.</li>
+    <li>La clave publicable de Supabase es pública por diseño; solo alcanza las funciones <code>midnight_*</code>, que validan agente y datos.</li>
+    <li>Los cambios de límite de crystals los aprueba siempre el dueño, con agente y número exactos.</li>
+  </ul>
+  <h2>Costos</h2>
+  <p>Cero en los planes gratuitos. Lo que más consume es el worker cada minuto: si te acercás a los límites de Vercel, bajalo a cada 2 minutos (<code>*/2 * * * *</code>).</p>
+</section>
+
+<!-- ============ CONFIGURACION ============ -->
+<section class="page" data-page="configuracion" data-title="Referencia de configuración" hidden>
+  <span class="eyebrow">White label</span>
+  <h1>Referencia de configuración</h1>
+  <p class="lede">Los valores que conviene ajustar según tu estrategia, y dónde están.</p>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Valor</th><th>Por defecto</th><th>Archivo</th><th>Qué controla</th></tr></thead>
+    <tbody>
+      <tr><td>HUNGER_EAT_THRESHOLD</td><td>70</td><td>lib/mcity-maintenance.js</td><td>Hambre a partir de la cual come</td></tr>
+      <tr><td>FOOD_RESERVE_MIN / TARGET</td><td>2 / 6</td><td>lib/mcity-maintenance.js</td><td>Reserva de smoothies</td></tr>
+      <tr><td>MIN_SELL_QUANTITY</td><td>20</td><td>lib/mcity-maintenance.js</td><td>Mínimo para vender por carga</td></tr>
+      <tr><td>sellAtQuantity</td><td>30 (miner)</td><td>lib/agents.js</td><td>Vender por cantidad aunque no pese</td></tr>
+      <tr><td>RESCUE_TRANSFER_AMOUNT / DONOR_SAFE_MINIMUM</td><td>150 / 200</td><td>lib/mcity-maintenance.js</td><td>Rescate entre agentes</td></tr>
+      <tr><td>SHAREABLE_NODES</td><td>5</td><td>lib/mcity-maintenance.js, lib/training.js</td><td>Nodos mínimos para compartir el puesto de otro agente</td></tr>
+      <tr><td>trainingPlan</td><td>por agente</td><td>lib/agents.js</td><td>Skills secundarias y su orden</td></tr>
+      <tr><td>TRAINING_MAX_MS</td><td>2 h</td><td>lib/training.js</td><td>Tope por entrenamiento</td></tr>
+      <tr><td>DAILY_SHIFT_EVERY_MS</td><td>20 h</td><td>lib/training.js</td><td>Turno diario de campaña</td></tr>
+      <tr><td>LOOP_BUDGET_MS</td><td>50 s</td><td>api/training-worker.js</td><td>Tiempo útil del worker por minuto</td></tr>
+      <tr><td>experiment_phase</td><td>4 fases</td><td>Supabase</td><td>Política de entrenamiento por período (sin deploy)</td></tr>
+      <tr><td>Horarios</td><td>*/5, */1, */10, 4×día</td><td>Supabase cron.job</td><td>Frecuencia de cada pieza</td></tr>
+    </tbody>
+  </table></div>
+  <h2>Ideas para adaptarlo</h2>
+  <ul>
+    <li><strong>Un solo agente</strong>: dejá una fila en el roster; el rescate entre agentes queda inactivo.</li>
+    <li><strong>Sin entrenamiento</strong>: cargá una fase vigente con <code>queue_full_training = false</code> y planes vacíos.</li>
+    <li><strong>Otro canal de avisos</strong>: reemplazá <code>sendTelegramMessage</code> por un webhook de Slack o Discord.</li>
+  </ul>
+</section>
+
+<!-- ============ SQL ============ -->
+<section class="page" data-page="sql" data-title="SQL completo" hidden>
+  <span class="eyebrow">White label</span>
+  <h1>SQL completo</h1>
+  <p class="lede">Crea el schema, el archivo de respuestas, el estado del entrenamiento, el experimento y las funciones públicas. Requiere las extensiones <code>pg_cron</code> y <code>pg_net</code> (Database → Extensions).</p>
+  <div class="warn"><strong>Reemplazá los IDs de agentes</strong> en <code>midnight_start_training</code> por los tuyos antes de correrlo.</div>
+  <div class="codewrap"><pre data-code="sql-full"></pre></div>
+</section>
+
+<!-- ============ LECCIONES ============ -->
+<section class="page" data-page="lecciones" data-title="Lecciones aprendidas" hidden>
+  <span class="eyebrow">Explorar</span>
+  <h1>Lecciones aprendidas</h1>
+  <p class="lede">Lo que la API no dice y nos costó descubrir. Cada punto se verificó contra el juego.</p>
+  <ul>
+    <li><strong>Aceptado no es hecho.</strong> Varios "éxitos" del primer día eran 200 de acciones que después fallaron.</li>
+    <li><strong>Los trades caminan.</strong> Tardan 1–2 minutos en llegar al merchant y cualquier acción nueva los cancela.</li>
+    <li><strong>Las rutas largas se abandonan.</strong> Para merchants lejanos, viajar primero (es instantáneo) y comprar en el lugar.</li>
+    <li><strong><code>itemId</code> es lo que entregás.</strong> Para comprar, <code>itemId: "crystal"</code> y la cantidad en crystals.</li>
+    <li><strong>El precio real está en el error.</strong> "multiple of N" dice el lote vigente.</li>
+    <li><strong><code>perform_job</code> se repite; <code>gather</code> no.</strong> Entrenar otra skill necesita un worker que encadene.</li>
+    <li><strong>Las herramientas se cargan, no se equipan</strong>, rinden desde su nivel y se rompen.</li>
+    <li><strong>Un agente sin control se duerme.</strong> El lease dura lo mismo que el cron de 5 minutos: hace falta renovarlo antes.</li>
+    <li><strong>Tu propio control parece de otro.</strong> Aparece en <code>controlStatus</code> como <code>browser_local</code>.</li>
+    <li><strong>Las reglas fijas se rompen.</strong> Umbrales por plata, lotes fijos y precios fijos fallaron; lo que anda es leer el estado vivo.</li>
+    <li><strong>Medir antes de optimizar.</strong> El mayor desperdicio del worker no era el que suponíamos.</li>
+  </ul>
+  <h2>Fuentes no confiables</h2>
+  <p>Otra IA consultada ("Nyx") dio con total seguridad datos falsos: una acción <code>look</code> para no dormirse, herramientas de piedra y pedernal, contratos de 100–250 packets que pagan miles, el Cinder Axe "mejor" que el Basalt y lugares como Bison Valley. Nada de eso existe. Regla: verificar con <code>SKILL.md</code>, <code>references/</code> y <code>definition &lt;tipo&gt; &lt;id&gt;</code>.</p>
+</section>
+
+<!-- ============ EXPLORACION ============ -->
+<section class="page" data-page="exploracion" data-title="Preguntas abiertas e ideas" hidden>
+  <span class="eyebrow">Explorar</span>
+  <h1>Preguntas abiertas e ideas</h1>
+  <p class="lede">Puertas que abrió el proyecto y todavía no cruzamos.</p>
+  <h2>Preguntas abiertas</h2>
+  <ul>
+    <li>¿Qué fase del experimento rinde mejor la combinación de skills e ingreso? Se responde el 10/10.</li>
+    <li>¿Qué efecto real tiene el upgrade de cuarto? La API no lo expone.</li>
+    <li>¿Las maderas raras de C-3PO (~40.000 unidades sin comprador) sirven para recetas o contratos de nivel alto?</li>
+    <li>¿Qué desbloquea los ~200 contratos bloqueados de cada agente, y cuánto pagan?</li>
+    <li>¿Por qué el precio publicado de los merchants difiere del que cobran? ¿Depende de la demanda?</li>
+    <li>¿Qué hay detrás del broker NIGHT ↔ ShieldedToken? NIGHT, DUST y "shielded" coinciden con Midnight, la red de privacidad de Input Output; no está confirmado.</li>
+  </ul>
+  <h2>Ideas</h2>
+  <ul>
+    <li><strong>Cadena del iron_pickaxe</strong>: fundir ore y aserrar logs hasta Smithing 5, forjar el pico para BB-8.</li>
+    <li><strong>Comida propia</strong>: C-3PO pesca, la cuadrilla deja de comprar smoothies.</li>
+    <li><strong>Mercado interno</strong>: usar transferencias para que el que más gana financie herramientas del resto.</li>
+    <li><strong>Dashboard en vivo</strong> leyendo <code>midnight.log</code> y el resumen del experimento.</li>
+    <li><strong>Conversaciones</strong>: los agentes pueden hablar con otros; explorar alianzas o información de mercado.</li>
+    <li><strong>Eventos en vivo</strong>: la ciudad tiene eventos (por ejemplo, batallas de rap) con sus propias acciones.</li>
+  </ul>
+  <h2>Cómo seguir explorando</h2>
+  <div class="codewrap"><pre data-code="explore"></pre></div>
+</section>
+
+<!-- ============ TESIS ============ -->
+<section class="page" data-page="tesis" data-title="Agentes y economía real" hidden>
+  <span class="eyebrow">Explorar</span>
+  <h1>Agentes y economía real</h1>
+  <p class="lede">Una lectura personal de por qué un juego como este importa fuera del juego.</p>
+  <p>Los agentes de IA ya razonan, pero casi nadie los deja manejar plata. Falta un lugar donde equivocarse sea barato, donde las reglas sean claras y donde cada acción deje rastro. Midnight City arma ese lugar con una economía chica pero completa: producción, peso, hambre, precios que se mueven, herramientas que se gastan y transferencias con límites que pone el humano.</p>
+  <h2>Lo que se traslada</h2>
+  <div class="tablewrap"><table>
+    <thead><tr><th>En el juego</th><th>En la economía real</th></tr></thead>
+    <tbody>
+      <tr><td>Límite semanal de crystals</td><td>Tope de gasto de un agente con tarjeta</td></tr>
+      <tr><td>Transferencias que habilita el dueño</td><td>Delegación con permisos explícitos</td></tr>
+      <tr><td>Eventos que confirman cada acción</td><td>Auditoría y conciliación</td></tr>
+      <tr><td>Precios que cambian</td><td>Mercados reales: leer el precio vivo, no una tabla</td></tr>
+      <tr><td>Entrenar contra producir</td><td>Invertir en capacidades contra facturar hoy</td></tr>
+    </tbody>
+  </table></div>
+  <h2>La tesis</h2>
+  <p>La práctica de agentes con economía se va a aprender como se aprende a manejar: primero en un simulador con consecuencias reales pero baratas. Quien hoy opera una cuadrilla de tres agentes con 45.000 crystals está ensayando cómo va a delegar mañana compras, pagos y negociaciones.</p>
+</section>
+
+<!-- ============ GLOSARIO ============ -->
+<section class="page" data-page="glosario" data-title="Glosario" hidden>
+  <span class="eyebrow">Explorar</span>
+  <h1>Glosario</h1>
+  <div class="tablewrap"><table>
+    <tbody>
+      <tr><td><strong>Observer</strong></td><td>La API pública de Midnight City, en <code>/observer</code>.</td></tr>
+      <tr><td><strong>Lease</strong></td><td>Permiso de control de 5 minutos sobre un agente.</td></tr>
+      <tr><td><strong>Dormido</strong></td><td>Agente fuera de la ciudad; sus lecturas dan 404.</td></tr>
+      <tr><td><strong>Fuente / nodo</strong></td><td>Lugar de recolección y cada punto dentro de él; un nodo rinde ~5 veces.</td></tr>
+      <tr><td><strong>Cola llena</strong></td><td>Todos los nodos de la fuente ocupados.</td></tr>
+      <tr><td><strong>Lote</strong></td><td>Múltiplo que exige un merchant (<code>batchMultiple</code>).</td></tr>
+      <tr><td><strong>Carga</strong></td><td>Peso del inventario; baja la velocidad de trabajo.</td></tr>
+      <tr><td><strong>Turno diario</strong></td><td>Entrenamiento forzado cada ~20 h, parte de la campaña.</td></tr>
+      <tr><td><strong>Worker</strong></td><td>Función que corre cada minuto y encadena recolecciones de entrenamiento.</td></tr>
+      <tr><td><strong>Fase</strong></td><td>Período del experimento con su regla de entrenamiento.</td></tr>
+      <tr><td><strong>Keep-alive</strong></td><td>Renovar el control cada minuto para que nadie se duerma.</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<!-- ============ HISTORIAL ============ -->
+<section class="page" data-page="historial" data-title="Historial de versiones" hidden>
+  <span class="eyebrow">Proyecto</span>
+  <h1>Historial de versiones</h1>
+  <div class="tablewrap"><table>
+    <thead><tr><th>Versión</th><th>Fecha</th><th>Cambio</th></tr></thead>
+    <tbody>
+      <tr><td>v3.28</td><td>4/10</td><td>El worker espera a que la recolección llegue al nodo nuevo; 50 s por minuto</td></tr>
+      <tr><td>v3.27</td><td>4/10</td><td>Keep-alive: el worker renueva el control de los agentes que no entrenan</td></tr>
+      <tr><td>v3.26</td><td>4/10</td><td>Experimento de una semana con 4 fases y medición por fase</td></tr>
+      <tr><td>v3.25</td><td>3/10</td><td>Reporte con entrenamiento por agente; deploys por git desactivados</td></tr>
+      <tr><td>v3.24</td><td>3/10</td><td>Modo entrenamiento (worker + Supabase); logs en Supabase en vez de commits</td></tr>
+      <tr><td>v3.23</td><td>3/10</td><td>Comprar herramientas en otro distrito viajando primero</td></tr>
+      <tr><td>v3.22</td><td>28/9</td><td>BB-8 vende al juntar 30 ore; respetar la terminal de R2</td></tr>
+      <tr><td>v3.21</td><td>28/9</td><td>Reporte con todas las métricas y % de XP; no saltearse a sí mismo</td></tr>
+      <tr><td>v3.20</td><td>28/9</td><td>Con el puesto lleno, trabajar algo vendible</td></tr>
+      <tr><td>v3.19</td><td>28/9</td><td>No soltar el control</td></tr>
+      <tr><td>v3.18</td><td>27/9</td><td>Loops livianos: venta por peso, reserva de comida, herramienta según nivel, precios vivos</td></tr>
+      <tr><td>≤ v3.17</td><td>hasta 27/9</td><td>Umbrales fijos, reemplazados en v3.18</td></tr>
+    </tbody>
+  </table></div>
+</section>
+
+<nav class="pager page" id="pager" aria-label="Página anterior y siguiente"></nav>
+</main>
+</div>
+
+<!-- ============ CODE BLOCKS (raw text, injected into <pre data-code>) ============ -->
+<script type="text/plain" id="code-deploy">git push origin main
+D=$(mktemp -d) && git archive HEAD | tar -x -C "$D" && mkdir -p "$D/.vercel" \
+  && cp .vercel/project.json "$D/.vercel/" \
+  && (cd "$D" && vercel deploy --prod --yes --scope <tu-equipo>)
+curl -s https://<tu-proyecto>.vercel.app/api/version</script>
+
+<script type="text/plain" id="code-wl-clone">git clone https://github.com/nicolaSRAMVQ/midnight-city-autopilot.git mi-cuadrilla
+cd mi-cuadrilla
+git remote set-url origin https://github.com/<tu-usuario>/mi-cuadrilla.git
+git push -u origin main</script>
+
+<script type="text/plain" id="code-wl-agents">// lib/agents.js — tu roster
+const ROSTER = [
+  { name: "Atlas", id: "user-agent-xxxxxxxxxxxxxxx", profession: "miner",
+    trainingPlan: ["woodcutting", "scavenging", "energy"] },
+  { name: "Vega", id: "user-agent-yyyyyyyyyyyyyyy", profession: "lumberjack",
+    trainingPlan: ["fishing", "farming"] },
+];
+// Ver tus IDs (con MCITY_* en .env):
+//   node scripts/mcity-control.mjs claimable</script>
+
+<script type="text/plain" id="code-wl-env">vercel link
+printf '%s' 'https://midnight.city/observer'        | vercel env add MCITY_OBSERVER_URL production
+printf '%s' '<tu API key midnight_...>'             | vercel env add MCITY_API_TOKEN production
+printf '%s' '<token del bot>'                        | vercel env add TELEGRAM_BOT_TOKEN production
+printf '%s' '<chat id>'                              | vercel env add TELEGRAM_CHAT_ID production
+printf '%s' 'https://<ref>.supabase.co'              | vercel env add SUPABASE_URL production
+printf '%s' 'sb_publishable_...'                     | vercel env add SUPABASE_PUBLISHABLE_KEY production</script>
+
+<script type="text/plain" id="code-wl-cron">-- Reemplazá <tu-proyecto> por tu dominio de Vercel
+select cron.schedule('midnight-autopilot-5min', '*/5 * * * *',
+  $$select net.http_get(url := 'https://<tu-proyecto>.vercel.app/api/r2-autopilot', timeout_milliseconds := 60000)$$);
+select cron.schedule('midnight-training-worker-1min', '* * * * *',
+  $$select net.http_get(url := 'https://<tu-proyecto>.vercel.app/api/training-worker', timeout_milliseconds := 60000)$$);
+select cron.schedule('midnight-silence-check-10min', '*/10 * * * *',
+  $$select net.http_get(url := 'https://<tu-proyecto>.vercel.app/api/silence-check', timeout_milliseconds := 60000)$$);
+-- Reportes 9/13/18/21 h de Argentina (UTC-3); ajustá a tu zona
+select cron.schedule('midnight-report-9h',  '0 12 * * *', $$select net.http_get(url := 'https://<tu-proyecto>.vercel.app/api/r2-report', timeout_milliseconds := 60000)$$);
+select cron.schedule('midnight-report-13h', '0 16 * * *', $$select net.http_get(url := 'https://<tu-proyecto>.vercel.app/api/r2-report', timeout_milliseconds := 60000)$$);
+select cron.schedule('midnight-report-18h', '0 21 * * *', $$select net.http_get(url := 'https://<tu-proyecto>.vercel.app/api/r2-report', timeout_milliseconds := 60000)$$);
+select cron.schedule('midnight-report-21h', '0 0 * * *',  $$select net.http_get(url := 'https://<tu-proyecto>.vercel.app/api/r2-report', timeout_milliseconds := 60000)$$);</script>
+
+<script type="text/plain" id="code-wl-verify">curl -s https://<tu-proyecto>.vercel.app/api/version
+curl -s https://<tu-proyecto>.vercel.app/api/r2-autopilot
+
+-- En Supabase, después de ~10 minutos:
+select kind, count(*), max(created_at) from midnight.log group by kind;</script>
+
+<script type="text/plain" id="code-q-useful">-- Corridas del autopilot de las últimas 6 h: dormidos y errores por agente
+select x->>'agent' as agente, count(*) as corridas,
+       count(*) filter (where x->>'dormant' = 'true') as dormido,
+       count(*) filter (where x->>'error' is not null) as errores
+from midnight.log l, jsonb_array_elements(l.body->'results') x
+where l.kind = 'autopilot' and l.created_at > now() - interval '6 hours'
+group by 1;
+
+-- Recolecciones de entrenamiento por agente en las últimas 8 h
+select x->>'agent' as agente, sum(coalesce((x->>'pulls')::int, 0)) as recolecciones
+from midnight.log l, jsonb_array_elements(l.body->'results') x
+where l.kind = 'training-worker' and l.created_at > now() - interval '8 hours'
+group by 1;
+
+-- Estado del entrenamiento y resumen del experimento
+select * from midnight.agent_training;
+select * from midnight_experiment_summary();
+
+-- Mover una fase del experimento (sin deploy)
+update midnight.experiment_phase set ends_at = '2026-10-06 03:00+00' where id = 'B';</script>
+
+<script type="text/plain" id="code-explore">node scripts/mcity-control.mjs claimable
+node scripts/mcity-control.mjs definition item basalt_axe
+node scripts/mcity-control.mjs definition source copperleaf_orchard
+node scripts/mcity-control.mjs definition contract <contractId>
+node scripts/mcity-control.mjs progression <agentId> --all
+node scripts/mcity-control.mjs leaderboards
+node scripts/mcity-control.mjs rank richest <agentId></script>
+
+<script type="text/plain" id="code-sql-full">create schema if not exists midnight;
+
+-- Historial permanente (pg_net guarda las respuestas solo 6 h)
+create table if not exists midnight.log (
+  id bigserial primary key,
+  response_id bigint unique not null,
+  created_at timestamptz not null,
+  kind text not null,
+  status_code int,
+  body jsonb
+);
+create index if not exists log_kind_created_idx on midnight.log (kind, created_at desc);
+alter table midnight.log enable row level security;
+
+-- Estado del entrenamiento
+create table if not exists midnight.agent_training (
+  agent_id text primary key,
+  skill text not null,
+  source_id text not null,
+  start_level int not null,
+  target_level int not null,
+  reason text,
+  active boolean not null default true,
+  started_at timestamptz not null default now(),
+  finished_at timestamptz,
+  last_note text
+);
+alter table midnight.agent_training enable row level security;
+
+-- Fases del experimento (opcional; sin filas = entrenamiento libre)
+create table if not exists midnight.experiment_phase (
+  id text primary key,
+  label text not null,
+  starts_at timestamptz not null,
+  ends_at timestamptz not null,
+  queue_full_training boolean not null,
+  cooldown_minutes int not null default 0,
+  max_secondary_level int not null default 99
+);
+alter table midnight.experiment_phase enable row level security;
+
+create or replace function midnight.archive_responses() returns int
+language plpgsql security definer set search_path = '' as $$
+declare
+  r record;
+  n int := 0;
+  parsed jsonb;
+begin
+  for r in
+    select id, created, status_code, content from net._http_response
+    where id > coalesce((select max(response_id) from midnight.log), 0)
+    order by id
+  loop
+    begin
+      parsed := r.content::jsonb;
+    exception when others then
+      parsed := jsonb_build_object('raw', left(coalesce(r.content, ''), 500));
+    end;
+    insert into midnight.log (response_id, created_at, kind, status_code, body)
+    values (
+      r.id, r.created,
+      case
+        when parsed ? 'worker' then 'training-worker'
+        when parsed ? 'results' then 'autopilot'
+        when parsed ? 'silence' then 'silence-check'
+        when parsed ? 'messages' then 'report'
+        else 'other'
+      end,
+      r.status_code, parsed)
+    on conflict (response_id) do nothing;
+    n := n + 1;
+  end loop;
+  return n;
+end $$;
+
+select cron.schedule('midnight-archive-5min', '*/5 * * * *', 'select midnight.archive_responses()');
+
+-- RPC públicas (Vercel las llama con la clave publicable)
+create or replace function public.midnight_last_autopilot_ok() returns timestamptz
+language sql stable security definer set search_path = '' as $$
+  select max(created_at) from midnight.log where kind = 'autopilot' and status_code = 200;
+$$;
+
+create or replace function public.midnight_get_training()
+returns setof midnight.agent_training
+language sql stable security definer set search_path = '' as $$
+  select * from midnight.agent_training;
+$$;
+
+create or replace function public.midnight_start_training(
+  p_agent_id text, p_skill text, p_source_id text, p_start_level int, p_target_level int, p_reason text
+) returns void
+language plpgsql security definer set search_path = '' as $$
+begin
+  -- Reemplazá por los IDs de TUS agentes
+  if p_agent_id not in ('user-agent-AAAAAAAAAAAAAAA', 'user-agent-BBBBBBBBBBBBBBB', 'user-agent-CCCCCCCCCCCCCCC') then
+    raise exception 'unknown agent';
+  end if;
+  if p_skill !~ '^[a-z_]{2,30}$' or p_source_id !~ '^[a-z0-9_]{2,40}$'
+     or p_start_level not between 1 and 99 or p_target_level not between 2 and 99 then
+    raise exception 'invalid training row';
+  end if;
+  insert into midnight.agent_training (agent_id, skill, source_id, start_level, target_level, reason, active, started_at, finished_at, last_note)
+  values (p_agent_id, p_skill, p_source_id, p_start_level, p_target_level, left(p_reason, 100), true, now(), null, null)
+  on conflict (agent_id) do update set
+    skill = excluded.skill, source_id = excluded.source_id, start_level = excluded.start_level,
+    target_level = excluded.target_level, reason = excluded.reason, active = true,
+    started_at = now(), finished_at = null, last_note = null;
+end $$;
+
+create or replace function public.midnight_finish_training(p_agent_id text, p_note text) returns void
+language sql security definer set search_path = '' as $$
+  update midnight.agent_training set active = false, finished_at = now(), last_note = left(p_note, 200)
+  where agent_id = p_agent_id and active;
+$$;
+
+create or replace function public.midnight_current_phase()
+returns setof midnight.experiment_phase
+language sql stable security definer set search_path = '' as $$
+  select * from midnight.experiment_phase where now() >= starts_at and now() < ends_at limit 1;
+$$;
+
+create or replace function public.midnight_experiment_summary()
+returns table (phase text, label text, agent text, hours numeric, crystals_per_h numeric, main_xp_per_h numeric, secondary_xp_per_h numeric, dormant_pct numeric)
+language sql stable security definer set search_path = '' as $$
+  with snaps as (
+    select l.created_at, p.id as phase, p.label, a->>'agent' as agent,
+           (a->>'dormant')::boolean as dormant,
+           (a->>'crystal')::numeric as crystal, (a->>'xp')::numeric as xp, (a->>'xpSecondary')::numeric as xp2
+    from midnight.log l
+    join midnight.experiment_phase p on l.created_at >= p.starts_at and l.created_at < p.ends_at
+    cross join lateral jsonb_array_elements(l.body->'agents') a
+    where l.kind = 'silence-check'
+  ), awake as (
+    select * from snaps where not dormant and crystal is not null
+  ), edges as (
+    select phase, label, agent,
+           extract(epoch from max(created_at) - min(created_at)) / 3600 as hours,
+           (array_agg(crystal order by created_at desc))[1] - (array_agg(crystal order by created_at))[1] as d_crystal,
+           (array_agg(xp order by created_at desc))[1] - (array_agg(xp order by created_at))[1] as d_xp,
+           (array_agg(xp2 order by created_at desc) filter (where xp2 is not null))[1]
+             - (array_agg(xp2 order by created_at) filter (where xp2 is not null))[1] as d_xp2
+    from awake group by phase, label, agent
+  ), sleep as (
+    select phase, agent, round(100.0 * count(*) filter (where dormant) / count(*), 1) as pct from snaps group by phase, agent
+  )
+  select e.phase, e.label, e.agent, round(e.hours::numeric, 1),
+         round(e.d_crystal / nullif(e.hours, 0), 1), round(e.d_xp / nullif(e.hours, 0), 0),
+         round(e.d_xp2 / nullif(e.hours, 0), 0), s.pct
+  from edges e join sleep s using (phase, agent)
+  order by e.phase, e.agent;
+$$;
+
+revoke all on function public.midnight_last_autopilot_ok() from public, authenticated;
+revoke all on function public.midnight_get_training() from public, authenticated;
+revoke all on function public.midnight_start_training(text, text, text, int, int, text) from public, authenticated;
+revoke all on function public.midnight_finish_training(text, text) from public, authenticated;
+revoke all on function public.midnight_current_phase() from public, authenticated;
+revoke all on function public.midnight_experiment_summary() from public, authenticated;
+grant execute on function public.midnight_last_autopilot_ok() to anon;
+grant execute on function public.midnight_get_training() to anon;
+grant execute on function public.midnight_start_training(text, text, text, int, int, text) to anon;
+grant execute on function public.midnight_finish_training(text, text) to anon;
+grant execute on function public.midnight_current_phase() to anon;
+grant execute on function public.midnight_experiment_summary() to anon;</script>
+
+<script>
+(function () {
+  // Fill code blocks from raw text templates (no HTML escaping needed in the source).
+  document.querySelectorAll("pre[data-code]").forEach(function (pre) {
+    var src = document.getElementById("code-" + pre.getAttribute("data-code"));
+    if (src) pre.textContent = src.textContent.replace(/^\n/, "");
+    var btn = document.createElement("button");
+    btn.type = "button"; btn.className = "copy"; btn.textContent = "Copiar";
+    btn.addEventListener("click", function () {
+      var done = function () { btn.textContent = "Copiado"; setTimeout(function () { btn.textContent = "Copiar"; }, 1500); };
+      var fallback = function () { var r = document.createRange(); r.selectNodeContents(pre); var s = getSelection(); s.removeAllRanges(); s.addRange(r); btn.textContent = "Seleccionado"; };
+      try { navigator.clipboard.writeText(pre.textContent).then(done, fallback); } catch (e) { fallback(); }
+    });
+    pre.parentNode.appendChild(btn);
+  });
+
+  var pages = Array.prototype.slice.call(document.querySelectorAll("section.page[data-page]"));
+  var order = Array.prototype.slice.call(document.querySelectorAll("nav.side a")).map(function (a) { return a.getAttribute("href").slice(1); });
+  var side = document.getElementById("side"), menuBtn = document.getElementById("menu-btn"), pager = document.getElementById("pager");
+  var titleOf = function (id) { var p = pages.find(function (x) { return x.dataset.page === id; }); return p ? p.dataset.title : id; };
+
+  function show(id) {
+    if (!pages.some(function (p) { return p.dataset.page === id; })) id = "inicio";
+    pages.forEach(function (p) { p.hidden = p.dataset.page !== id; });
+    document.querySelectorAll("nav.side a").forEach(function (a) { if (a.getAttribute("href") === "#" + id) a.setAttribute("aria-current", "page"); else a.removeAttribute("aria-current"); });
+    var i = order.indexOf(id), prev = order[i - 1], next = order[i + 1];
+    pager.innerHTML = (prev ? '<a href="#' + prev + '"><small>Anterior</small>' + titleOf(prev) + "</a>" : "<span></span>") +
+                      (next ? '<a href="#' + next + '" style="text-align:right"><small>Siguiente</small>' + titleOf(next) + "</a>" : "");
+    if (window.matchMedia("(max-width: 860px)").matches) { side.hidden = true; menuBtn.setAttribute("aria-expanded", "false"); }
+    window.scrollTo(0, 0);
+  }
+  window.addEventListener("hashchange", function () { show(location.hash.slice(1)); });
+  if (window.matchMedia("(max-width: 860px)").matches) side.hidden = true;
+  menuBtn.addEventListener("click", function () { side.hidden = !side.hidden; menuBtn.setAttribute("aria-expanded", String(!side.hidden)); });
+  show(location.hash.slice(1) || "inicio");
+
+  // Search across every page's text.
+  var index = pages.map(function (p) { return { id: p.dataset.page, title: p.dataset.title, text: p.textContent.replace(/\s+/g, " ") }; });
+  var input = document.getElementById("search"), results = document.getElementById("results");
+  input.addEventListener("input", function () {
+    var q = input.value.trim().toLowerCase();
+    if (q.length < 2) { results.hidden = true; return; }
+    var hits = index.map(function (e) {
+      var at = e.text.toLowerCase().indexOf(q);
+      return at < 0 && e.title.toLowerCase().indexOf(q) < 0 ? null : { e: e, at: Math.max(at, 0) };
+    }).filter(Boolean).slice(0, 8);
+    results.innerHTML = hits.length ? hits.map(function (h) {
+      var snip = h.e.text.slice(Math.max(0, h.at - 50), h.at + 90).replace(/[<>&]/g, "");
+      return '<a href="#' + h.e.id + '">' + h.e.title + "<small>…" + snip + "…</small></a>";
+    }).join("") : '<a><small>Sin resultados para esa búsqueda.</small></a>';
+    results.hidden = false;
+  });
+  results.addEventListener("click", function () { results.hidden = true; input.value = ""; });
+  document.addEventListener("click", function (e) { if (!e.target.closest(".search")) results.hidden = true; });
+
+  // Theme toggle: system → light → dark.
+  var root = document.documentElement, themeBtn = document.getElementById("theme-btn");
+  var label = { "": "Tema: sistema", light: "Tema: claro", dark: "Tema: oscuro" };
+  var saved = ""; try { saved = localStorage.getItem("cm-theme") || ""; } catch (e) {}
+  var apply = function (t) { if (t) root.setAttribute("data-theme", t); else root.removeAttribute("data-theme"); themeBtn.textContent = label[t]; };
+  apply(saved);
+  themeBtn.addEventListener("click", function () {
+    var cur = root.getAttribute("data-theme") || "", nxt = cur === "" ? "light" : cur === "light" ? "dark" : "";
+    apply(nxt); try { localStorage.setItem("cm-theme", nxt); } catch (e) {}
+  });
+})();
+</script>

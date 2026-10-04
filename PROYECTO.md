@@ -16,6 +16,12 @@ desde un navegador en este setup.
 | BB-8 | `user-agent-326gbw4lg4sjiiv` | miner | mining |
 | C-3PO | `user-agent-r5wd1einkurgide` | lumberjack | woodcutting |
 
+## Sitio de documentación
+
+https://claude.ai/artifact/EX2ukCS7U8FtaddKaaA4DL (privado; se comparte desde su menú Share).
+Fuente: `docs/site/index.html`. Para actualizarlo, editar ese archivo y republicar el Artifact con esa URL.
+Incluye la guía white label y el SQL completo para replicar el sistema.
+
 ## Cómo retomar en un chat nuevo
 
 1. Leer este archivo completo.
