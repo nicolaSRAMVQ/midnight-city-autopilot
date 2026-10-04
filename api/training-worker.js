@@ -37,7 +37,13 @@ async function trainAgent(agent, row, shared) {
   let active = row?.active ? row : null;
   if (!active) {
     const lastShift = row?.finished_at ? Date.parse(row.finished_at) : 0;
-    if (Date.now() - lastShift < DAILY_SHIFT_EVERY_MS || !initial) return { agent: agent.name, idle: true };
+    if (Date.now() - lastShift < DAILY_SHIFT_EVERY_MS || !initial) {
+      // Keep-alive: the control lease lasts exactly the autopilot's 5-min interval, so
+      // agents only touched by the autopilot dropped out of the city ~30% of the time
+      // (C-3PO, 3/10). Renewing it every minute costs no action and doesn't stop work.
+      await connect(agent.id);
+      return { agent: agent.name, idle: true, keepAlive: true };
+    }
     const [gameContent, merchants, policy] = await shared;
     const choice = chooseTraining(agent, initial.progression, gameContent, merchants, policy.maxLevel);
     if (!choice) return { agent: agent.name, idle: true, note: "sin skill de entrenamiento disponible" };
