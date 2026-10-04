@@ -1,7 +1,7 @@
 # Cuadrilla Midnight — Proyecto
 
 Fuente única de verdad del proyecto. Si otro documento contradice este, vale este.
-Última actualización: 2026-10-04 (autopilot v3.27).
+Última actualización: 2026-10-04 (autopilot v3.28).
 
 ## Qué es
 
@@ -217,6 +217,8 @@ Las fases viven en `midnight.experiment_phase` (se editan en Supabase, sin deplo
   (crystals y XP principal cada 10 min). Calcularla para el informe final del 10/10.
 - Primeras 10 h de la fase A: R2 ~21 💎/h y 107 XP/h principal; BB-8 ~25 💎/h y 39 XP/h; C-3PO ~15 💎/h y 11.862 XP/h.
   Antes del entrenamiento (28/9→3/10) R2 hacía ~180 💎/h.
+- Ojo al comparar: el 4/10 ~03:30 UTC, a mitad de la fase A, entraron mejoras de eficiencia que aplican a todas
+  las fases (v3.27 keep-alive, v3.28 el worker ya no abandona el minuto). Medir la fase A desde ahí.
 - Al terminar: elegir la fase ganadora y dejarla fija (o mezclar).
 
 ## Pendientes
@@ -226,7 +228,7 @@ Las fases viven en `midnight.experiment_phase` (se editan en Supabase, sin deplo
 - Vercel gratis permite 100 deploys por día (`api-deployments-free-per-day`); si se pasa, esperar al día siguiente.
 - BB-8 podría usar el iron_pickaxe (Mining 5) pero hay que forjarlo (Smithing 5).
 - Bajar el 11% de corridas con agentes dormidos.
-- Sumar los contratos al ciclo (XP gratis, una vez).
+- Contratos: hoy solo C-3PO tiene (4, 732 XP en total, ~4 min de su trabajo) y entregarlos corta su loop. No vale la pena por ahora.
 - Actualizar la skill al bundle 2026-09-17 (ver `latestSkillVersion` en `context`).
 - R2 junta encrypted_packet sin comprador (1.459 al 28/9). Hoy no lo frena; vigilar la carga.
 - Evaluar la ruta del iron_pickaxe para BB-8 (lenta: ~1.700 fundiciones hasta Smithing 5).
@@ -240,6 +242,7 @@ del cinder_axe. Verificar siempre contra `SKILL.md`, `references/` y
 
 ## Historial
 
+- **v3.28 (4/10):** el worker espera a que la recolección llegue al nodo nuevo en vez de abandonar el minuto; 50 s por minuto.
 - **v3.27 (4/10):** el worker renueva el control de los agentes que no entrenan (C-3PO estaba dormido ~30%).
 - **v3.26 (4/10):** experimento de una semana con 4 fases de entrenamiento; snapshot con XP secundario; sección en el reporte.
 - **v3.25 (3/10, en producción desde 15:37 UTC):** el reporte de Telegram muestra el entrenamiento por agente. Deploys por git desactivados.
