@@ -1,8 +1,10 @@
 /**
  * Droid crew autopilot — lightweight keep-alive, runs every 10 min via
  * EasyCron. Handles every agent in lib/agents.js in parallel (each with its
- * own lease). Silent on routine success: Telegram is only pinged on a real
- * failure. The 4x/day report (api/r2-report.js) shows what this did.
+ * own lease). Silent on routine success. v3.29: an agent's failure is only
+ * sent to Telegram once it has failed 3 runs in a row (one message
+ * per problem, plus one when it recovers): ~100 one-off 401s a day were noise.
+ * The daily report (api/r2-report.js) shows what this did.
  * See lib/mcity-maintenance.js for the shared logic and design notes.
  */
 
@@ -13,9 +15,11 @@ import {
   runConnectedMaintenance,
   tryReadWithoutConnecting,
 } from "../lib/mcity-maintenance.js";
+import { rpc } from "../lib/supabase.js";
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
+const FAILURE_THRESHOLD = 3;
 
 async function sendTelegramAlert(text) {
   await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -96,11 +100,28 @@ export default async function handler(req, res) {
 
   const results = await Promise.all(AGENTS.map(runAgent));
 
-  const failures = results.filter((r) => r.error);
-  if (failures.length > 0) {
+  // Streaks live in midnight.alert_state. If Supabase can't be reached we say
+  // nothing: a missed alert repeats next run, a false one can't be taken back.
+  const verdicts = await Promise.all(
+    results.map(async (r) => ({
+      ...r,
+      verdict: await rpc("midnight_track_failure", {
+        p_key: `autopilot:${r.agent}`,
+        p_failed: Boolean(r.error),
+        p_error: r.error ?? null,
+        p_threshold: FAILURE_THRESHOLD,
+      }).catch(() => null),
+    })),
+  );
+  const alerts = verdicts.filter((v) => v.verdict === "alert");
+  const recovered = verdicts.filter((v) => v.verdict === "recovered");
+  if (alerts.length > 0) {
     await sendTelegramAlert(
-      `⚠️ Autopiloto (chequeo rápido) falló:\n${failures.map((f) => `• ${f.agent}: ${f.error}`).join("\n")}`,
+      `⚠️ Autopiloto: falla hace ${FAILURE_THRESHOLD} ciclos seguidos (15 min):\n${alerts.map((f) => `• ${f.agent}: ${f.error}`).join("\n")}\nTe aviso cuando se recupere.`,
     );
+  }
+  if (recovered.length > 0) {
+    await sendTelegramAlert(`✅ Autopiloto: se recuperó ${recovered.map((r) => r.agent).join(", ")}.`);
   }
 
   // v3.14: Last-resort crystal rescue — only reaches an agent that is still

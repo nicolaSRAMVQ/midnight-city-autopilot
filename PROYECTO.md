@@ -1,7 +1,7 @@
 # Cuadrilla Midnight — Proyecto
 
 Fuente única de verdad del proyecto. Si otro documento contradice este, vale este.
-Última actualización: 2026-10-04 (autopilot v3.28).
+Última actualización: 2026-10-09 (autopilot v3.29).
 
 ## Qué es
 
@@ -249,6 +249,7 @@ del cinder_axe. Verificar siempre contra `SKILL.md`, `references/` y
 ## Historial
 
 - **v3.28 (4/10):** el worker espera a que la recolección llegue al nodo nuevo en vez de abandonar el minuto; 50 s por minuto.
+- **v3.29 (9/10):** Telegram con menos ruido. Las alertas del piloto solo salen si un droide falla 3 ciclos seguidos, una vez, y otra al recuperarse (tabla midnight.alert_state). El worker ya no renueva el control en los minutos del piloto (la colisión daba ~100 HTTP 401 por día desde el 4/10). Un solo reporte automático, corto, a las 9; el resto a demanda con /menu en el bot (api/telegram.js). Si un reporte programado falla, no se manda nada.
 - **v3.27 (4/10):** el worker renueva el control de los agentes que no entrenan (C-3PO estaba dormido ~30%).
 - **v3.26 (4/10):** experimento de una semana con 4 fases de entrenamiento; snapshot con XP secundario; sección en el reporte.
 - **v3.25 (3/10, en producción desde 15:37 UTC):** el reporte de Telegram muestra el entrenamiento por agente. Deploys por git desactivados.

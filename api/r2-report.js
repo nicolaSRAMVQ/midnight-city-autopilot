@@ -1,8 +1,13 @@
 /**
- * Droid crew Telegram report — 4x/day (Supabase pg_cron). One short narrative
- * intro for the whole crew, then every metric for each agent in lib/agents.js.
- * Each agent goes through the same maintenance as the autopilot; agents under
- * another kind of control (e.g. the City app's own runtime) are only read.
+ * Droid crew Telegram report. One short narrative intro for the whole crew,
+ * then every metric for each agent in lib/agents.js. Each agent goes through
+ * the same maintenance as the autopilot; agents under another kind of control
+ * (e.g. the City app's own runtime) are only read.
+ *
+ * v3.29: once a day by pg_cron in the short form (?mode=short), with a menu
+ * button for the full one. On demand, api/telegram.js builds either form
+ * read-only (no lease, so it can't collide with the autopilot). If a scheduled
+ * report can't be built, nothing is sent: the menu is there to ask again.
  */
 
 import { AGENTS } from "../lib/agents.js";
@@ -160,11 +165,11 @@ function crewIntro(window, all, trainingRows) {
   return `${parts[0]} ${sentence}. ${closing}`.trim();
 }
 
-async function buildAgentData(agent) {
+async function buildAgentData(agent, readOnly) {
   const initial = await tryReadWithoutConnecting(agent.id);
   const control = initial?.context.controlStatus ?? null;
   const externallyControlled = control !== null && control.mode !== "browser_local";
-  if (externallyControlled) return { agent, data: initial, notes: [], externallyControlled };
+  if (externallyControlled || readOnly) return { agent, data: initial, notes: [], externallyControlled };
   const m = await runConnectedMaintenance(agent, {
     context: initial?.context ?? null,
     needs: initial?.needs ?? null,
@@ -174,11 +179,18 @@ async function buildAgentData(agent) {
   return { agent, data: m, notes: m.autopilotNotes ?? [], externallyControlled };
 }
 
-async function sendTelegramMessage(text) {
+export const MENU = {
+  inline_keyboard: [
+    [{ text: "⚡ Resumen", callback_data: "short" }, { text: "📜 Reporte completo", callback_data: "full" }],
+    [{ text: "🩺 Estado del piloto", callback_data: "status" }],
+  ],
+};
+
+export async function sendTelegramMessage(text, replyMarkup) {
   const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text, parse_mode: "HTML", disable_web_page_preview: true }),
+    body: JSON.stringify({ chat_id: TELEGRAM_CHAT_ID, text, parse_mode: "HTML", disable_web_page_preview: true, reply_markup: replyMarkup }),
   });
   if (!response.ok) throw new Error(`Telegram error: ${response.status} ${await response.text()}`);
 }
@@ -190,13 +202,27 @@ const WINDOWS = [
   { center: 21 * 60, name: "SUSURRO NOCTURNO", desc: "En la oscuridad, tres corazones laten al ritmo de la Ciudad." },
 ];
 
-export async function buildReport() {
+function formatAgentShort(m, trainingRow) {
+  const level = m.primary ? `${esc(m.primaryName)} L${m.primary.level}${m.primary.pct != null ? ` (${m.primary.pct}%)` : ""}` : esc(m.primaryName);
+  const doing = trainingRow?.active ? `🎓 ${esc(trainingRow.skill)}` : m.working ? "⚒️" : "🏕️";
+  const slow = (m.load.workSpeedPercent ?? 100) < 100 ? ` · ⚖️ ${m.load.workSpeedPercent}%` : "";
+  return `${doing} <b>${esc(m.agent.name)}</b> · ${level} · 💎 ${num(m.crystals)} · 🥤 ${m.hunger}${slow}`;
+}
+
+async function currentPhaseLine() {
+  const phase = (await rpc("midnight_current_phase").catch(() => []))?.[0];
+  if (!phase) return null;
+  const until = new Date(phase.ends_at).toLocaleString("es-AR", { timeZone: TZ, day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
+  return `🧪 Experimento, fase ${phase.id} hasta ${until}`;
+}
+
+export async function buildReport({ mode = "full", readOnly = false } = {}) {
   const gameContent = await fetchGameContent().catch(() => null);
   const trainingRows = await getTrainingRows().catch(() => []);
   const all = await Promise.all(
     AGENTS.map(async (agent) => {
       try {
-        const r = await buildAgentData(agent);
+        const r = await buildAgentData(agent, readOnly);
         const ok = r.data?.context && r.data?.needs && r.data?.inventory && r.data?.progression;
         return { ...r, metrics: ok ? agentMetrics(agent, r.data, gameContent) : null };
       } catch (error) {
@@ -218,6 +244,12 @@ export async function buildReport() {
   );
   const footer = `━━━━━━━━━━\n🌟 <a href='https://dashboard-app-green-alpha.vercel.app'>Mirador de la Ciudad</a>\n⏰ ${new Date().toLocaleString("es-AR", { timeZone: TZ })}`;
 
+  if (mode === "short") {
+    const lines = all.map((a) => (a.metrics ? formatAgentShort(a.metrics, trainingRows.find((r) => r.agent_id === a.agent.id)) : `💤 <b>${esc(a.agent.name)}</b> sin datos`));
+    const phase = await currentPhaseLine();
+    return [[header, "", ...lines, ...(phase ? ["", phase] : [])].join("\n")];
+  }
+
   const experiment = await experimentSection().catch(() => null);
   if (experiment) sections.push(experiment);
   const combined = `${header}\n\n${sections.join("\n\n")}\n\n${footer}`;
@@ -235,17 +267,14 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Missing env variables" });
   }
 
+  const mode = req.query?.mode === "short" ? "short" : "full";
   try {
-    const messages = await buildReport();
-    for (const message of messages) await sendTelegramMessage(message.slice(0, 4096));
-    res.status(200).json({ success: true, agents: AGENTS.map((a) => a.name), messages: messages.length });
+    const messages = await buildReport({ mode });
+    for (const [i, message] of messages.entries()) await sendTelegramMessage(message.slice(0, 4096), i === messages.length - 1 ? MENU : undefined);
+    res.status(200).json({ success: true, mode, agents: AGENTS.map((a) => a.name), messages: messages.length });
   } catch (error) {
+    // No Telegram message on failure (v3.29): the logged 500 is enough.
     console.error(error);
-    try {
-      await sendTelegramMessage(`⚠️ No pude generar el reporte: ${esc(error.message)}`);
-    } catch {
-      // ignore secondary failure
-    }
     res.status(500).json({ error: error.message });
   }
 }

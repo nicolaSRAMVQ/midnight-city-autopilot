@@ -6,7 +6,8 @@
  * two projects and burned the 100-deploys/day free quota.)
  *
  * "Quiet too long" = no successful autopilot run in midnight.log for 25 min.
- * The alert repeats on every call while the silence lasts, on purpose.
+ * v3.29: one alert when the silence starts and one when it ends (it used to
+ * repeat every 10 min while it lasted).
  */
 
 import { AGENTS } from "../lib/agents.js";
@@ -59,7 +60,9 @@ export default async function handler(req, res) {
   const silentForMs = lastTimestamp ? now - lastTimestamp : null;
   const isSilent = silentForMs !== null && silentForMs > SILENCE_THRESHOLD_MS;
 
-  if (isSilent) {
+  const verdict = lastTimestamp === null ? null : await rpc("midnight_track_failure", { p_key: "silence", p_failed: isSilent, p_threshold: 1 }).catch(() => null);
+  if (verdict === "recovered") await sendTelegramAlert("✅ El autopiloto volvió a correr.");
+  if (verdict === "alert") {
     const minutes = Math.round(silentForMs / 60000);
     await sendTelegramAlert(
       `🔇 <b>Silencio detectado</b>: sin corrida exitosa del autopilot hace ${minutes} min (umbral: ${SILENCE_THRESHOLD_MS / 60000} min).\n` +

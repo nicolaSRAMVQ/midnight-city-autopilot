@@ -13,7 +13,9 @@ name: Agent autopilot
 # get removed from the city). Supabase jobs (see cron.job):
 #   midnight-autopilot-5min        */5  * * * *  -> /api/r2-autopilot
 #   midnight-silence-check-10min   */10 * * * *  -> /api/silence-check
-#   midnight-report-{9,13,18,21}h  daily         -> /api/r2-report
+#   midnight-report-9h             daily 12 UTC  -> /api/r2-report?mode=short
+#   (v3.29: the other three daily reports were dropped; the bot menu, api/telegram.js,
+#   sends any report on demand)
 # This workflow keeps running as a zero-cost backup for the autopilot and
 # silence-check. Reports are NOT scheduled here anymore (they'd duplicate);
 # use workflow_dispatch -> report to send one by hand.

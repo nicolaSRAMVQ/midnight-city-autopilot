@@ -41,6 +41,10 @@ async function trainAgent(agent, row, shared) {
       // Keep-alive: the control lease lasts exactly the autopilot's 5-min interval, so
       // agents only touched by the autopilot dropped out of the city ~30% of the time
       // (C-3PO, 3/10). Renewing it every minute costs no action and doesn't stop work.
+      // v3.29: not on the autopilot's minutes. A second connect while its run is
+      // mid-flight voids its token and it got HTTP 401 (~100 alerts/day from 4/10).
+      const minute = new Date().getUTCMinutes() % 5;
+      if (minute === 0 || minute === 1) return { agent: agent.name, idle: true, keepAlive: "skipped_autopilot_minute" };
       await connect(agent.id);
       return { agent: agent.name, idle: true, keepAlive: true };
     }
