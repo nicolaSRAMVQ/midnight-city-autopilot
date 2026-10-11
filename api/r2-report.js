@@ -100,7 +100,7 @@ function formatAgentSection(m, notes, externallyControlled, trainingRow) {
     ? `🧰 ${m.tools.map((t) => `${esc(t.id)} ${t.usable ? "✅ activa" : `⏳ desde ${esc(t.skill)} L${t.requiredLevel}`}`).join(" · ")}`
     : "🧰 Sin herramienta";
   const lines = [
-    `<b>✨ ${esc(m.agent.name)}</b> · ${esc(m.agent.profession)}${m.rank ? ` · 🏆 puesto #${m.rank}` : ""}${externallyControlled ? " · 🎮 controlado desde otro lado" : ""}`,
+    `<b>✨ ${esc(m.agent.name)}</b> · ${esc(m.agent.profession)}${m.rank ? ` · 🏆 puesto${rankText(m)}` : ""}${externallyControlled ? " · 🎮 controlado desde otro lado" : ""}`,
     `${doing} · 📍 ${esc(m.place)}`,
     m.primary ? `🎯 ${fmtProgress(esc(m.primaryName), m.primary)}` : `🎯 ${esc(m.primaryName)}: sin datos`,
     m.others.length ? `📚 ${m.others.map((o) => `${esc(o.name)} L${o.p.level}${o.p.pct != null ? ` (${o.p.pct}%)` : ""}`).join(" · ")}` : null,
@@ -165,6 +165,17 @@ function crewIntro(window, all, trainingRows) {
   return `${parts[0]} ${sentence}. ${closing}`.trim();
 }
 
+// "#254 ▲12 (4,5 %) en 7 días": compara con el puesto más viejo de la última semana.
+function rankText(m) {
+  if (!m.rank) return "";
+  const b = m.rankBase;
+  if (!b?.rank || b.rank === m.rank) return ` #${m.rank}${b?.rank ? " =" : ""}`;
+  const diff = b.rank - m.rank; // positivo = subió
+  const pct = Math.abs((diff / b.rank) * 100).toFixed(1).replace(".", ",");
+  const days = Math.max(1, Math.round((Date.now() - Date.parse(b.at)) / 864e5));
+  return ` #${m.rank} ${diff > 0 ? "▲" : "▼"}${Math.abs(diff)} (${pct} %) en ${days >= 7 ? "7 días" : `${days} día${days > 1 ? "s" : ""}`}`;
+}
+
 // Puesto en el ranking general de experiencia del juego (no necesita token ni sesión).
 async function fetchRank(agentId) {
   try {
@@ -218,7 +229,7 @@ function formatAgentShort(m, trainingRow) {
   const level = m.primary ? `${esc(m.primaryName)} L${m.primary.level}${m.primary.pct != null ? ` (${m.primary.pct}%)` : ""}` : esc(m.primaryName);
   const doing = trainingRow?.active ? `🎓 ${esc(trainingRow.skill)}` : m.working ? "⚒️" : "🏕️";
   const slow = (m.load.workSpeedPercent ?? 100) < 100 ? ` · ⚖️ ${m.load.workSpeedPercent}%` : "";
-  return `${doing} <b>${esc(m.agent.name)}</b>${m.rank ? ` #${m.rank}` : ""} · ${level} · 💎 ${num(m.crystals)} · 🥤 ${m.hunger}${slow}`;
+  return `${doing} <b>${esc(m.agent.name)}</b>${rankText(m)} · ${level} · 💎 ${num(m.crystals)} · 🥤 ${m.hunger}${slow}`;
 }
 
 async function currentPhaseLine() {
@@ -232,12 +243,14 @@ async function currentPhaseLine() {
 export async function buildReport({ mode = "full", readOnly = false } = {}) {
   const gameContent = await fetchGameContent().catch(() => null);
   const trainingRows = await getTrainingRows().catch(() => []);
+  const rankBase = await rpc("midnight_rank_baseline").catch(() => []);
   const all = await Promise.all(
     AGENTS.map(async (agent) => {
       try {
         const [r, rank] = await Promise.all([buildAgentData(agent, readOnly), fetchRank(agent.id)]);
         const ok = r.data?.context && r.data?.needs && r.data?.inventory && r.data?.progression;
-        return { ...r, metrics: ok ? { ...agentMetrics(agent, r.data, gameContent), rank } : null };
+        const base = (rankBase ?? []).find((b) => b.agent === agent.name)
+        return { ...r, metrics: ok ? { ...agentMetrics(agent, r.data, gameContent), rank, rankBase: base ?? null } : null };
       } catch (error) {
         return { agent, metrics: null, error: error.message };
       }
