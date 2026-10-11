@@ -81,7 +81,7 @@ const short = (n) => n == null ? "–" : Math.abs(n) >= 1e6 ? nf(n / 1e6, 2) + "
 const fmtDate = (d) => { const [, m, day] = d.split("-"); return `${+day}/${+m}`; };
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
-function rankAt(ranks, agent, msAgo) {
+function rankAt(ranks, agent, msAgo, fallback = false) {
   const target = Date.now() - msAgo;
   const mine = ranks.filter((r) => r.agent === agent);
   if (!mine.length) return null;
@@ -89,7 +89,7 @@ function rankAt(ranks, agent, msAgo) {
   for (const r of mine) { if (Date.parse(r.at) <= target) best = r; }
   if (best) return { ...best, exact: true };
   const first = mine[0]; // historial más corto que el período pedido
-  return Date.now() - Date.parse(first.at) > 3 * 36e5 ? { ...first, exact: false } : null;
+  return fallback && Date.now() - Date.parse(first.at) > 3 * 36e5 ? { ...first, exact: false } : null;
 }
 
 function deltaBox(now, past, label) {
@@ -98,8 +98,8 @@ function deltaBox(now, past, label) {
   const pct = (Math.abs(diff) / past.rank) * 100;
   const cls = diff > 0 ? "up" : diff < 0 ? "down" : "eq";
   const arrow = diff > 0 ? "▲" : diff < 0 ? "▼" : "=";
-  const days = Math.max(1, Math.round((Date.now() - Date.parse(past.at)) / 864e5));
-  const lab = past.exact ? label : `${days} d*`;
+  const hours = (Date.now() - Date.parse(past.at)) / 36e5;
+  const lab = past.exact ? label : hours < 24 ? `${Math.round(hours)} h*` : `${Math.round(hours / 24)} d*`;
   return `<div class="delta"><b class="${cls}">${arrow}${diff ? Math.abs(diff) : ""}</b><span>${diff ? nf(pct, 1) + " % · " : ""}${lab}</span></div>`;
 }
 
@@ -119,8 +119,8 @@ function card(a, days, ranks) {
   const state = a.error ? "⚠️ sin lectura" : a.working ? "⚒️ trabajando" : "🏕️ parado";
   return `<div class="card">
     <div class="drow"><span class="name" style="color:${COLORS[a.name]}">${esc(a.name)}</span><span class="sub">${state}</span></div>
-    <div class="drow" style="margin-top:6px"><span class="rank">${now ? "#" + now : "–"}</span><span class="sub">ranking XP</span></div>
-    <div class="deltas">${deltaBox(now, rankAt(ranks, a.name, 864e5), "1 día")}${deltaBox(now, rankAt(ranks, a.name, 7 * 864e5), "7 días")}${deltaBox(now, rankAt(ranks, a.name, 30 * 864e5), "30 días")}</div>
+    <div class="drow" style="margin-top:6px"><span class="rank">${now ? "#" + now : "–"}</span><span class="sub">${TOTAL && now ? `de ${nf(TOTAL)} · top ${Math.max(1, Math.round((now / TOTAL) * 100))} %` : "ranking XP"}</span></div>
+    <div class="deltas">${deltaBox(now, rankAt(ranks, a.name, 864e5, true), "1 día")}${deltaBox(now, rankAt(ranks, a.name, 7 * 864e5), "7 días")}${deltaBox(now, rankAt(ranks, a.name, 30 * 864e5), "30 días")}</div>
     <div class="kv"><span>${esc(a.skill)} → L${(a.level ?? 0) + 1}</span><span>${nf(pctLevel, 1)} %</span></div>
     <div class="bar"><i style="width:${pctLevel}%;background:${COLORS[a.name]}"></i></div>
     <div class="kv">
@@ -131,7 +131,7 @@ function card(a, days, ranks) {
       <span>Crystals por día</span><span>${crDay == null ? "–" : (crDay >= 0 ? "+" : "") + nf(crDay)}</span>
       <span>Hambre · carga</span><span>🥤 ${nf(a.hunger)} · ⚖️ ${nf(a.speed)} %</span>
     </div>
-    <div class="gap">${b.ahead ? `⬆️ #${b.ahead.rank} ${esc(b.ahead.name)}: a ${short(gapAhead)} xp${passDays ? ` (lo pasa en ~${passDays < 1 ? nf(passDays * 24) + " h" : nf(passDays, 1) + " d"})` : ""}` : ""}
+    <div class="gap">${b.ahead ? `⬆️ #${b.ahead.rank} ${esc(b.ahead.name)}: a ${short(gapAhead)} xp${passDays ? ` (lo pasa en ${passDays * 24 < 1 ? "menos de 1 h" : passDays < 1 ? "~" + nf(passDays * 24) + " h" : "~" + nf(passDays, 1) + " d"})` : ""}` : ""}
       ${b.behind ? `<br>⬇️ #${b.behind.rank} ${esc(b.behind.name)}: ${short(gapBehind)} xp atrás` : ""}</div>
   </div>`;
 }
@@ -233,7 +233,7 @@ function phasesBlock(phases) {
   }).join("");
 }
 
-let DATA = null, current = "xp";
+let DATA = null, current = "xp", TOTAL = null;
 function drawChart() {
   document.getElementById("chart").innerHTML = lineChart(DATA.history.days, current);
   document.getElementById("chartNote").textContent = current === "rank" ? "Arriba es mejor. El historial de puestos arrancó el 11/10." : current === "xpday" ? "XP que sumó cada droide en el día (de cierre a cierre)." : "";
@@ -247,6 +247,7 @@ async function load() {
     const h = DATA.history || {};
     if (h.error) throw new Error(h.error);
     const days = h.days || [], ranks = h.ranks || [];
+    TOTAL = DATA.totalAgents;
     const live = ORDER.map((n) => DATA.live.find((a) => a.name === n)).filter(Boolean);
     document.getElementById("cards").innerHTML = live.map((a) => card(a, days, ranks)).join("");
     document.getElementById("tabs").innerHTML = Object.entries(METRICS).map(([k, m]) => `<button data-k="${k}">${m.label}</button>`).join("");
