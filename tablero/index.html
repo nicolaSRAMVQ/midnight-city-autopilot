@@ -168,7 +168,7 @@ function hourly(hours, f, { delta = false, back = 24 } = {}) {
   return { xs: hs.map(hourLabel), series };
 }
 
-function hourlyRanks(ranks, backHours = null) {
+function hourlyRanks(ranks, backHours = null, raw = false) {
   if (backHours) ranks = ranks.filter((r) => Date.parse(r.at) >= Date.now() - backHours * 36e5);
   const hours = [...new Set(ranks.map((r) => r.at.slice(0, 13)))].sort();
   const label = (h) => hourLabel(h + ":00:00Z");
@@ -177,16 +177,16 @@ function hourlyRanks(ranks, backHours = null) {
     series: ORDER.map((agent) => {
       const mine = ranks.filter((r) => r.agent === agent);
       const first = mine[0]?.rank;
-      const by = Object.fromEntries(mine.map((r) => [r.at.slice(0, 13), first - r.rank])); // puestos ganados
+      const by = Object.fromEntries(mine.map((r) => [r.at.slice(0, 13), raw ? r.rank : first - r.rank])); // puesto o puestos ganados
       return { agent, vals: hours.map((h) => by[h] ?? null) };
     }),
   };
 }
 
-function chart({ xs, series }, { kind = "line", fmt = short, invert = false, range = null, width }) {
+function chart({ xs, series }, { kind = "line", fmt = short, invert = false, range = null, width, height = 220 }) {
   const all = series.flatMap((s) => s.vals).filter((v) => v != null);
   if (all.length < 2 || xs.length < 2) return `<p class="sub">Todavía no hay suficientes datos. Se va llenando solo.</p>`;
-  const W = Math.max(300, Math.min(640, width || 640)), H = 220, L = 50, R = 10, T = 10, B = 26;
+  const W = Math.max(300, Math.min(640, width || 640)), H = height, L = 50, R = 10, T = 10, B = 26;
   let [lo, hi] = range ?? [Math.min(...all), Math.max(...all)];
   if (kind === "bar") lo = Math.min(0, lo);
   if (hi === lo) { hi += 1; lo -= 1; }
@@ -194,8 +194,9 @@ function chart({ xs, series }, { kind = "line", fmt = short, invert = false, ran
   const x = (i) => (kind === "bar" ? L + slot * (i + 0.5) : L + (n === 1 ? 0 : (i * (W - L - R)) / (n - 1)));
   const y = (v) => { const t = (v - lo) / (hi - lo); return invert ? T + t * (H - T - B) : H - B - t * (H - T - B); };
   let g = "";
-  for (let k = 0; k <= 4; k++) {
-    const v = lo + ((hi - lo) * k) / 4, yy = y(v);
+  const gridN = height < 180 ? 2 : 4;
+  for (let k = 0; k <= gridN; k++) {
+    const v = lo + ((hi - lo) * k) / gridN, yy = y(v);
     g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="#22263a"/><text x="${L - 6}" y="${yy + 4}" fill="#8a90a8" font-size="11" text-anchor="end">${fmt(v)}</text>`;
   }
   const maxTicks = Math.max(3, Math.floor((W - L - R) / (Math.max(...xs.map((d) => String(d).length)) * 7 + 10)));
@@ -219,6 +220,20 @@ function chart({ xs, series }, { kind = "line", fmt = short, invert = false, ran
     }
   });
   return `<svg class="chartbox" viewBox="0 0 ${W} ${H}" role="img">${g}</svg>`;
+}
+
+// Puesto real de cada droide, cada uno con su propia escala (están en zonas muy
+// distintas del ranking, y en una escala común las tres líneas salen planas).
+function rankCard(ranks, back, width) {
+  const data = hourlyRanks(ranks, back, true);
+  const parts = data.series.map((s) => {
+    const vals = s.vals.filter((v) => v != null);
+    if (vals.length < 2) return "";
+    const first = vals[0], last = vals.at(-1), best = Math.min(...vals), diff = first - last;
+    const head = `<div class="now"><b style="color:${COLORS[s.agent]}">${s.agent}</b> de #${nf(first)} a <b>#${nf(last)}</b> <span class="${diff > 0 ? "up" : diff < 0 ? "down" : "eq"}">${diff > 0 ? "▲" : diff < 0 ? "▼" : "="}${diff ? Math.abs(diff) : ""}</span> · mejor #${nf(best)}</div>`;
+    return head + chart({ xs: data.xs, series: [s] }, { invert: true, fmt: (v) => "#" + nf(v), width, height: 130 });
+  }).join("");
+  return `<div class="card"><h3>Puesto en el ranking</h3>${parts || '<p class="sub">Todavía no hay suficientes datos.</p>'}<div class="note">Hora por hora; arriba es mejor. Cada droide tiene su propia escala. El registro de puestos empezó el 11/10 a la madrugada; antes de eso el juego no guarda historial.</div></div>`;
 }
 
 // Último valor de cada droide, para leer el gráfico sin tocarlo.
@@ -254,7 +269,7 @@ function drawCharts() {
       ];
   document.getElementById("ranges").innerHTML = Object.entries(RANGES).map(([k, v]) => `<button data-r="${k}" class="${k === RANGE ? "on" : ""}">${v.label}</button>`).join("");
   document.querySelectorAll("#ranges button").forEach((b) => (b.onclick = () => { RANGE = b.dataset.r; try { localStorage.setItem("mc-range", RANGE); } catch {} drawCharts(); }));
-  document.getElementById("charts").innerHTML = specs.map((c) => `<div class="card"><h3>${c.title}</h3><div class="now">${latest(c.data, c.opt.fmt || short)}</div>${chart(c.data, { ...c.opt, width })}<div class="note">${c.note}</div></div>`).join("");
+  document.getElementById("charts").innerHTML = rankCard(ranks, rankBack, width) + specs.map((c) => `<div class="card"><h3>${c.title}</h3><div class="now">${latest(c.data, c.opt.fmt || short)}</div>${chart(c.data, { ...c.opt, width })}<div class="note">${c.note}</div></div>`).join("");
 }
 
 function boxesTable(days) {
