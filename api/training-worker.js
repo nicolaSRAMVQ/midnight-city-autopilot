@@ -8,6 +8,7 @@
  */
 
 import { AGENTS } from "../lib/agents.js";
+import { rpc } from "../lib/supabase.js";
 import {
   connect,
   fetchGameContent,
@@ -130,8 +131,10 @@ export default async function handler(req, res) {
     return res.status(200).json({ worker: true, error: error.message });
   }
   const shared = Promise.all([fetchGameContent().catch(() => null), fetchMerchants(), getTrainingPolicy()]);
+  // v3.36: los agentes en prueba manual no se tocan (ni keep-alive: robaría la sesión).
+  const holds = (await rpc("midnight_manual_holds").catch(() => [])) ?? [];
   const results = await Promise.all(
-    AGENTS.map((agent) =>
+    AGENTS.map((agent) => holds.some((h) => h.agent === agent.name) ? { agent: agent.name, skipped: "manual" } :
       trainAgent(agent, rows.find((r) => r.agent_id === agent.id), shared).catch((error) => ({ agent: agent.name, error: error.message })),
     ),
   );

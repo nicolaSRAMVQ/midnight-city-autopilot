@@ -45,8 +45,13 @@ function toRescueState(agent, { inventory, needs, sellableBatches, crystalsPerBa
   };
 }
 
+// v3.36: agentes en prueba manual (tabla midnight.manual_hold, vence sola): el piloto no los toca.
+let holds = [];
+
 async function runAgent(agent) {
   try {
+    const hold = holds.find((h) => h.agent === agent.name);
+    if (hold) return { agent: agent.name, skipped: true, reason: `manual: ${hold.reason}` };
     const initial = await tryReadWithoutConnecting(agent.id);
     // Our own lease from the previous run shows up as mode "browser_local"
     // (renewing it is the point); only yield to other kinds of control.
@@ -98,6 +103,7 @@ export default async function handler(req, res) {
     return res.status(200).json({ paused: true, results: [] });
   }
 
+  holds = (await rpc("midnight_manual_holds").catch(() => [])) ?? [];
   const results = await Promise.all(AGENTS.map(runAgent));
 
   // Streaks live in midnight.alert_state. If Supabase can't be reached we say
