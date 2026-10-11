@@ -56,32 +56,61 @@ th{color:var(--mut);font-weight:500}
 .ok{color:var(--up)}.warn{color:#ffad33}
 .note{font-size:12.5px;color:var(--mut);margin-top:8px}
 #err{color:var(--down)}
+body{padding-bottom:84px}
+.page{display:none}
+.page.on{display:block;animation:fade .2s}
+@keyframes fade{from{opacity:.4}to{opacity:1}}
+.page>h2:first-child{margin-top:14px}
+.menu{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(4,1fr);background:rgba(17,19,28,.96);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+.menu a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:10px;color:var(--mut);text-decoration:none;font-size:20px}
+.menu a span{font-size:11px;letter-spacing:.2px;text-align:center;line-height:1.15}
+.menu a.on{color:var(--tx);background:#1b1f2e}
+@media (min-width:760px){
+  body{padding-bottom:16px}
+  .menu{position:sticky;top:0;bottom:auto;margin:12px 0 4px;border:1px solid var(--line);border-radius:14px;grid-template-columns:repeat(4,auto);justify-content:start;gap:4px;padding:5px}
+  .menu a{flex-direction:row;gap:8px;font-size:16px;padding:8px 14px}
+  .menu a span{font-size:14px}
+}
 </style>
 </head>
 <body>
-<h1>🌃 Tablero Midnight</h1>
-<div class="sub" id="upd">Cargando…</div>
-<div id="err"></div>
+<header class="top">
+  <h1>🌃 Tablero Midnight</h1>
+  <div class="sub" id="upd">Cargando…</div>
+  <div id="err"></div>
+  <nav class="menu" id="menu">
+    <a href="#hoy" data-tab="hoy">🏁 <span>Hoy</span></a>
+    <a href="#graficos" data-tab="graficos">📈 <span>Gráficos</span></a>
+    <a href="#boxes" data-tab="boxes">🔧 <span>Boxes y pruebas</span></a>
+    <a href="#explorar" data-tab="explorar">🧭 <span>Explorar</span></a>
+  </nav>
+</header>
 
-<h2>🏁 Ranking y carrera</h2>
-<div class="grid" id="cards"></div>
+<section class="page" data-page="hoy">
+  <h2>🏁 Ranking y carrera</h2>
+  <div class="grid" id="cards"></div>
+</section>
 
-<h2>📈 Gráficos</h2>
-<div class="tabs" id="ranges"></div>
-<div class="legend" id="legend" style="margin:-2px 0 10px"></div>
-<div class="charts" id="charts"></div>
+<section class="page" data-page="graficos">
+  <h2>📈 Gráficos</h2>
+  <div class="tabs" id="ranges"></div>
+  <div class="legend" id="legend" style="margin:-2px 0 10px"></div>
+  <div class="charts" id="charts"></div>
+</section>
 
-<h2>🔧 Boxes, últimos días</h2>
-<div class="card scroll" id="boxes"></div>
+<section class="page" data-page="boxes">
+  <h2>🔧 Boxes, últimos días</h2>
+  <div class="card scroll" id="boxes"></div>
+  <h2>🧪 Prueba de ventas (desde 11/10)</h2>
+  <div class="card" id="test"></div>
+  <h2>📚 Historial de experimentos</h2>
+  <div class="card" id="phases"></div>
+</section>
 
-<h2>🧪 Prueba de ventas (desde 11/10)</h2>
-<div class="card" id="test"></div>
-
-<h2>📚 Historial de experimentos</h2>
-<div class="card" id="phases"></div>
-
-<h2>🧭 Explorar Midnight City</h2>
-<div id="explore"><div class="card sub">Cargando lo que tiene el juego…</div></div>
+<section class="page" data-page="explorar">
+  <h2>🧭 Explorar Midnight City</h2>
+  <div id="explore"><div class="card sub">Cargando lo que tiene el juego…</div></div>
+</section>
 
 <script>
 const API = "/api/agent-status?view=dashboard";
@@ -445,8 +474,21 @@ async function loadExplore() {
   }
 }
 
+// ───── Menú: una sección por pantalla (mobile first). La URL (#hoy, #graficos…) recuerda dónde estás. ─────
+const TABS = ["hoy", "graficos", "boxes", "explorar"];
+let exploreLoaded = false;
+function showTab(t) {
+  if (!TABS.includes(t)) t = "hoy";
+  document.querySelectorAll(".page").forEach((p) => p.classList.toggle("on", p.dataset.page === t));
+  document.querySelectorAll("#menu a").forEach((a) => a.classList.toggle("on", a.dataset.tab === t));
+  if (t === "graficos" && DATA) drawCharts(); // los gráficos miden el ancho: se dibujan cuando se ven
+  if (t === "explorar" && !exploreLoaded) { exploreLoaded = true; loadExplore(); }
+  window.scrollTo({ top: 0 });
+}
+window.addEventListener("hashchange", () => showTab(location.hash.slice(1)));
+showTab(location.hash.slice(1));
+
 load();
-loadExplore();
 setInterval(load, 5 * 60e3);
 </script>
 </body>
