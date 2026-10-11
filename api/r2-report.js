@@ -100,7 +100,7 @@ function formatAgentSection(m, notes, externallyControlled, trainingRow) {
     ? `🧰 ${m.tools.map((t) => `${esc(t.id)} ${t.usable ? "✅ activa" : `⏳ desde ${esc(t.skill)} L${t.requiredLevel}`}`).join(" · ")}`
     : "🧰 Sin herramienta";
   const lines = [
-    `<b>✨ ${esc(m.agent.name)}</b> · ${esc(m.agent.profession)}${externallyControlled ? " · 🎮 controlado desde otro lado" : ""}`,
+    `<b>✨ ${esc(m.agent.name)}</b> · ${esc(m.agent.profession)}${m.rank ? ` · 🏆 puesto #${m.rank}` : ""}${externallyControlled ? " · 🎮 controlado desde otro lado" : ""}`,
     `${doing} · 📍 ${esc(m.place)}`,
     m.primary ? `🎯 ${fmtProgress(esc(m.primaryName), m.primary)}` : `🎯 ${esc(m.primaryName)}: sin datos`,
     m.others.length ? `📚 ${m.others.map((o) => `${esc(o.name)} L${o.p.level}${o.p.pct != null ? ` (${o.p.pct}%)` : ""}`).join(" · ")}` : null,
@@ -165,6 +165,18 @@ function crewIntro(window, all, trainingRows) {
   return `${parts[0]} ${sentence}. ${closing}`.trim();
 }
 
+// Puesto en el ranking general de experiencia del juego (no necesita token ni sesión).
+async function fetchRank(agentId) {
+  try {
+    const base = (process.env.MCITY_OBSERVER_URL || "").replace(/\/$/, "");
+    const r = await fetch(`${base}/api/leaderboards?board=experience&agentId=${encodeURIComponent(agentId)}`, { signal: AbortSignal.timeout(8000) });
+    if (!r.ok) return null;
+    return (await r.json())?.entry?.rank ?? null;
+  } catch {
+    return null;
+  }
+}
+
 async function buildAgentData(agent, readOnly) {
   const initial = await tryReadWithoutConnecting(agent.id);
   const control = initial?.context.controlStatus ?? null;
@@ -206,12 +218,13 @@ function formatAgentShort(m, trainingRow) {
   const level = m.primary ? `${esc(m.primaryName)} L${m.primary.level}${m.primary.pct != null ? ` (${m.primary.pct}%)` : ""}` : esc(m.primaryName);
   const doing = trainingRow?.active ? `🎓 ${esc(trainingRow.skill)}` : m.working ? "⚒️" : "🏕️";
   const slow = (m.load.workSpeedPercent ?? 100) < 100 ? ` · ⚖️ ${m.load.workSpeedPercent}%` : "";
-  return `${doing} <b>${esc(m.agent.name)}</b> · ${level} · 💎 ${num(m.crystals)} · 🥤 ${m.hunger}${slow}`;
+  return `${doing} <b>${esc(m.agent.name)}</b>${m.rank ? ` #${m.rank}` : ""} · ${level} · 💎 ${num(m.crystals)} · 🥤 ${m.hunger}${slow}`;
 }
 
 async function currentPhaseLine() {
   const phase = (await rpc("midnight_current_phase").catch(() => []))?.[0];
-  if (!phase) return null;
+  // Regla vigente de largo plazo (fase E): no es un experimento, no se muestra.
+  if (!phase || Date.parse(phase.ends_at) - Date.now() > 90 * 864e5) return null;
   const until = new Date(phase.ends_at).toLocaleString("es-AR", { timeZone: TZ, day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" });
   return `🧪 Experimento, fase ${phase.id} hasta ${until}`;
 }
@@ -222,9 +235,9 @@ export async function buildReport({ mode = "full", readOnly = false } = {}) {
   const all = await Promise.all(
     AGENTS.map(async (agent) => {
       try {
-        const r = await buildAgentData(agent, readOnly);
+        const [r, rank] = await Promise.all([buildAgentData(agent, readOnly), fetchRank(agent.id)]);
         const ok = r.data?.context && r.data?.needs && r.data?.inventory && r.data?.progression;
-        return { ...r, metrics: ok ? agentMetrics(agent, r.data, gameContent) : null };
+        return { ...r, metrics: ok ? { ...agentMetrics(agent, r.data, gameContent), rank } : null };
       } catch (error) {
         return { agent, metrics: null, error: error.message };
       }
