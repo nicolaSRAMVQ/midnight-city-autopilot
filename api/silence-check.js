@@ -56,6 +56,7 @@ async function snapshot(agent) {
     isPerformingJob: data.context?.agent?.isPerformingJob ?? null,
     hunger: data.needs?.hunger?.value ?? null,
     crystal: items.crystal ?? 0,
+    space: data.context?.currentSpace?.id ?? data.context?.agent?.position?.spaceId ?? null, // v3.34: mapa de recorridos
     xp: skillId ? (data.progression?.skills?.[skillId]?.xp ?? null) : null,
     xpSecondary: Object.entries(data.progression?.skills ?? {}).filter(([name]) => name !== skillId).reduce((sum, [, sk]) => sum + (sk.xp ?? 0), 0),
   };

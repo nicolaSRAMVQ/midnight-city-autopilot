@@ -44,6 +44,16 @@ th{color:var(--mut);font-weight:500}
 .chartbox{width:100%}
 .phase{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px}
 .phase b{min-width:22px;color:var(--acc)}
+.big{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
+.big div{background:#0b0d14;border-radius:10px;padding:10px}
+.big b{display:block;font-size:22px}
+.big span{font-size:12px;color:var(--mut)}
+.lvl{display:inline-block;min-width:30px;padding:2px 6px;border-radius:6px;text-align:center;font-variant-numeric:tabular-nums}
+.faq details{border-bottom:1px solid var(--line);padding:10px 0}
+.faq summary{cursor:pointer;font-weight:600}
+.faq p{margin:8px 0 0;color:#c9cde0;font-size:14px}
+.tag{display:inline-block;font-size:11.5px;padding:2px 8px;border-radius:999px;background:#0b0d14;color:var(--mut);margin:2px}
+.ok{color:var(--up)}.warn{color:#ffad33}
 .note{font-size:12.5px;color:var(--mut);margin-top:8px}
 #err{color:var(--down)}
 </style>
@@ -69,6 +79,9 @@ th{color:var(--mut);font-weight:500}
 
 <h2>📚 Historial de experimentos</h2>
 <div class="card" id="phases"></div>
+
+<h2>🧭 Explorar Midnight City</h2>
+<div id="explore"><div class="card sub">Cargando lo que tiene el juego…</div></div>
 
 <script>
 const API = "/api/agent-status?view=dashboard";
@@ -338,7 +351,102 @@ async function load() {
     document.getElementById("err").textContent = "No pude leer los datos ahora. Probá recargar en un rato.";
   }
 }
+// ───── Explorar Midnight City (v3.34): qué tiene el juego y qué hicimos y qué no ─────
+const SKILL_ES = { woodcutting: "Tala", mining: "Minería", hacking: "Hacking", smithing: "Herrería", crafting: "Artesanía", fishing: "Pesca", farming: "Cultivo", scavenging: "Rebusque", cooking: "Cocina", chemistry: "Química", energy: "Energía", engineering: "Ingeniería", agility: "Agilidad", infiltration: "Infiltración", combat: "Combate", defence: "Defensa", ranged: "Distancia", vitality: "Vitalidad", bounty_hunting: "Caza de recompensas" };
+const BOARD_ES = { experience: "Experiencia total", completedContracts: "Contratos", mostLiked: "Likes", richest: "Riqueza", mostPopular: "Popularidad", ...SKILL_ES };
+const lvlColor = (l) => l >= 20 ? "background:#1f6f4a;color:#fff" : l >= 10 ? "background:#2d4f3f;color:#fff" : l >= 2 ? "background:#26304a" : "color:#555b70";
+
+function exploreHtml(e) {
+  const t = e.totals, D = ORDER.map((n) => e.droids.find((d) => d.name === n)).filter(Boolean);
+  const trained = (d) => Object.values(d.skills).filter((s) => s.level > 1).length;
+  const totalTools = D.reduce((s, d) => s + d.tools.length, 0);
+  let h = "";
+
+  h += `<div class="card"><p class="sub" style="margin-top:0">Lo que tiene el juego, y cuánto de eso usamos hoy.</p><div class="big">
+    <div><b>${t.skills}</b><span>habilidades · entrenamos ${D.map((d) => `${d.name} ${trained(d)}`).join(", ")}</span></div>
+    <div><b>${t.spaces}</b><span>lugares en el mapa · cada droide vive en 1</span></div>
+    <div><b>${t.contracts}</b><span>contratos · completamos 0</span></div>
+    <div><b>${t.enemies}</b><span>enemigos · peleamos 0</span></div>
+    <div><b>${t.recipes}</b><span>recetas para fabricar · tenemos ${D.map((d) => d.recipes.usable).join(" / ")} habilitadas</span></div>
+    <div><b>${t.equipment}</b><span>armas, armaduras y equipo · usamos 0</span></div>
+    <div><b>${t.tools}</b><span>herramientas · tenemos ${totalTools} (una cada uno)</span></div>
+    <div><b>${t.constructionSites}</b><span>terrenos para construir · tenemos 0</span></div>
+    <div><b>${t.boards}</b><span>rankings distintos</span></div>
+  </div></div>`;
+
+  // Rankings donde mejor estamos
+  h += `<div class="card" style="margin-top:12px"><h3 style="margin:0 0 4px">🏆 Dónde estamos mejor</h3><p class="sub" style="margin-top:0">Los rankings en los que cada droide está más arriba, de los ${t.boards} que tiene el juego.</p><div class="grid">`;
+  for (const d of D) {
+    const best = Object.entries(d.ranks).filter(([, r]) => r).sort((a, b) => a[1] - b[1]).slice(0, 5);
+    h += `<div><b style="color:${COLORS[d.name]}">${d.name}</b><div class="kv" style="margin-top:6px">${best.map(([b, r]) => `<span>${BOARD_ES[b] ?? b}</span><span>#${nf(r)}</span>`).join("")}</div></div>`;
+  }
+  h += `</div></div>`;
+
+  // Habilidades
+  h += `<div class="card scroll" style="margin-top:12px"><h3 style="margin:0 0 4px">🎓 Las ${t.skills} habilidades</h3><p class="sub" style="margin-top:0">Nivel de cada droide. Toda la experiencia de cualquier habilidad suma al ranking general.</p>
+    <table><tr><th>Habilidad</th>${D.map((d) => `<th style="color:${COLORS[d.name]}">${d.name}</th>`).join("")}<th>Se entrena con</th></tr>`;
+  const order = [...e.skillIds].sort((a, b) => Math.max(...D.map((d) => d.skills[b]?.level ?? 1)) - Math.max(...D.map((d) => d.skills[a]?.level ?? 1)));
+  for (const s of order) {
+    const src = e.skillSources[s];
+    const how = [src.sources && `${src.sources} fuentes`, src.recipes && `${src.recipes} recetas`, src.contracts && `${src.contracts} contratos`].filter(Boolean).join(" · ") || (s === "combat" || s === "defence" || s === "ranged" || s === "vitality" ? "peleando" : "–");
+    h += `<tr><td>${SKILL_ES[s] ?? s}</td>${D.map((d) => { const l = d.skills[s]?.level ?? 1; return `<td><span class="lvl" style="${lvlColor(l)}">${l}</span></td>`; }).join("")}<td class="sub">${how}</td></tr>`;
+  }
+  h += `</table></div>`;
+
+  // Contratos
+  const doableAll = D.reduce((s, d) => s + d.contracts.doable, 0), xpAll = D.reduce((s, d) => s + d.contracts.doableXp, 0);
+  h += `<div class="card" style="margin-top:12px"><h3 style="margin:0 0 4px">📜 Contratos <span class="warn">· sin explorar</span></h3>
+    <p style="margin:4px 0">Encargos de las facciones de la ciudad: entregás un objeto y te dan experiencia y crystals, o documentos (reportes, libros de cuentas). Hoy podríamos hacer <b>${doableAll}</b> con lo que ya tenemos en el inventario.</p><div class="kv">
+    ${D.map((d) => `<span style="color:${COLORS[d.name]}">${d.name}</span><span>${d.contracts.doable} listos · +${nf(d.contracts.doableXp)} xp</span>`).join("")}</div>
+    <p class="note">Dan poca experiencia (${nf(xpAll)} entre todos, menos de una hora de trabajo), pero cuentan para el ranking de contratos, donde hoy no figuramos. Los disponibles cambian según dónde está parado cada uno: BB-8 tenía 3 en la mina y 0 en el centro.</p></div>`;
+
+  // Batallas
+  h += `<div class="card scroll" style="margin-top:12px"><h3 style="margin:0 0 4px">⚔️ Batallas <span class="warn">· sin explorar</span></h3>
+    <p style="margin:4px 0">Sí hay: ${t.enemies} enemigos de ${e.enemyFactions.length} bandas (${e.enemyFactions.join(", ")}), todos en <b>${esc(e.enemyArea)}</b>, en 5 niveles. Pelear da experiencia de combate por cada golpe y una recompensa por cada enemigo vencido, y a veces sueltan objetos.</p>
+    <table><tr><th>Enemigo</th><th>Nivel</th><th>Vida</th><th>Ataque</th><th>XP por vencerlo</th></tr>${e.enemies.map((x) => `<tr><td>${x.tier}</td><td>${x.level}</td><td>${x.health}</td><td>${x.attack}</td><td>${x.bountyXp}</td></tr>`).join("")}</table>
+    <p class="note"><b>Por qué hoy no conviene:</b> los tres tienen combate en nivel 1, ninguna arma ni armadura, y si un droide muere pierde lo que lleva encima: ${D.map((d) => `${d.name} arriesga ${nf(d.death.crystalsAtRisk)} crystals`).join(", ")}. La experiencia de pelear (57 a 617 por enemigo) es muy poca comparada con lo que ganan trabajando (cientos de miles por día).</p></div>`;
+
+  // Materiales guardados
+  h += `<div class="card scroll" style="margin-top:12px"><h3 style="margin:0 0 4px">📦 Lo que acumulamos y nadie compra</h3>
+    <p style="margin:4px 0">Materiales que salen del trabajo y ningún mercader compra. No son basura: son ingredientes de recetas, pero para fabricar hay que subir habilidades que hoy están en 1.</p>
+    <div class="grid">${D.map((d) => `<div><b style="color:${COLORS[d.name]}">${d.name}</b><div class="kv" style="margin-top:6px">${d.unsold.slice(0, 5).map((u) => `<span>${esc(u.name)}</span><span>${nf(u.qty)}${u.recipes ? ` · ${u.recipes} rec.` : ""}</span>`).join("")}</div></div>`).join("")}</div></div>`;
+
+  // Construcción
+  if (e.construction) h += `<div class="card" style="margin-top:12px"><h3 style="margin:0 0 4px">🏗️ Terrenos para construir</h3>
+    <p style="margin:4px 0">Hay ${e.construction.count} terrenos. Construir cuesta <b>${nf(e.construction.installCost)}</b> crystals, más <b>${nf(e.construction.upkeep)}</b> por día de mantenimiento, que sube ${nf(e.construction.upkeepIncrease)} cada día. A cambio da +${e.construction.workBonus} % de trabajo. Entre los tres tenemos unos ${nf(D.reduce((s, d) => s + d.death.crystalsAtRisk, 0))} crystals: hoy está lejos.</p></div>`;
+
+  // Mapa
+  const where = Object.fromEntries(D.map((d) => [d.name, d.space]));
+  const visited = {};
+  for (const p of e.places || []) (visited[p.space] ??= []).push(p.agent);
+  h += `<div class="card" style="margin-top:12px"><h3 style="margin:0 0 4px">🗺️ El mapa</h3><p class="sub" style="margin-top:0">${t.spaces} lugares. Ahora: ${D.map((d) => `${d.name} en ${esc(d.space ?? "?")}`).join(" · ")}.</p>
+    <div>${e.spaces.map((sp) => { const here = D.filter((d) => d.space === sp.name).map((d) => d.name); const been = (visited[sp.id] || []); const act = [e.activity.enemies[sp.id] && "⚔️", e.activity.contracts[sp.id] && "📜", e.activity.workstations[sp.id] && "🛠️"].filter(Boolean).join(""); return `<span class="tag" style="${here.length ? "background:#1f6f4a;color:#fff" : been.length ? "background:#26304a;color:#e8eaf4" : ""}">${esc(sp.name)}${act ? " " + act : ""}${here.length ? " · " + here.join(", ") : ""}</span>`; }).join("")}</div>
+    <p class="note">Verde: donde está cada uno ahora. Azul: por donde pasaron (lo registramos desde el 11/10). ⚔️ enemigos · 📜 contratos · 🛠️ talleres para fabricar.</p></div>`;
+
+  // Preguntas
+  h += `<div class="card faq" style="margin-top:12px"><h3 style="margin:0 0 4px">❓ Preguntas</h3>
+    <details><summary>¿Hay batallas? ¿Para qué sirven?</summary><p>Sí, ${t.enemies} enemigos en ${esc(e.enemyArea)}. Dan experiencia por cada golpe, una recompensa al vencerlos y a veces objetos. Hoy no conviene: estamos en nivel 1 sin armas, y morir hace perder lo que se lleva encima.</p></details>
+    <details><summary>¿Pelear o hacer contratos sube la experiencia del personaje?</summary><p>Sí. El ranking general suma la experiencia de todas las habilidades, así que cualquier cosa que entrene una habilidad suma. Pero lo que más suma, por lejos, es el trabajo de cada profesión, que es lo que hacen hoy.</p></details>
+    <details><summary>¿Es al pedo hacer contratos?</summary><p>Para subir en el ranking general, casi sí: dan poca experiencia. Para figurar en el ranking de contratos, no. El juego los marca como completados, así que parecen de una sola vez, y ya los podemos hacer con lo que tenemos.</p></details>
+    <details><summary>¿Qué herramientas tenemos y cuáles no?</summary><p>Cada uno tiene la de su oficio: ${D.map((d) => `${d.name}: ${d.tools.join(", ") || "ninguna"}`).join(" · ")}. El juego tiene ${t.tools} herramientas y ${t.equipment} piezas de equipo (armas y armaduras); de equipo no usamos ninguna.</p></details>
+    <details><summary>¿Qué no hicimos todavía?</summary><p>Contratos, batallas, fabricar con recetas, construir en terrenos y la mayoría de las habilidades (${t.skills - Math.max(...D.map(trained))} de ${t.skills} siguen en nivel 1 para todos). Lo más prometedor para probar: los contratos (gratis, ya los podemos hacer) y fabricar con lo acumulado.</p></details>
+  </div>`;
+  return h;
+}
+
+async function loadExplore() {
+  try {
+    const r = await fetch("/api/agent-status?view=explore");
+    const e = await r.json();
+    if (!e.droids) throw new Error();
+    document.getElementById("explore").innerHTML = exploreHtml(e);
+  } catch {
+    document.getElementById("explore").innerHTML = '<div class="card sub">No pude leer el juego ahora. Probá recargar en un rato.</div>';
+  }
+}
+
 load();
+loadExplore();
 setInterval(load, 5 * 60e3);
 </script>
 </body>
