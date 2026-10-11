@@ -321,11 +321,11 @@ function boxesTable(days) {
     h += `<tr><td>${fmtDate(dt)}</td>`;
     for (const a of ORDER) {
       const d = days.find((x) => x.agent === a && x.date === dt);
-      h += d ? `<td>${nf(d.working_pct)} % · 🛒${d.sell_overload + d.sell_liquidity}${d.tool_trips ? ` · 🪓${d.tool_trips}` : ""}${d.errors ? ` · ⚠️${d.errors}` : ""}</td>` : "<td>–</td>";
+      h += d ? `<td>${nf(d.working_pct)} % · 🛒${d.sell_overload + d.sell_liquidity}${d.tool_trips ? ` · 🪓${d.tool_trips}` : ""}${d.contracts ? ` · 📜${d.contracts}` : ""}${d.errors ? ` · ⚠️${d.errors}` : ""}</td>` : "<td>–</td>";
     }
     h += "</tr>";
   }
-  return h + `</table><p class="note">% del día trabajando · 🛒 viajes a vender (por peso o por falta de crystals) · 🪓 viajes a comprar herramienta · ⚠️ ciclos con error. El día de hoy va en curso.</p>`;
+  return h + `</table><p class="note">% del día trabajando · 🛒 viajes a vender (por peso o por falta de crystals) · 🪓 viajes a comprar herramienta · 📜 contratos entregados · ⚠️ ciclos con error. El día de hoy va en curso.</p>`;
 }
 
 function testBlock(days) {
