@@ -21,6 +21,8 @@ import {
 } from "../lib/mcity-maintenance.js";
 import { getTrainingRows } from "../lib/training.js";
 import { rpc } from "../lib/supabase.js";
+import { MEGA_MENU } from "../lib/telegram-views.js";
+import { DASHBOARD_URL } from "../lib/dashboard.js";
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
@@ -202,12 +204,8 @@ async function buildAgentData(agent, readOnly) {
   return { agent, data: m, notes: m.autopilotNotes ?? [], externallyControlled };
 }
 
-export const MENU = {
-  inline_keyboard: [
-    [{ text: "⚡ Resumen", callback_data: "short" }, { text: "📜 Reporte completo", callback_data: "full" }],
-    [{ text: "🩺 Estado del piloto", callback_data: "status" }],
-  ],
-};
+// v3.31: the big button board lives in lib/telegram-views.js.
+export const MENU = MEGA_MENU;
 
 export async function sendTelegramMessage(text, replyMarkup) {
   const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/sendMessage`, {
@@ -268,12 +266,12 @@ export async function buildReport({ mode = "full", readOnly = false } = {}) {
       ? formatAgentSection(a.metrics, a.notes ?? [], a.externallyControlled, trainingRows.find((r) => r.agent_id === a.agent.id))
       : `<b>✨ ${esc(a.agent.name)}</b>\n💤 Sin datos${a.error ? `: ${esc(a.error)}` : " (dormido)"}`,
   );
-  const footer = `━━━━━━━━━━\n🌟 <a href='https://dashboard-app-green-alpha.vercel.app'>Mirador de la Ciudad</a>\n⏰ ${new Date().toLocaleString("es-AR", { timeZone: TZ })}`;
+  const footer = `━━━━━━━━━━\n🌐 <a href='${DASHBOARD_URL}'>Tablero Midnight</a>\n⏰ ${new Date().toLocaleString("es-AR", { timeZone: TZ })}`;
 
   if (mode === "short") {
     const lines = all.map((a) => (a.metrics ? formatAgentShort(a.metrics, trainingRows.find((r) => r.agent_id === a.agent.id)) : `💤 <b>${esc(a.agent.name)}</b> sin datos`));
     const phase = await currentPhaseLine();
-    return [[header, "", ...lines, ...(phase ? ["", phase] : [])].join("\n")];
+    return [[header, "", ...lines, ...(phase ? ["", phase] : []), "", `🌐 <a href='${DASHBOARD_URL}'>Abrir el tablero</a>`].join("\n")];
   }
 
   const experiment = await experimentSection().catch(() => null);

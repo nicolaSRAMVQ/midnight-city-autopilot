@@ -17,6 +17,8 @@
 import { createHash } from "node:crypto";
 import { MENU, buildReport, sendTelegramMessage } from "./r2-report.js";
 import { rpc } from "../lib/supabase.js";
+import { getDashboardData } from "../lib/dashboard.js";
+import { DASH_VIEWS, agentCard } from "../lib/telegram-views.js";
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
@@ -26,7 +28,10 @@ const WEBHOOK_URL = "https://r2-telegram-reporter.vercel.app/api/telegram";
 
 const webhookSecret = () => createHash("sha256").update(`midnight-webhook:${TELEGRAM_BOT_TOKEN}`).digest("hex").slice(0, 48);
 
-const COMMANDS = { "/resumen": "short", "/reporte": "full", "/estado": "status", "/menu": "menu", "/start": "menu" };
+const COMMANDS = {
+  "/resumen": "short", "/reporte": "full", "/estado": "status", "/menu": "menu", "/start": "menu",
+  "/ranking": "rank", "/ritmo": "pace", "/economia": "eco", "/boxes": "boxes", "/prueba": "test", "/tablero": "menu",
+};
 
 async function telegram(method, body) {
   const response = await fetch(`https://api.telegram.org/bot${TELEGRAM_BOT_TOKEN}/${method}`, {
@@ -47,7 +52,12 @@ async function setup(res) {
   });
   const commands = await telegram("setMyCommands", {
     commands: [
-      { command: "menu", description: "Botones: resumen, reporte, estado" },
+      { command: "menu", description: "Todos los botones y el tablero" },
+      { command: "ranking", description: "Puestos y variación 1/7/30 días" },
+      { command: "ritmo", description: "XP por día y cuándo sube de nivel" },
+      { command: "economia", description: "Crystals de cada droide" },
+      { command: "boxes", description: "Cuánto trabajan, viajes y errores" },
+      { command: "prueba", description: "Prueba de ventas contra la base" },
       { command: "resumen", description: "Resumen corto de la cuadrilla" },
       { command: "reporte", description: "Reporte completo" },
       { command: "estado", description: "¿El piloto anda bien?" },
@@ -86,6 +96,16 @@ async function statusText() {
 async function run(action) {
   if (action === "menu") return sendTelegramMessage("¿Qué querés ver?", MENU);
   if (action === "status") return sendTelegramMessage(await statusText(), MENU);
+  if (DASH_VIEWS[action] || action.startsWith("agent:")) {
+    try {
+      const data = await getDashboardData(30);
+      if (data.history?.error) throw new Error(data.history.error);
+      const text = action.startsWith("agent:") ? agentCard(data, action.slice(6)) : DASH_VIEWS[action](data);
+      return sendTelegramMessage(text.slice(0, 4096), MENU);
+    } catch {
+      return sendTelegramMessage("No pude leer los datos ahora. Probá de nuevo en un rato.", MENU);
+    }
+  }
   try {
     const messages = await buildReport({ mode: action, readOnly: true });
     for (const [i, m] of messages.entries()) await sendTelegramMessage(m.slice(0, 4096), i === messages.length - 1 ? MENU : undefined);
@@ -112,7 +132,7 @@ export default async function handler(req, res) {
     const word = (update.message?.text ?? "").trim().split(/[\s@]/)[0].toLowerCase();
     action = COMMANDS[word] ?? null;
   }
-  if (["short", "full", "status", "menu"].includes(action)) await run(action);
+  if (typeof action === "string" && (["short", "full", "status", "menu"].includes(action) || DASH_VIEWS[action] || /^agent:(R2|BB-8|C-3PO)$/.test(action))) await run(action);
   // Always 200: anything else makes Telegram resend the same update.
   res.status(200).json({ ok: true });
 }

@@ -1,0 +1,269 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Tablero Midnight</title>
+<meta name="robots" content="noindex">
+<style>
+:root{--bg:#07080d;--card:#11131c;--line:#22263a;--tx:#e8eaf4;--mut:#8a90a8;--up:#3ddc84;--down:#ff5c6c;--r2:#4da3ff;--bb8:#ffad33;--c3:#c792ff;--acc:#7cf0d0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:16px;max-width:980px;margin-inline:auto}
+h1{font-size:22px;margin:4px 0 2px;letter-spacing:.5px}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:1.5px;color:var(--mut);margin:28px 0 10px;font-weight:600}
+.sub{color:var(--mut);font-size:13px}
+.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.drow{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.name{font-weight:700;font-size:18px}
+.rank{font-size:34px;font-weight:800;line-height:1}
+.deltas{display:flex;gap:6px;margin:10px 0}
+.delta{flex:1;background:#0b0d14;border-radius:10px;padding:6px 4px;text-align:center}
+.delta b{display:block;font-size:15px}
+.delta span{font-size:11px;color:var(--mut)}
+.up{color:var(--up)}.down{color:var(--down)}.eq{color:var(--mut)}
+.kv{display:grid;grid-template-columns:1fr auto;gap:3px 10px;font-size:13.5px}
+.kv span:nth-child(odd){color:var(--mut)}
+.bar{height:8px;background:#0b0d14;border-radius:6px;overflow:hidden;margin:6px 0 10px}
+.bar i{display:block;height:100%;border-radius:6px}
+.gap{font-size:12.5px;color:var(--mut);margin-top:8px;border-top:1px solid var(--line);padding-top:8px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.tabs button{background:#0b0d14;color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font:inherit;font-size:13px}
+.tabs button.on{color:var(--tx);border-color:var(--acc)}
+svg{display:block;width:100%;height:auto}
+.legend{display:flex;gap:14px;font-size:12.5px;color:var(--mut);margin-top:6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:6px 4px;text-align:right;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--mut);font-weight:500}
+.scroll{overflow-x:auto}
+.phase{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.phase b{min-width:22px;color:var(--acc)}
+.note{font-size:12.5px;color:var(--mut);margin-top:8px}
+#err{color:var(--down)}
+</style>
+</head>
+<body>
+<h1>🌃 Tablero Midnight</h1>
+<div class="sub" id="upd">Cargando…</div>
+<div id="err"></div>
+
+<h2>🏁 Ranking y carrera</h2>
+<div class="grid" id="cards"></div>
+
+<h2>📈 Evolución diaria</h2>
+<div class="card">
+  <div class="tabs" id="tabs"></div>
+  <div id="chart"></div>
+  <div class="legend" id="legend"></div>
+  <div class="note" id="chartNote"></div>
+</div>
+
+<h2>🔧 Boxes, últimos días</h2>
+<div class="card scroll" id="boxes"></div>
+
+<h2>🧪 Prueba de ventas (desde 11/10)</h2>
+<div class="card" id="test"></div>
+
+<h2>📚 Historial de experimentos</h2>
+<div class="card" id="phases"></div>
+
+<script>
+const API = "/api/agent-status?view=dashboard";
+const COLORS = { "R2": "var(--r2)", "BB-8": "var(--bb8)", "C-3PO": "var(--c3)" };
+const ORDER = ["R2", "BB-8", "C-3PO"];
+const TEST_START = Date.parse("2026-10-11T04:44:00Z");
+// Línea base de la prueba: % trabajando medido antes de v3.30 (24 h al 10/10).
+const BASE_WORK = { "R2": 76.3, "BB-8": 62.4, "C-3PO": 63.4 };
+const nf = (n, d = 0) => n == null || isNaN(n) ? "–" : Number(n).toLocaleString("es-AR", { maximumFractionDigits: d, minimumFractionDigits: d });
+const short = (n) => n == null ? "–" : Math.abs(n) >= 1e6 ? nf(n / 1e6, 2) + " M" : Math.abs(n) >= 1e4 ? nf(n / 1e3, 1) + " k" : nf(n);
+const fmtDate = (d) => { const [, m, day] = d.split("-"); return `${+day}/${+m}`; };
+const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+function rankAt(ranks, agent, msAgo) {
+  const target = Date.now() - msAgo;
+  const mine = ranks.filter((r) => r.agent === agent);
+  if (!mine.length) return null;
+  let best = null;
+  for (const r of mine) { if (Date.parse(r.at) <= target) best = r; }
+  if (best) return { ...best, exact: true };
+  const first = mine[0]; // historial más corto que el período pedido
+  return Date.now() - Date.parse(first.at) > 3 * 36e5 ? { ...first, exact: false } : null;
+}
+
+function deltaBox(now, past, label) {
+  if (!now || !past) return `<div class="delta"><b class="eq">–</b><span>${label}</span></div>`;
+  const diff = past.rank - now; // positivo = subió
+  const pct = (Math.abs(diff) / past.rank) * 100;
+  const cls = diff > 0 ? "up" : diff < 0 ? "down" : "eq";
+  const arrow = diff > 0 ? "▲" : diff < 0 ? "▼" : "=";
+  const days = Math.max(1, Math.round((Date.now() - Date.parse(past.at)) / 864e5));
+  const lab = past.exact ? label : `${days} d*`;
+  return `<div class="delta"><b class="${cls}">${arrow}${diff ? Math.abs(diff) : ""}</b><span>${diff ? nf(pct, 1) + " % · " : ""}${lab}</span></div>`;
+}
+
+function card(a, days, ranks) {
+  const mine = days.filter((d) => d.agent === a.name);
+  const full = mine.slice(0, -1).slice(-3); // últimos días completos
+  const xpDay = full.length > 1 ? (full.at(-1).xp - full[0].xp) / (full.length - 1) : null;
+  const crDay = full.length > 1 ? (full.at(-1).crystal - full[0].crystal) / (full.length - 1) : null;
+  const toLevel = a.nextLevelXp != null ? a.nextLevelXp - a.xp : null;
+  const eta = xpDay > 0 && toLevel > 0 ? toLevel / xpDay : null;
+  const b = a.board || {};
+  const now = b.rank;
+  const pctLevel = a.nextLevelXp ? Math.min(100, (a.xp / a.nextLevelXp) * 100) : 0;
+  const gapAhead = b.ahead && b.xp != null ? b.ahead.xp - b.xp : null;
+  const gapBehind = b.behind && b.xp != null ? b.xp - b.behind.xp : null;
+  const passDays = gapAhead > 0 && xpDay > 0 ? gapAhead / xpDay : null;
+  const state = a.error ? "⚠️ sin lectura" : a.working ? "⚒️ trabajando" : "🏕️ parado";
+  return `<div class="card">
+    <div class="drow"><span class="name" style="color:${COLORS[a.name]}">${esc(a.name)}</span><span class="sub">${state}</span></div>
+    <div class="drow" style="margin-top:6px"><span class="rank">${now ? "#" + now : "–"}</span><span class="sub">ranking XP</span></div>
+    <div class="deltas">${deltaBox(now, rankAt(ranks, a.name, 864e5), "1 día")}${deltaBox(now, rankAt(ranks, a.name, 7 * 864e5), "7 días")}${deltaBox(now, rankAt(ranks, a.name, 30 * 864e5), "30 días")}</div>
+    <div class="kv"><span>${esc(a.skill)} → L${(a.level ?? 0) + 1}</span><span>${nf(pctLevel, 1)} %</span></div>
+    <div class="bar"><i style="width:${pctLevel}%;background:${COLORS[a.name]}"></i></div>
+    <div class="kv">
+      <span>Falta para subir</span><span>${short(toLevel)} xp</span>
+      <span>Llega en</span><span>${eta == null ? "–" : eta < 1 ? "menos de 1 día" : "~" + nf(eta, 1) + " días"}</span>
+      <span>XP por día</span><span>${short(xpDay)}</span>
+      <span>Crystals</span><span>💎 ${nf(a.crystals)}</span>
+      <span>Crystals por día</span><span>${crDay == null ? "–" : (crDay >= 0 ? "+" : "") + nf(crDay)}</span>
+      <span>Hambre · carga</span><span>🥤 ${nf(a.hunger)} · ⚖️ ${nf(a.speed)} %</span>
+    </div>
+    <div class="gap">${b.ahead ? `⬆️ #${b.ahead.rank} ${esc(b.ahead.name)}: a ${short(gapAhead)} xp${passDays ? ` (lo pasa en ~${passDays < 1 ? nf(passDays * 24) + " h" : nf(passDays, 1) + " d"})` : ""}` : ""}
+      ${b.behind ? `<br>⬇️ #${b.behind.rank} ${esc(b.behind.name)}: ${short(gapBehind)} xp atrás` : ""}</div>
+  </div>`;
+}
+
+const METRICS = {
+  xp: { label: "XP del oficio", get: (d) => d.xp, fmt: short },
+  crystal: { label: "Crystals", get: (d) => d.crystal, fmt: short },
+  xpday: { label: "XP ganada por día", delta: "xp", fmt: short },
+  working: { label: "% trabajando", get: (d) => d.working_pct, fmt: (v) => nf(v) + " %" },
+  rank: { label: "Puesto", get: (d) => d.rank, fmt: (v) => "#" + nf(v), invert: true },
+};
+
+function series(days, key) {
+  const m = METRICS[key];
+  const dates = [...new Set(days.map((d) => d.date))].sort();
+  return {
+    dates,
+    lines: ORDER.map((agent) => {
+      const mine = days.filter((d) => d.agent === agent);
+      const by = Object.fromEntries(mine.map((d) => [d.date, d]));
+      const vals = dates.map((dt, i) => {
+        const d = by[dt];
+        if (!d) return null;
+        if (m.delta) { const p = by[dates[i - 1]]; return p ? d[m.delta] - p[m.delta] : null; }
+        return m.get(d);
+      });
+      return { agent, vals };
+    }),
+  };
+}
+
+function lineChart(days, key) {
+  const m = METRICS[key];
+  const { dates, lines } = series(days, key);
+  const all = lines.flatMap((l) => l.vals).filter((v) => v != null);
+  if (all.length < 2) return `<p class="sub">Todavía no hay suficientes días con este dato. Se va llenando solo.</p>`;
+  const W = Math.max(320, Math.min(640, document.getElementById("chart").clientWidth || 640)), H = W < 500 ? 240 : 260, L = 52, R = 12, T = 12, B = 28;
+  let lo = Math.min(...all), hi = Math.max(...all);
+  if (key === "working") { lo = 0; hi = 100; }
+  if (hi === lo) { hi += 1; lo -= 1; }
+  const x = (i) => L + (dates.length === 1 ? 0 : (i * (W - L - R)) / (dates.length - 1));
+  const y = (v) => { const t = (v - lo) / (hi - lo); return m.invert ? T + t * (H - T - B) : H - B - t * (H - T - B); };
+  let g = "";
+  for (let k = 0; k <= 4; k++) {
+    const v = lo + ((hi - lo) * k) / 4, yy = y(v);
+    g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="#22263a"/><text x="${L - 6}" y="${yy + 4}" fill="#8a90a8" font-size="11" text-anchor="end">${m.fmt(v)}</text>`;
+  }
+  const step = Math.ceil(dates.length / 8);
+  dates.forEach((d, i) => { if (i % step === 0 || i === dates.length - 1) g += `<text x="${x(i)}" y="${H - 8}" fill="#8a90a8" font-size="11" text-anchor="middle">${fmtDate(d)}</text>`; });
+  for (const l of lines) {
+    const pts = l.vals.map((v, i) => (v == null ? null : [x(i), y(v)])).filter(Boolean);
+    if (!pts.length) continue;
+    g += `<polyline fill="none" stroke="${COLORS[l.agent]}" stroke-width="2.5" stroke-linejoin="round" points="${pts.map((p) => p.join(",")).join(" ")}"/>`;
+    g += pts.map((p) => `<circle cx="${p[0]}" cy="${p[1]}" r="3" fill="${COLORS[l.agent]}"/>`).join("");
+  }
+  return `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="${m.label}">${g}</svg>`;
+}
+
+function boxesTable(days) {
+  const dates = [...new Set(days.map((d) => d.date))].sort().slice(-7).reverse();
+  let h = `<table><tr><th>Día</th>${ORDER.map((a) => `<th style="color:${COLORS[a]}">${a}</th>`).join("")}</tr>`;
+  for (const dt of dates) {
+    h += `<tr><td>${fmtDate(dt)}</td>`;
+    for (const a of ORDER) {
+      const d = days.find((x) => x.agent === a && x.date === dt);
+      h += d ? `<td>${nf(d.working_pct)} % · 🛒${d.sell_overload + d.sell_liquidity}${d.errors ? ` · ⚠️${d.errors}` : ""}</td>` : "<td>–</td>";
+    }
+    h += "</tr>";
+  }
+  return h + `</table><p class="note">% del día trabajando · 🛒 viajes a vender (por peso o por falta de crystals) · ⚠️ ciclos con error. El día de hoy va en curso.</p>`;
+}
+
+function testBlock(days) {
+  const before = (a) => days.filter((d) => d.agent === a && d.date >= "2026-10-08" && d.date <= "2026-10-10");
+  const after = (a) => days.filter((d) => d.agent === a && Date.parse(d.date + "T23:59:59-03:00") > TEST_START);
+  const avg = (arr, f) => (arr.length ? arr.reduce((s, d) => s + f(d), 0) / arr.length : null);
+  const perDay = (arr) => {
+    const tot = arr.reduce((s, d) => s + d.samples, 0);
+    return tot ? (arr.reduce((s, d) => s + d.sell_overload + d.sell_liquidity, 0) * 144) / tot : null;
+  };
+  const elapsed = (Date.now() - TEST_START) / 864e5;
+  let h = `<p class="sub">Regla nueva: solo vende por falta de liquidez si le quedan menos de 1.000 crystals. Llevamos ${nf(Math.max(0, elapsed), 1)} de 7 días.</p>
+  <table><tr><th></th><th>% trabajando antes</th><th>ahora</th><th>viajes/día antes</th><th>ahora</th></tr>`;
+  for (const a of ORDER) {
+    const b = before(a), n = after(a);
+    const wNow = n.length ? avg(n, (d) => d.working_pct * d.samples) / avg(n, (d) => d.samples) : null;
+    const diff = wNow != null ? wNow - BASE_WORK[a] : null;
+    h += `<tr><td style="color:${COLORS[a]}">${a}</td><td>${nf(BASE_WORK[a], 1)} %</td><td class="${diff == null ? "" : diff >= 0 ? "up" : "down"}">${wNow == null ? "–" : nf(wNow, 1) + " %"}</td><td>${nf(perDay(b), 0)}</td><td>${nf(perDay(n), 0)}</td></tr>`;
+  }
+  return h + `</table><p class="note">Las primeras horas mueven mucho el número; se lee en serio a partir del tercer día. Informe final el sábado 18/10.</p>`;
+}
+
+function phasesBlock(phases) {
+  const RESULT = { A: "la peor: entrenaba sin parar y casi no trabajaba", B: "mejor, pero las pausas cortaban el trabajo", C: "buena para crystals de R2", D: "ganadora: más XP y más crystals", E: "regla vigente" };
+  return phases.map((p) => {
+    const f = (s) => new Date(s).toLocaleDateString("es-AR", { day: "numeric", month: "numeric" });
+    const live = Date.now() >= Date.parse(p.starts_at) && Date.now() < Date.parse(p.ends_at);
+    return `<div class="phase"><b>${esc(p.id)}</b><div>${esc(p.label)}<div class="sub">${f(p.starts_at)}${p.id === "E" ? " en adelante" : " a " + f(p.ends_at)} · ${RESULT[p.id] ?? ""}${live ? " · 🟢 ahora" : ""}</div></div></div>`;
+  }).join("");
+}
+
+let DATA = null, current = "xp";
+function drawChart() {
+  document.getElementById("chart").innerHTML = lineChart(DATA.history.days, current);
+  document.getElementById("chartNote").textContent = current === "rank" ? "Arriba es mejor. El historial de puestos arrancó el 11/10." : current === "xpday" ? "XP que sumó cada droide en el día (de cierre a cierre)." : "";
+  document.querySelectorAll("#tabs button").forEach((b) => b.classList.toggle("on", b.dataset.k === current));
+}
+
+async function load() {
+  try {
+    const r = await fetch(API, { cache: "no-store" });
+    DATA = await r.json();
+    const h = DATA.history || {};
+    if (h.error) throw new Error(h.error);
+    const days = h.days || [], ranks = h.ranks || [];
+    const live = ORDER.map((n) => DATA.live.find((a) => a.name === n)).filter(Boolean);
+    document.getElementById("cards").innerHTML = live.map((a) => card(a, days, ranks)).join("");
+    document.getElementById("tabs").innerHTML = Object.entries(METRICS).map(([k, m]) => `<button data-k="${k}">${m.label}</button>`).join("");
+    document.querySelectorAll("#tabs button").forEach((b) => (b.onclick = () => { current = b.dataset.k; drawChart(); }));
+    document.getElementById("legend").innerHTML = ORDER.map((a) => `<span><i style="background:${COLORS[a]}"></i>${a}</span>`).join("");
+    drawChart();
+    document.getElementById("boxes").innerHTML = boxesTable(days);
+    document.getElementById("test").innerHTML = testBlock(days);
+    document.getElementById("phases").innerHTML = phasesBlock(h.phases || []);
+    const t = new Date(DATA.timestamp).toLocaleString("es-AR", { timeZone: "America/Argentina/Buenos_Aires", day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" });
+    document.getElementById("upd").textContent = `Datos en vivo de ${t} · se actualiza solo cada 5 minutos · * = historial más corto que el período`;
+  } catch (e) {
+    document.getElementById("err").textContent = "No pude leer los datos ahora. Probá recargar en un rato.";
+  }
+}
+load();
+setInterval(load, 5 * 60e3);
+</script>
+</body>
+</html>
