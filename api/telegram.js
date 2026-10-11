@@ -19,6 +19,7 @@ import { MENU, buildReport, sendTelegramMessage } from "./r2-report.js";
 import { rpc } from "../lib/supabase.js";
 import { getDashboardData } from "../lib/dashboard.js";
 import { DASH_VIEWS, agentCard } from "../lib/telegram-views.js";
+import { PORTFOLIO_MENU, PORTFOLIO_VIEWS, getPortfolio } from "../lib/portfolio.js";
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
@@ -30,7 +31,7 @@ const webhookSecret = () => createHash("sha256").update(`midnight-webhook:${TELE
 
 const COMMANDS = {
   "/resumen": "short", "/reporte": "full", "/estado": "status", "/menu": "menu", "/start": "menu",
-  "/ranking": "rank", "/ritmo": "pace", "/economia": "eco", "/boxes": "boxes", "/prueba": "test", "/tablero": "menu",
+  "/ranking": "rank", "/ritmo": "pace", "/economia": "eco", "/boxes": "boxes", "/prueba": "test", "/tablero": "menu", "/cartera": "pf", "/tokens": "pf:tokens",
 };
 
 async function telegram(method, body) {
@@ -58,6 +59,8 @@ async function setup(res) {
       { command: "economia", description: "Crystals de cada droide" },
       { command: "boxes", description: "Cuánto trabajan, viajes y errores" },
       { command: "prueba", description: "Prueba de ventas contra la base" },
+      { command: "cartera", description: "Cartera $cmate: valor y variación" },
+      { command: "tokens", description: "Todos los tokens de $cmate" },
       { command: "resumen", description: "Resumen corto de la cuadrilla" },
       { command: "reporte", description: "Reporte completo" },
       { command: "estado", description: "¿El piloto anda bien?" },
@@ -96,6 +99,13 @@ async function statusText() {
 async function run(action) {
   if (action === "menu") return sendTelegramMessage("¿Qué querés ver?", MENU);
   if (action === "status") return sendTelegramMessage(await statusText(), MENU);
+  if (PORTFOLIO_VIEWS[action]) {
+    try {
+      return sendTelegramMessage(PORTFOLIO_VIEWS[action](await getPortfolio()).slice(0, 4096), PORTFOLIO_MENU);
+    } catch {
+      return sendTelegramMessage("No pude leer la cartera ahora (Koios, Minswap o CoinGecko no respondieron). Probá en un rato.", PORTFOLIO_MENU);
+    }
+  }
   if (DASH_VIEWS[action] || action.startsWith("agent:")) {
     try {
       const data = await getDashboardData(30);
@@ -132,7 +142,7 @@ export default async function handler(req, res) {
     const word = (update.message?.text ?? "").trim().split(/[\s@]/)[0].toLowerCase();
     action = COMMANDS[word] ?? null;
   }
-  if (typeof action === "string" && (["short", "full", "status", "menu"].includes(action) || DASH_VIEWS[action] || /^agent:(R2|BB-8|C-3PO)$/.test(action))) await run(action);
+  if (typeof action === "string" && (["short", "full", "status", "menu"].includes(action) || DASH_VIEWS[action] || PORTFOLIO_VIEWS[action] || /^agent:(R2|BB-8|C-3PO)$/.test(action))) await run(action);
   // Always 200: anything else makes Telegram resend the same update.
   res.status(200).json({ ok: true });
 }

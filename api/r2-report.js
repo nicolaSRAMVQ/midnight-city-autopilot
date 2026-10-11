@@ -294,6 +294,18 @@ export default async function handler(req, res) {
     return res.status(500).json({ error: "Missing env variables" });
   }
 
+  if (req.query?.mode === "portfolio") {
+    // v3.32: la cartera $cmate, para un envío programado o de prueba.
+    try {
+      const { getPortfolio, portfolioSummary, PORTFOLIO_MENU } = await import("../lib/portfolio.js");
+      await sendTelegramMessage(portfolioSummary(await getPortfolio()), PORTFOLIO_MENU);
+      return res.status(200).json({ success: true, mode: "portfolio" });
+    } catch (error) {
+      console.error(error);
+      return res.status(500).json({ error: error.message });
+    }
+  }
+
   const mode = req.query?.mode === "short" ? "short" : "full";
   try {
     const messages = await buildReport({ mode });
