@@ -57,7 +57,8 @@ th{color:var(--mut);font-weight:500}
 <div class="grid" id="cards"></div>
 
 <h2>📈 Gráficos</h2>
-<div class="legend" id="legend" style="margin:-4px 0 10px"></div>
+<div class="tabs" id="ranges"></div>
+<div class="legend" id="legend" style="margin:-2px 0 10px"></div>
 <div class="charts" id="charts"></div>
 
 <h2>🔧 Boxes, últimos días</h2>
@@ -138,8 +139,13 @@ function card(a, days, ranks) {
 
 // Gráficos (v3.33): varios a la vista. Cada uno es una serie por droide sobre un eje
 // de días (o de horas, para el puesto) y se dibuja como líneas o barras agrupadas.
-function daily(days, f, { delta = false, complete = false } = {}) {
+const RANGES = { "24h": { label: "24 h", hours: 24 }, "48h": { label: "48 h", hours: 48 }, "7d": { label: "7 días", days: 7 }, "30d": { label: "30 días", days: 30 }, all: { label: "Todo" } };
+let RANGE = (() => { try { return localStorage.getItem("mc-range") || "7d"; } catch { return "7d"; } })();
+if (!RANGES[RANGE]) RANGE = "7d";
+
+function daily(days, f, { delta = false, complete = false, window = null } = {}) {
   let dates = [...new Set(days.map((d) => d.date))].sort();
+  if (window) dates = dates.slice(-(window + (delta ? 1 : 0) + (complete ? 1 : 0)));
   const series = ORDER.map((agent) => {
     const by = Object.fromEntries(days.filter((d) => d.agent === agent).map((d) => [d.date, d]));
     return { agent, vals: dates.map((dt, i) => { const d = by[dt]; if (!d) return null; if (!delta) return f(d); const p = by[dates[i - 1]]; return p ? f(d) - f(p) : null; }) };
@@ -149,9 +155,23 @@ function daily(days, f, { delta = false, complete = false } = {}) {
   return { xs: dates.map(fmtDate), series };
 }
 
-function hourlyRanks(ranks) {
+// Hora por hora (últimas 24 o 48 h): mismo formato que daily().
+const hourLabel = (iso) => { const p = Object.fromEntries(new Intl.DateTimeFormat("es-AR", { timeZone: "America/Argentina/Buenos_Aires", day: "numeric", month: "numeric", hour: "2-digit", hourCycle: "h23" }).formatToParts(new Date(iso)).map((x) => [x.type, x.value])); return `${p.day}/${p.month} ${p.hour}h`; };
+function hourly(hours, f, { delta = false, back = 24 } = {}) {
+  const since = Date.now() - (back + (delta ? 1 : 0)) * 36e5;
+  let hs = [...new Set(hours.map((h) => h.at))].filter((h) => Date.parse(h) >= since).sort();
+  const series = ORDER.map((agent) => {
+    const by = Object.fromEntries(hours.filter((h) => h.agent === agent).map((h) => [h.at, h]));
+    return { agent, vals: hs.map((t, i) => { const d = by[t]; if (!d) return null; if (!delta) return f(d); const p = by[hs[i - 1]]; return p ? f(d) - f(p) : null; }) };
+  });
+  if (delta) { hs = hs.slice(1); series.forEach((s) => s.vals.shift()); }
+  return { xs: hs.map(hourLabel), series };
+}
+
+function hourlyRanks(ranks, backHours = null) {
+  if (backHours) ranks = ranks.filter((r) => Date.parse(r.at) >= Date.now() - backHours * 36e5);
   const hours = [...new Set(ranks.map((r) => r.at.slice(0, 13)))].sort();
-  const label = (h) => { const d = new Date(h + ":00:00Z"); const p = Object.fromEntries(new Intl.DateTimeFormat("es-AR", { timeZone: "America/Argentina/Buenos_Aires", day: "numeric", month: "numeric", hour: "2-digit", hourCycle: "h23" }).formatToParts(d).map((x) => [x.type, x.value])); return `${p.day}/${p.month} ${p.hour}h`; };
+  const label = (h) => hourLabel(h + ":00:00Z");
   return {
     xs: hours.map(label),
     series: ORDER.map((agent) => {
@@ -209,15 +229,31 @@ function drawCharts() {
   const width = (document.getElementById("charts").clientWidth || 640) - 30;
   const trips = (d) => d.sell_overload + d.sell_liquidity;
   const pctFmt = (v) => nf(v) + " %";
-  const specs = [
-    { title: "Experiencia del oficio", note: "XP acumulada en la profesión principal.", data: daily(days, (d) => d.xp), opt: {} },
-    { title: "XP ganada por día", note: "Días completos, de cierre a cierre.", data: daily(days, (d) => d.xp, { delta: true, complete: true }), opt: { kind: "bar" } },
-    { title: "Puestos ganados en el ranking", note: "Hora por hora, contra el primer registro (11/10). Arriba es mejor; el puesto actual está en las tarjetas de arriba.", data: hourlyRanks(ranks), opt: { fmt: (v) => (v > 0 ? "+" : "") + nf(v) } },
-    { title: "Crystals", note: "Lo que tiene guardado cada uno.", data: daily(days, (d) => d.crystal), opt: {} },
-    { title: "Crystals ganados por día", note: "Días completos.", data: daily(days, (d) => d.crystal, { delta: true, complete: true }), opt: { kind: "bar" } },
-    { title: "% del día trabajando", note: "Medido cada 10 minutos.", data: daily(days, (d) => d.working_pct), opt: { range: [0, 100], fmt: pctFmt } },
-    { title: "Viajes a vender por día", note: "Por peso o por falta de crystals. Menos es mejor.", data: daily(days, trips, { complete: true }), opt: { kind: "bar", fmt: nf } },
-  ];
+  const r = RANGES[RANGE];
+  const hoursData = DATA.history.hours || [];
+  const rankBack = r.hours ?? (r.days ? r.days * 24 : null);
+  const since = r.hours ? `en las últimas ${r.hours} h` : r.days ? `en los últimos ${r.days} días` : "desde el 11/10";
+  const specs = r.hours
+    ? [
+        { title: "Experiencia del oficio", note: "XP acumulada, hora por hora.", data: hourly(hoursData, (d) => d.xp, { back: r.hours }), opt: {} },
+        { title: "XP ganada por hora", note: "Cuánto sumó cada hora.", data: hourly(hoursData, (d) => d.xp, { delta: true, back: r.hours }), opt: { kind: "bar" } },
+        { title: "Puestos ganados en el ranking", note: `Contra el primer registro ${since}. Arriba es mejor.`, data: hourlyRanks(ranks, rankBack), opt: { fmt: (v) => (v > 0 ? "+" : "") + nf(v) } },
+        { title: "Crystals", note: "Lo que tiene guardado cada uno.", data: hourly(hoursData, (d) => d.crystal, { back: r.hours }), opt: {} },
+        { title: "Crystals ganados por hora", note: "Las caídas son compras (comida, herramientas).", data: hourly(hoursData, (d) => d.crystal, { delta: true, back: r.hours }), opt: { kind: "bar" } },
+        { title: "% de la hora trabajando", note: "Medido cada 10 minutos.", data: hourly(hoursData, (d) => d.working_pct, { back: r.hours }), opt: { range: [0, 100], fmt: pctFmt } },
+        { title: "Viajes a vender por hora", note: "Por peso o por falta de crystals.", data: hourly(hoursData, (d) => d.trips, { back: r.hours }), opt: { kind: "bar", fmt: nf } },
+      ]
+    : [
+        { title: "Experiencia del oficio", note: "XP acumulada en la profesión principal.", data: daily(days, (d) => d.xp, { window: r.days }), opt: {} },
+        { title: "XP ganada por día", note: "Días completos, de cierre a cierre.", data: daily(days, (d) => d.xp, { delta: true, complete: true, window: r.days }), opt: { kind: "bar" } },
+        { title: "Puestos ganados en el ranking", note: `Hora por hora, contra el primer registro ${since}. Arriba es mejor.`, data: hourlyRanks(ranks, rankBack), opt: { fmt: (v) => (v > 0 ? "+" : "") + nf(v) } },
+        { title: "Crystals", note: "Lo que tiene guardado cada uno.", data: daily(days, (d) => d.crystal, { window: r.days }), opt: {} },
+        { title: "Crystals ganados por día", note: "Días completos.", data: daily(days, (d) => d.crystal, { delta: true, complete: true, window: r.days }), opt: { kind: "bar" } },
+        { title: "% del día trabajando", note: "Medido cada 10 minutos.", data: daily(days, (d) => d.working_pct, { window: r.days }), opt: { range: [0, 100], fmt: pctFmt } },
+        { title: "Viajes a vender por día", note: "Por peso o por falta de crystals. Menos es mejor.", data: daily(days, trips, { complete: true, window: r.days }), opt: { kind: "bar", fmt: nf } },
+      ];
+  document.getElementById("ranges").innerHTML = Object.entries(RANGES).map(([k, v]) => `<button data-r="${k}" class="${k === RANGE ? "on" : ""}">${v.label}</button>`).join("");
+  document.querySelectorAll("#ranges button").forEach((b) => (b.onclick = () => { RANGE = b.dataset.r; try { localStorage.setItem("mc-range", RANGE); } catch {} drawCharts(); }));
   document.getElementById("charts").innerHTML = specs.map((c) => `<div class="card"><h3>${c.title}</h3><div class="now">${latest(c.data, c.opt.fmt || short)}</div>${chart(c.data, { ...c.opt, width })}<div class="note">${c.note}</div></div>`).join("");
 }
 

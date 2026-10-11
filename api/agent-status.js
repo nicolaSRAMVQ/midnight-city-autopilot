@@ -18,7 +18,7 @@ export default async function handler(req, res) {
   try {
     if (req.query?.view === "dashboard") {
       res.setHeader("Cache-Control", "s-maxage=120, stale-while-revalidate=600");
-      return res.status(200).json(await getDashboardData(30));
+      return res.status(200).json(await getDashboardData(90));
     }
     const agents = await Promise.all(AGENTS.map(getAgentStatus));
     res.status(200).json({ success: true, timestamp: new Date().toISOString(), agents });
