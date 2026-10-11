@@ -265,3 +265,9 @@ del cinder_axe. Verificar siempre contra `SKILL.md`, `references/` y
 - **28/9:** token de producción renovado (antes todo daba 401).
 - **v3.17 y anteriores:** umbrales fijos (C-3PO vendía solo con ≤150 crystals, Smart Balance del 25%,
   rescate proactivo). Todo reemplazado en v3.18. Detalle en `git log`.
+
+## v3.31 (11/10/2026)
+- Tablero web: https://r2-telegram-reporter.vercel.app/tablero/ (datos de `api/agent-status?view=dashboard`, RPC `midnight_dashboard`). Sin función nueva: el plan Hobby permite 12.
+- Telegram: botonera grande (Ranking, Ritmo, Economía, Boxes, Prueba de ventas, Piloto, un botón por droide, link al tablero). Textos en `lib/telegram-views.js`. El resumen diario termina con el link.
+- Herramientas: se compran de a 4 por viaje (`TOOL_SPARES`). El hacha de C-3PO se gastaba y se recompraba 35 a 51 veces por día.
+- El historial de puestos arrancó el 11/10 ~05:00 UTC: las variaciones a 1/7/30 días aparecen a medida que pasa el tiempo.
