@@ -1,0 +1,384 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Midnight World · Cuadrilla</title>
+<meta name="robots" content="noindex">
+<style>
+:root{--bg:#07080d;--card:#11131c;--line:#22263a;--tx:#e8eaf4;--mut:#8a90a8;--up:#3ddc84;--down:#ff5c6c;--r2:#4da3ff;--bb8:#ffad33;--c3:#c792ff;--acc:#7cf0d0;--sim:#7cf0d0}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:16px;max-width:1180px;margin-inline:auto;padding-bottom:60px}
+a{color:var(--acc)}
+header{display:flex;flex-wrap:wrap;align-items:baseline;gap:10px 16px;margin-bottom:6px}
+h1{font-size:24px;margin:4px 0 2px;letter-spacing:.5px}
+h2{font-size:13px;text-transform:uppercase;letter-spacing:1.5px;color:var(--mut);margin:28px 0 10px;font-weight:600}
+.sub{color:var(--mut);font-size:13px}
+.pill{font-size:12px;padding:3px 10px;border-radius:999px;border:1px solid var(--line);color:var(--mut)}
+.pill.live{color:var(--up);border-color:#1f5a3a}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
+.layout{display:grid;gap:12px;grid-template-columns:minmax(0,1fr) 320px}
+@media (max-width:860px){.layout{grid-template-columns:1fr}}
+#mapa svg{display:block;width:100%;height:auto;touch-action:manipulation}
+.zone{cursor:pointer;transition:opacity .2s}
+.zone rect{stroke:#2c3150;stroke-width:1.5}
+.zone:hover rect{stroke:var(--acc)}
+.zone text{fill:#c9cde0;font-size:15px;font-weight:600;pointer-events:none}
+.zone .k{fill:var(--mut);font-size:11.5px;font-weight:400}
+.bld rect{fill:#161a28;stroke:#30365a}
+.bld text{fill:#aab0c8;font-size:10.5px;pointer-events:none}
+.plot{cursor:pointer}
+.plot rect{fill:#121522;stroke:#2a2f48;stroke-width:1}
+.plot:hover rect{stroke:var(--acc)}
+.droid{cursor:pointer}
+.droid circle.halo{animation:pulse 2.2s ease-out infinite;transform-origin:center;transform-box:fill-box}
+@keyframes pulse{0%{opacity:.55;transform:scale(1)}100%{opacity:0;transform:scale(2.1)}}
+.droid text{font-size:12px;font-weight:800;fill:#07080d;pointer-events:none}
+.side h3{margin:0 0 4px;font-size:17px}
+.kv{display:grid;grid-template-columns:1fr auto;gap:3px 10px;font-size:13.5px}
+.kv span:nth-child(odd){color:var(--mut)}
+.bar{height:8px;background:#0b0d14;border-radius:6px;overflow:hidden;margin:6px 0 10px}
+.bar i{display:block;height:100%;border-radius:6px}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin:8px 0}
+.tabs button,.btn{background:#0b0d14;color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font:inherit;font-size:13px;cursor:pointer}
+.tabs button.on,.btn.on{color:var(--tx);border-color:var(--acc)}
+.btn.main{background:var(--acc);color:#07080d;border-color:var(--acc);font-weight:700}
+.btn.danger{color:var(--down);border-color:#5a2230}
+.big{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(150px,1fr))}
+.big div{background:#0b0d14;border-radius:10px;padding:10px}
+.big b{display:block;font-size:20px}
+.big span{font-size:12px;color:var(--mut)}
+table{width:100%;border-collapse:collapse;font-size:13px}
+th,td{padding:6px 4px;text-align:right;border-bottom:1px solid var(--line)}
+th:first-child,td:first-child{text-align:left}
+th{color:var(--mut);font-weight:500}
+.scroll{overflow-x:auto}
+.note{font-size:12.5px;color:var(--mut);margin-top:8px}
+.warn{color:#ffad33}.ok{color:var(--up)}.bad{color:var(--down)}
+.sim{display:inline-block;font-size:10.5px;letter-spacing:1px;text-transform:uppercase;color:var(--sim);border:1px dashed var(--sim);border-radius:6px;padding:1px 6px;margin-left:6px;vertical-align:2px}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--mut);margin:6px 0}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+#tip{position:fixed;pointer-events:none;z-index:9;background:#0b0d11;border:1px solid var(--line);border-radius:8px;padding:8px 10px;font-size:12.5px;display:none;max-width:280px;box-shadow:0 4px 18px rgba(0,0,0,.5)}
+.log{list-style:none;padding:0;margin:0;font-size:13.5px}
+.log li{padding:7px 0;border-bottom:1px solid var(--line);display:flex;gap:10px}
+.log li b{min-width:62px;color:var(--mut);font-weight:500;font-variant-numeric:tabular-nums}
+select{background:#0b0d14;color:var(--tx);border:1px solid var(--line);border-radius:8px;padding:6px 8px;font:inherit;font-size:13.5px;width:100%;margin:4px 0 8px}
+.choices{display:grid;gap:6px;grid-template-columns:1fr 1fr;margin:6px 0 10px}
+.choices button{text-align:left;background:#0b0d14;border:1px solid var(--line);border-radius:10px;padding:8px;color:var(--tx);font:inherit;font-size:12.5px;cursor:pointer}
+.choices button.on{border-color:var(--acc)}
+.choices button small{display:block;color:var(--mut);font-size:11px}
+</style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>🌃 Midnight World</h1>
+    <div class="sub">La ciudad de la Cuadrilla: dónde está cada droide, por dónde se mueve y qué podríamos construir.</div>
+  </div>
+  <span class="pill" id="estado">cargando…</span>
+  <span class="sub"><a href="https://r2-telegram-reporter.vercel.app/tablero/">📊 Tablero de seguimiento</a></span>
+</header>
+
+<div class="layout">
+  <div class="card" id="mapa">
+    <div class="tabs" id="capas">
+      <button data-c="ahora" class="on">Ahora</button>
+      <button data-c="calor">Dónde pasan el tiempo</button>
+      <button data-c="terrenos">Terrenos</button>
+    </div>
+    <div id="svgMapa"></div>
+    <div class="legend" id="legMapa"></div>
+    <div class="note">El juego no da coordenadas: la forma del mapa es nuestra. Los lugares, los droides y los 50 terrenos de construcción son los del juego.</div>
+  </div>
+  <div class="card side" id="panel"></div>
+</div>
+
+<h2>¿Cuándo podemos construir? <span class="sim">simulación</span></h2>
+<div class="card">
+  <div class="big" id="kpiSim"></div>
+  <div class="tabs" id="horizonte"><button data-d="90">90 días</button><button data-d="180" class="on">180 días</button><button data-d="365">1 año</button></div>
+  <div class="legend" id="legProy"></div>
+  <div id="chProy"></div>
+  <div class="scroll"><table id="tablaSim"></table></div>
+  <div class="note" id="notaSim"></div>
+</div>
+
+<h2>Bitácora de la ciudad</h2>
+<div class="card"><ul class="log" id="bitacora"></ul></div>
+
+<div id="tip"></div>
+<script>
+const API = "https://r2-telegram-reporter.vercel.app/api/agent-status";
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const n0 = v => Math.round(v ?? 0).toLocaleString("es-AR");
+const corto = v => Math.abs(v) >= 1e6 ? (v/1e6).toLocaleString("es-AR",{maximumFractionDigits:2}) + " M" : Math.abs(v) >= 1e3 ? Math.round(v/1e3).toLocaleString("es-AR") + " k" : n0(v);
+const DROIDES = { "R2": { color:"#4da3ff", ini:"R2", oficio:"hacker" }, "BB-8": { color:"#ffad33", ini:"BB", oficio:"minero" }, "C-3PO": { color:"#c792ff", ini:"3P", oficio:"leñador" } };
+
+// ---------- Mapa (layout propio; ids reales del juego) ----------
+const ZONAS = [
+  { id:"forest",            x:20,  y:20,  w:260, h:280, emoji:"🌲" },
+  { id:"north",             x:300, y:20,  w:600, h:130, emoji:"🧭" },
+  { id:"volcano",           x:920, y:20,  w:260, h:280, emoji:"🌋" },
+  { id:"forest-rivers",     x:20,  y:320, w:260, h:300, emoji:"🦠" },
+  { id:"west",              x:300, y:170, w:140, h:280, emoji:"🏚" },
+  { id:"central",           x:460, y:170, w:290, h:280, emoji:"🏙" },
+  { id:"east",              x:770, y:170, w:130, h:280, emoji:"🏭" },
+  { id:"miners-cave",       x:920, y:320, w:260, h:300, emoji:"⛏" },
+  { id:"south",             x:300, y:470, w:600, h:150, emoji:"🛤" },
+  { id:"bison-valley",      x:20,  y:640, w:260, h:300, emoji:"🦬" },
+  { id:"construction-yard", x:300, y:640, w:880, h:300, emoji:"🏗" },
+];
+// Interiores del juego, dibujados como edificios dentro de Central.
+const INTERIORES = ["hacker-house-interior","charging-house-interior","hoskbrew-interior","goodtimes-interior","iog-house-interior","iog-sleeping-quarters","nexifuse-interior","ada-arena-interior","prison-interior"];
+const W = 1200, H = 960;
+const TIPOS = [
+  { id:"taller",   nombre:"Taller de hacking",  icono:"💻", para:"R2" },
+  { id:"fundicion",nombre:"Fundición",          icono:"🔥", para:"BB-8" },
+  { id:"aserradero",nombre:"Aserradero",        icono:"🪵", para:"C-3PO" },
+  { id:"granja",   nombre:"Granja de smoothies",icono:"🥤", para:null },
+  { id:"torre",    nombre:"Torre de vigilancia",icono:"📡", para:null },
+  { id:"casa",     nombre:"Casa de la Cuadrilla",icono:"🏠", para:null },
+];
+const LS = "midnightWorld.terrenos.v1";
+let terrenos = JSON.parse(localStorage.getItem(LS) || "{}");
+const guardar = () => localStorage.setItem(LS, JSON.stringify(terrenos));
+
+let D = null, X = null, capa = "ahora", sel = { tipo:"ciudad" }, horizonte = 180;
+const espacioPorNombre = {}, nombrePorId = {};
+
+function anclaInterior(id) {
+  const i = INTERIORES.indexOf(id), z = ZONAS.find(z => z.id === "central");
+  const c = i % 3, r = Math.floor(i / 3), bw = 86, bh = 54;
+  return { x: z.x + 14 + c * (bw + 6), y: z.y + 38 + r * (bh + 8), w: bw, h: bh };
+}
+function anclaEspacio(id) {
+  const z = ZONAS.find(z => z.id === id);
+  if (z) return { x: z.x + z.w / 2, y: z.id === "central" ? z.y + z.h - 38 : z.y + z.h / 2 + 10 };
+  if (INTERIORES.includes(id)) { const b = anclaInterior(id); return { x: b.x + b.w / 2, y: b.y + b.h / 2 + 6 }; }
+  return null;
+}
+const PLOTS = Array.from({ length: 50 }, (_, i) => {
+  const z = ZONAS.find(z => z.id === "construction-yard"), c = i % 10, r = Math.floor(i / 10);
+  const pw = 78, ph = 44;
+  return { i, x: z.x + 22 + c * (pw + 8), y: z.y + 44 + r * (ph + 8), w: pw, h: ph };
+});
+
+function calor() {
+  const porEspacio = {}; let max = 1;
+  for (const p of X?.places ?? []) { porEspacio[p.space] = (porEspacio[p.space] || 0) + p.samples; }
+  Object.values(porEspacio).forEach(v => max = Math.max(max, v));
+  return { porEspacio, max };
+}
+
+function dibujarMapa() {
+  const { porEspacio, max } = calor();
+  const fillZona = id => {
+    if (capa !== "calor") return "#0e1019";
+    const v = (porEspacio[id] || 0) / max; return v ? `rgba(124,240,208,${0.08 + v * 0.55})` : "#0e1019";
+  };
+  let g = "";
+  for (const z of ZONAS) {
+    const nombre = nombrePorId[z.id] || z.id, act = X?.activity ?? {};
+    const extra = [act.contracts?.[z.id] && `${act.contracts[z.id]} contratos`, act.enemies?.[z.id] && `${act.enemies[z.id]} enemigos`].filter(Boolean).join(" · ");
+    g += `<g class="zone" data-z="${z.id}"><rect x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="14" fill="${fillZona(z.id)}"/>` +
+      `<text x="${z.x + 14}" y="${z.y + 24}">${z.emoji} ${esc(nombre)}</text>` +
+      (extra ? `<text class="k" x="${z.x + 14}" y="${z.y + 42}">${esc(extra)}</text>` : "") + `</g>`;
+  }
+  for (const id of INTERIORES) {
+    const b = anclaInterior(id), v = (porEspacio[id] || 0) / max;
+    g += `<g class="zone bld" data-z="${id}"><rect x="${b.x}" y="${b.y}" width="${b.w}" height="${b.h}" rx="8" ${capa === "calor" && v ? `style="fill:rgba(124,240,208,${0.08 + v * 0.55})"` : ""}/>` +
+      `<text x="${b.x + 6}" y="${b.y + 16}">${esc((nombrePorId[id] || id).replace(" Sleeping Quarters", " Sleep"))}</text></g>`;
+  }
+  // Terrenos
+  for (const p of PLOTS) {
+    const t = terrenos[p.i], col = t ? DROIDES[t.dueno]?.color : null, tipo = t && TIPOS.find(x => x.id === t.tipo);
+    const fac = t ? factibilidad(t.dueno) : null;
+    g += `<g class="plot" data-p="${p.i}"><rect x="${p.x}" y="${p.y}" width="${p.w}" height="${p.h}" rx="6" ${t ? `style="fill:${col}22;stroke:${col};stroke-dasharray:${fac?.puede ? "0" : "4 3"}"` : ""} ${capa === "terrenos" ? "" : 'opacity=".55"'}/>` +
+      (t ? `<text x="${p.x + p.w/2}" y="${p.y + 28}" text-anchor="middle" style="font-size:18px">${tipo?.icono ?? "🏠"}</text>` :
+           `<text x="${p.x + 8}" y="${p.y + 16}" style="fill:#4a5070;font-size:10px">#${p.i + 1}</text>`) + `</g>`;
+  }
+  // Droides: donde están ahora (o, en la capa de calor, donde más tiempo pasan)
+  const pos = {};
+  for (const a of D?.live ?? []) {
+    let id = espacioPorNombre[a.location];
+    if (capa === "calor") { const top = (X?.places ?? []).filter(p => p.agent === a.name).sort((x, y) => y.samples - x.samples)[0]; if (top) id = top.space; }
+    const anc = anclaEspacio(id); if (!anc) continue;
+    const k = id; pos[k] = (pos[k] || 0) + 1;
+    const dx = (pos[k] - 1) * 34 - 10, d = DROIDES[a.name] || { color:"#fff", ini:a.name.slice(0,2) };
+    const cx = anc.x + dx, cy = anc.y + 18;
+    g += `<g class="droid" data-d="${esc(a.name)}">${a.working ? `<circle class="halo" cx="${cx}" cy="${cy}" r="15" fill="${d.color}"/>` : ""}` +
+      `<circle cx="${cx}" cy="${cy}" r="15" fill="${d.color}" stroke="#07080d" stroke-width="3"/><text x="${cx}" y="${cy + 4}" text-anchor="middle">${d.ini}</text></g>`;
+  }
+  $("#svgMapa").innerHTML = `<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Mapa de Midnight World">${g}</svg>`;
+  $("#legMapa").innerHTML = Object.entries(DROIDES).map(([k, d]) => `<span><i style="background:${d.color}"></i>${k} · ${d.oficio}</span>`).join("") +
+    (capa === "calor" ? `<span>· más verde = más tiempo (${n0((X?.places ?? []).reduce((s, p) => s + p.samples, 0))} muestras desde el 11/10)</span>` :
+     capa === "terrenos" ? `<span>· línea punteada = proyecto que todavía no se puede pagar</span>` : `<span>· el halo indica que está trabajando</span>`);
+  $("#svgMapa svg").onclick = e => {
+    const d = e.target.closest(".droid"), p = e.target.closest(".plot"), z = e.target.closest(".zone");
+    if (d) sel = { tipo:"droide", id:d.dataset.d }; else if (p) sel = { tipo:"terreno", id:+p.dataset.p }; else if (z) sel = { tipo:"zona", id:z.dataset.z };
+    else sel = { tipo:"ciudad" };
+    panel();
+  };
+}
+
+// ---------- Economía y simulación ----------
+function ritmo(nombre) {
+  const dias = (D?.history?.days ?? []).filter(r => r.agent === nombre).sort((a, b) => a.date.localeCompare(b.date));
+  const ult = dias.slice(-8);
+  if (ult.length < 2) return 0;
+  return (ult[ult.length - 1].crystal - ult[0].crystal) / (ult.length - 1);
+}
+const OBRA = () => X?.construction ?? { installCost:1e6, upkeep:1e5, upkeepIncrease:1e4, workBonus:5, count:50 };
+function factibilidad(nombre) {
+  const a = (D?.live ?? []).find(x => x.name === nombre); if (!a) return null;
+  const o = OBRA(), r = ritmo(nombre), falta = Math.max(0, o.installCost - a.crystals);
+  const dias = falta === 0 ? 0 : r > 0 ? Math.ceil(falta / r) : Infinity;
+  // Con la obra instalada: cuántos días aguanta el alquiler (base + aumento diario) con lo que le sobra y su ingreso.
+  let saldo = a.crystals - o.installCost, d = 0, alquiler = o.upkeep;
+  if (saldo >= 0) { while (d < 3650) { saldo += r - alquiler; if (saldo < 0) break; d++; alquiler += o.upkeepIncrease; } }
+  return { crystals:a.crystals, ritmo:r, falta, dias, puede: falta === 0, aguanta: saldo >= 0 ? d : null, pct: Math.min(100, a.crystals / o.installCost * 100) };
+}
+const fechaEn = d => { const x = new Date(); x.setDate(x.getDate() + d); return x.toLocaleDateString("es-AR", { day:"numeric", month:"short", year:"numeric" }); };
+
+function simulador() {
+  const o = OBRA(), live = D?.live ?? [];
+  const total = live.reduce((s, a) => s + a.crystals, 0), rTot = live.reduce((s, a) => s + ritmo(a.name), 0);
+  const mejor = live.map(a => ({ a, f: factibilidad(a.name) })).sort((x, y) => x.f.dias - y.f.dias)[0];
+  $("#kpiSim").innerHTML = [
+    [n0(o.installCost), "crystals para instalar una obra"], [n0(o.upkeep) + "/día", `alquiler, +${n0(o.upkeepIncrease)} cada día`],
+    [`+${o.workBonus}%`, "de velocidad de trabajo que da"], [n0(total), "crystals de la Cuadrilla hoy"],
+    [`+${n0(rTot)}/día`, "ritmo de la Cuadrilla (7 días)"],
+    [mejor ? (isFinite(mejor.f.dias) ? fechaEn(mejor.f.dias) : "nunca") : "—", mejor ? `primero en poder pagarla: ${mejor.a.name}` : ""],
+  ].map(([b, s]) => `<div><b>${b}</b><span>${esc(s)}</span></div>`).join("");
+  $("#tablaSim").innerHTML = `<tr><th>Droide</th><th>Crystals</th><th>Ritmo/día</th><th>Le falta</th><th>Llega</th><th>Alquiler vs. lo que gana</th></tr>` +
+    live.map(a => { const f = factibilidad(a.name);
+      return `<tr><td><i style="display:inline-block;width:10px;height:10px;border-radius:3px;background:${DROIDES[a.name]?.color};margin-right:6px"></i>${esc(a.name)}</td>
+      <td>${n0(f.crystals)} <span class="note">(${f.pct.toFixed(0)}%)</span></td><td>${f.ritmo >= 0 ? "+" : ""}${n0(f.ritmo)}</td><td>${n0(f.falta)}</td>
+      <td>${f.puede ? '<span class="ok">ya</span>' : isFinite(f.dias) ? `${n0(f.dias)} días · ${fechaEn(f.dias)}` : '<span class="bad">no llega</span>'}</td>
+      <td>${f.ritmo > 0 ? `<span class="${o.upkeep > f.ritmo ? "bad" : "ok"}">${(o.upkeep / f.ritmo).toLocaleString("es-AR", { maximumFractionDigits: 1 })}×</span>` : "—"}${f.aguanta != null ? ` · aguanta ${f.aguanta} días` : ""}</td></tr>`; }).join("");
+  const r2 = factibilidad("R2");
+  $("#notaSim").innerHTML = `Las transferencias entre droides tienen un tope de 1.000 crystals por semana: no se puede juntar la plata de los tres en uno. Por eso cada uno se mide solo.<br>` +
+    `El alquiler arranca en ${n0(o.upkeep)} por día y sube ${n0(o.upkeepIncrease)} cada día; con ingresos de ~${n0(r2?.ritmo ?? 0)}/día, una obra hoy se come los ahorros en pocos días. ` +
+    `Construir es estético en el juego (+${o.workBonus}% de velocidad): conviene simularlo acá antes de gastar. Nada de esta página compra ni ejecuta acciones en el juego.`;
+  proyeccion();
+}
+
+function proyeccion() {
+  const o = OBRA(), live = D?.live ?? [], L = 64, R = 110, T = 14, Hh = 230, B = 26, Wc = Math.max(320, $("#chProy").clientWidth || 700);
+  const max = Math.max(o.installCost * 1.15, ...live.map(a => a.crystals + Math.max(0, ritmo(a.name)) * horizonte));
+  const x = d => L + d / horizonte * (Wc - L - R), y = v => T + Hh - Math.min(v, max) / max * Hh;
+  const ticks = [0, .25, .5, .75, 1].map(f => f * max);
+  let g = ticks.map(t => `<line x1="${L}" x2="${Wc - R}" y1="${y(t)}" y2="${y(t)}" stroke="#22263a"/><text x="${L - 6}" y="${y(t) + 4}" text-anchor="end" fill="#8a90a8" font-size="11">${corto(t)}</text>`).join("");
+  g += `<line x1="${L}" x2="${Wc - R}" y1="${y(o.installCost)}" y2="${y(o.installCost)}" stroke="#7cf0d0" stroke-dasharray="6 4"/><text x="${L + 6}" y="${y(o.installCost) - 6}" fill="#7cf0d0" font-size="12">precio de una obra: ${corto(o.installCost)}</text>`;
+  for (const m of [0, horizonte / 2, horizonte]) g += `<text x="${x(m)}" y="${T + Hh + 16}" text-anchor="middle" fill="#8a90a8" font-size="11">${m === 0 ? "hoy" : fechaEn(m)}</text>`;
+  const fin = [];
+  for (const a of live) {
+    const r = ritmo(a.name), c = DROIDES[a.name]?.color ?? "#fff";
+    g += `<path d="M${x(0)},${y(a.crystals)}L${x(horizonte)},${y(a.crystals + r * horizonte)}" stroke="${c}" stroke-width="2" fill="none"/>`;
+    g += `<circle cx="${x(0)}" cy="${y(a.crystals)}" r="4" fill="${c}"/>`;
+    const f = factibilidad(a.name);
+    if (!f.puede && isFinite(f.dias) && f.dias <= horizonte) g += `<circle cx="${x(f.dias)}" cy="${y(o.installCost)}" r="6" fill="${c}" stroke="#07080d" stroke-width="2"><title>${a.name} llega el ${fechaEn(f.dias)}</title></circle>`;
+    fin.push({ a, yy: y(a.crystals + r * horizonte), v: a.crystals + r * horizonte, c });
+  }
+  fin.sort((p, q) => p.yy - q.yy); for (let i = 1; i < fin.length; i++) if (fin[i].yy - fin[i - 1].yy < 14) fin[i].yy = fin[i - 1].yy + 14;
+  fin.forEach(f => g += `<text x="${Wc - R + 8}" y="${f.yy + 4}" fill="#e8eaf4" font-size="12">${f.a.name} ${corto(f.v)}</text>`);
+  $("#chProy").innerHTML = `<svg width="${Wc}" height="${T + Hh + B}" role="img" aria-label="Proyección de crystals">${g}</svg>`;
+  $("#legProy").innerHTML = live.map(a => `<span><i style="background:${DROIDES[a.name]?.color}"></i>${a.name}</span>`).join("") + `<span>· proyección lineal con el ritmo de los últimos 7 días</span>`;
+}
+
+// ---------- Panel lateral ----------
+function panel() {
+  const el = $("#panel"), o = OBRA();
+  if (sel.tipo === "droide") {
+    const a = D.live.find(x => x.name === sel.id), d = DROIDES[a.name], f = factibilidad(a.name);
+    const lugares = (X?.places ?? []).filter(p => p.agent === a.name).sort((p, q) => q.samples - p.samples), tot = lugares.reduce((s, p) => s + p.samples, 0) || 1;
+    const ex = (X?.droids ?? []).find(x => x.name === a.name);
+    el.innerHTML = `<h3 style="color:${d.color}">${esc(a.name)} · ${d.oficio}</h3><div class="sub">${a.working ? "🟢 trabajando" : "⚪ quieto"} en ${esc(a.location)}</div>
+      <div class="bar"><i style="width:${a.xpPercent}%;background:${d.color}"></i></div>
+      <div class="kv"><span>Nivel</span><b>${esc(a.skill)} (${a.xpPercent}%)</b><span>Crystals</span><b>${n0(a.crystals)}</b><span>Ritmo</span><b>+${n0(f.ritmo)}/día</b>
+      <span>Hambre</span><b>${a.hunger}</b><span>Velocidad</span><b>${a.speed}%</b>${ex ? `<span>Contratos hechos</span><b>${ex.contracts.completed}</b><span>Herramientas</span><b>${ex.tools.length}</b>` : ""}</div>
+      <h2>Dónde pasa el tiempo</h2>` +
+      lugares.slice(0, 5).map(p => `<div class="kv"><span>${esc(nombrePorId[p.space] || p.space)}</span><b>${Math.round(p.samples / tot * 100)}%</b></div>`).join("") +
+      `<h2>Su terreno <span class="sim">simulación</span></h2><div class="note">Tiene el ${f.pct.toFixed(0)}% de lo que cuesta una obra. ${f.puede ? "Ya podría instalarla." : isFinite(f.dias) ? `A este ritmo llega en ${n0(f.dias)} días (${fechaEn(f.dias)}).` : "Con este ritmo no llega."}</div>`;
+  } else if (sel.tipo === "terreno") {
+    const t = terrenos[sel.id];
+    const opciones = Object.keys(DROIDES).map(k => `<option ${(sel.dueno || t?.dueno || "R2") === k ? "selected" : ""}>${k}</option>`).join("");
+    const dueno = sel.dueno || t?.dueno || "R2", f = factibilidad(dueno), tipoSel = sel.obra || t?.tipo || TIPOS.find(x => x.para === dueno)?.id || "casa";
+    el.innerHTML = `<h3>Terreno #${sel.id + 1} <span class="sim">simulación</span></h3>
+      <div class="sub">Construction Yard · uno de los ${o.count} terrenos del juego</div>
+      <div class="note">Elegí quién lo pagaría y qué levantar. Queda guardado solo en este navegador.</div>
+      <label class="sub">Dueño</label><select id="selDueno">${opciones}</select>
+      <div class="choices" id="selTipo">${TIPOS.map(x => `<button data-t="${x.id}" class="${x.id === tipoSel ? "on" : ""}">${x.icono} ${x.nombre}<small>${x.para ? "ideal para " + x.para : "para la Cuadrilla"}</small></button>`).join("")}</div>
+      <div class="kv"><span>Instalación</span><b>${n0(o.installCost)}</b><span>Alquiler</span><b>${n0(o.upkeep)}/día (+${n0(o.upkeepIncrease)}/día)</b><span>Bonus</span><b>+${o.workBonus}% velocidad</b>
+      <span>${esc(dueno)} tiene</span><b>${n0(f.crystals)} (${f.pct.toFixed(0)}%)</b><span>Podría pagarla</span><b>${f.puede ? '<span class="ok">ya</span>' : isFinite(f.dias) ? fechaEn(f.dias) : '<span class="bad">no llega</span>'}</b>
+      <span>Alquiler cubierto</span><b>${f.aguanta == null ? "—" : f.aguanta + " días"}</b></div>
+      <div class="tabs" style="margin-top:12px"><button class="btn main" id="btnGuardar">${t ? "Actualizar proyecto" : "Planificar obra"}</button>${t ? `<button class="btn danger" id="btnBorrar">Liberar terreno</button>` : ""}</div>`;
+    $("#selTipo").onclick = e => { const b = e.target.closest("button"); if (!b) return; sel.obra = b.dataset.t; panel(); };
+    $("#selDueno").onchange = () => { sel.dueno = $("#selDueno").value; panel(); };
+    const listo = () => { sel = { tipo:"terreno", id:sel.id }; capa = "terrenos"; marcarCapa(); dibujarMapa(); panel(); bitacora(); };
+    $("#btnGuardar").onclick = () => { terrenos[sel.id] = { dueno: dueno, tipo: tipoSel, desde: t?.desde || new Date().toISOString().slice(0, 10) }; guardar(); listo(); };
+    if (t) $("#btnBorrar").onclick = () => { delete terrenos[sel.id]; guardar(); listo(); };
+  } else if (sel.tipo === "zona") {
+    const id = sel.id, nombre = nombrePorId[id] || id, act = X?.activity ?? {};
+    const quienes = (D?.live ?? []).filter(a => espacioPorNombre[a.location] === id).map(a => a.name);
+    const tiempo = (X?.places ?? []).filter(p => p.space === id);
+    el.innerHTML = `<h3>${esc(nombre)}</h3><div class="sub">${INTERIORES.includes(id) ? "Edificio" : "Distrito"} · <code>${esc(id)}</code></div>
+      <div class="kv" style="margin-top:10px"><span>Ahora hay</span><b>${quienes.length ? esc(quienes.join(", ")) : "nadie de la Cuadrilla"}</b>
+      <span>Contratos</span><b>${act.contracts?.[id] ?? 0}</b><span>Enemigos</span><b>${act.enemies?.[id] ?? 0}</b><span>Estaciones de trabajo</span><b>${act.workstations?.[id] ?? 0}</b></div>
+      <h2>Quién pasó por acá</h2>` + (tiempo.length ? tiempo.sort((a, b) => b.samples - a.samples).map(p => `<div class="kv"><span>${esc(p.agent)}</span><b>${n0(p.samples)} muestras</b></div>`).join("") : `<div class="note">Ningún droide estuvo acá desde el 11/10.</div>`) +
+      (id === "construction-yard" ? `<div class="note">Acá están los ${OBRA().count} terrenos. Tocá uno para planificar una obra.</div>` : "");
+  } else {
+    const live = D?.live ?? [], planes = Object.values(terrenos);
+    el.innerHTML = `<h3>La ciudad</h3><div class="sub">${n0(D?.totalAgents)} agentes en Midnight City · ${X?.totals?.spaces ?? 20} lugares</div>
+      <div class="kv" style="margin-top:10px">${live.map(a => `<span><span style="color:${DROIDES[a.name]?.color}">●</span> ${esc(a.name)}</span><b>${esc(a.location)}</b>`).join("")}</div>
+      <h2>Proyectos de obra <span class="sim">simulación</span></h2>
+      ${planes.length ? Object.entries(terrenos).map(([i, t]) => { const tp = TIPOS.find(x => x.id === t.tipo); const f = factibilidad(t.dueno);
+        return `<div class="kv"><span>#${+i + 1} ${tp?.icono} ${esc(tp?.nombre)} · ${esc(t.dueno)}</span><b>${f?.puede ? '<span class="ok">pagable</span>' : `${f?.pct.toFixed(0)}%`}</b></div>`; }).join("") : `<div class="note">Todavía no hay obras planificadas. Andá a la capa <b>Terrenos</b> y tocá un lote del Construction Yard.</div>`}
+      <div class="note">Tocá un droide, un distrito o un terreno para ver el detalle.</div>`;
+  }
+}
+
+// ---------- Bitácora (sale de los datos reales) ----------
+function bitacora() {
+  const ev = [];
+  const porDroide = {};
+  for (const r of D?.history?.days ?? []) (porDroide[r.agent] ??= []).push(r);
+  for (const [nombre, dias] of Object.entries(porDroide)) {
+    dias.sort((a, b) => a.date.localeCompare(b.date));
+    for (let i = Math.max(1, dias.length - 7); i < dias.length; i++) {
+      const d = dias[i], ant = dias[i - 1], delta = d.crystal - ant.crystal;
+      if (Math.abs(delta) >= 1) ev.push({ f: d.date, t: `${nombre} ${delta >= 0 ? "sumó" : "gastó"} ${n0(Math.abs(delta))} crystals${d.working_pct != null ? ` y trabajó el ${Math.round(d.working_pct)}% del día` : ""}${d.contracts ? `, entregó ${d.contracts} contrato${d.contracts > 1 ? "s" : ""}` : ""}${d.tool_trips ? `, ${d.tool_trips} viaje${d.tool_trips > 1 ? "s" : ""} por herramienta` : ""}.` });
+    }
+  }
+  for (const [i, t] of Object.entries(terrenos)) { const tp = TIPOS.find(x => x.id === t.tipo); ev.push({ f: t.desde, t: `📐 Proyecto: ${t.dueno} planificó ${tp?.icono} ${tp?.nombre} en el terreno #${+i + 1} (simulación).` }); }
+  ev.sort((a, b) => b.f.localeCompare(a.f));
+  $("#bitacora").innerHTML = ev.slice(0, 24).map(e => `<li><b>${esc(e.f.slice(5).split("-").reverse().join("/"))}</b><span>${esc(e.t)}</span></li>`).join("") || `<li>Sin datos todavía.</li>`;
+}
+
+// ---------- Carga ----------
+function marcarCapa() { document.querySelectorAll("#capas button").forEach(b => b.classList.toggle("on", b.dataset.c === capa)); }
+$("#capas").onclick = e => { const c = e.target.dataset.c; if (!c) return; capa = c; marcarCapa(); dibujarMapa(); };
+$("#horizonte").onclick = e => { const d = e.target.dataset.d; if (!d) return; horizonte = +d; document.querySelectorAll("#horizonte button").forEach(b => b.classList.toggle("on", b === e.target)); proyeccion(); };
+addEventListener("resize", () => { clearTimeout(window._rz); window._rz = setTimeout(() => D && proyeccion(), 200); });
+
+async function cargar() {
+  try {
+    const [d, x] = await Promise.all([
+      fetch(API + "?view=dashboard", { cache: "no-store" }).then(r => r.json()),
+      fetch(API + "?view=explore").then(r => r.json()).catch(() => null),
+    ]);
+    D = d; X = x;
+    for (const s of X?.spaces ?? []) { espacioPorNombre[s.name] = s.id; nombrePorId[s.id] = s.name; }
+    const hora = new Date(d.timestamp).toLocaleTimeString("es-AR", { hour: "2-digit", minute: "2-digit" });
+    $("#estado").className = "pill live"; $("#estado").textContent = `en vivo · ${hora}`;
+    dibujarMapa(); panel(); simulador(); bitacora();
+  } catch (e) {
+    $("#estado").className = "pill"; $("#estado").innerHTML = `<span class="bad">sin datos: ${esc(e.message)}</span>`;
+  }
+}
+cargar();
+setInterval(cargar, 120000);
+</script>
+</body>
+</html>
