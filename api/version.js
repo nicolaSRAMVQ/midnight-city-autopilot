@@ -4,10 +4,10 @@
 
 export default function handler(req, res) {
   res.status(200).json({
-    version: "v3.37-live",
+    version: "v3.38-mundo3d",
     timestamp: new Date().toISOString(),
     format: "Tolkien Newsletter",
     headers: ["CRÓNICA MATINAL", "PARTE MERIDIANO", "RELATO VESPERTINO", "SUSSURRO NOCTURNO"],
-    features: ["telegram-menu", "alert-streaks", "minimalist-reporting", "tolkien-narratives", "flexible-windows"],
+    features: ["mundo3d-integration", "telegram-menu", "alert-streaks", "minimalist-reporting", "tolkien-narratives", "flexible-windows"],
   });
 }

@@ -83,6 +83,7 @@ body{padding-bottom:84px}
     <a href="#graficos" data-tab="graficos">📈 <span>Gráficos</span></a>
     <a href="#boxes" data-tab="boxes">🔧 <span>Boxes y pruebas</span></a>
     <a href="#explorar" data-tab="explorar">🧭 <span>Explorar</span></a>
+    <a href="#mundo3d" data-tab="mundo3d">🎮 <span>Mundo 3D</span></a>
   </nav>
 </header>
 
@@ -110,6 +111,16 @@ body{padding-bottom:84px}
 <section class="page" data-page="explorar">
   <h2>🧭 Explorar Midnight City</h2>
   <div id="explore"><div class="card sub">Cargando lo que tiene el juego…</div></div>
+</section>
+
+<section class="page" data-page="mundo3d">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
+    <h2 style="margin:0">🎮 Simulación 3D de Midnight City & Interacción Local</h2>
+    <a href="https://midnight-city.vercel.app" target="_blank" class="btn" style="text-decoration:none;font-size:12px">↗️ Abrir en midnight-city.vercel.app</a>
+  </div>
+  <div class="card" style="padding:0;overflow:hidden;border-radius:14px;height:720px;border:1px solid #1f253d">
+    <iframe id="iframe3d" src="https://midnight-city.vercel.app" style="width:100%;height:100%;border:none" allow="autoplay"></iframe>
+  </div>
 </section>
 
 <script>
@@ -475,7 +486,7 @@ async function loadExplore() {
 }
 
 // ───── Menú: una sección por pantalla (mobile first). La URL (#hoy, #graficos…) recuerda dónde estás. ─────
-const TABS = ["hoy", "graficos", "boxes", "explorar"];
+const TABS = ["hoy", "graficos", "boxes", "explorar", "mundo3d"];
 let exploreLoaded = false;
 function showTab(t) {
   if (!TABS.includes(t)) t = "hoy";
