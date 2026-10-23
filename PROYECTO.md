@@ -227,6 +227,40 @@ Las fases viven en `midnight.experiment_phase` (se editan en Supabase, sin deplo
   las fases (v3.27 keep-alive, v3.28 el worker ya no abandona el minuto). Medir la fase A desde ahí.
 - Al terminar: elegir la fase ganadora y dejarla fija (o mezclar).
 
+## Roadmap de Expansión y Diversificación (2026-10-23)
+
+Acordado tras auditoría integral de las mecánicas desaprovechadas (728 recetas, 200 contratos, 30 enemigos, 19 skills).
+Se reorienta el foco: salir del monotrabajo estéril hacia una presencia multi-skill completa.
+
+### Fase 1: Operación Limpieza & Gira de Contratos (Inmediato - 24 a 48 hs)
+- **Diagnóstico:** Los agentes tienen 17 contratos listos para entregar con materiales que ya llevan en sus mochilas, pero nunca viajan a cobrarlos.
+- **Acciones:**
+  - R2 viaja a Central Plaza a entregar sus 10 contratos pendientes.
+  - BB-8 viaja a Charging House y Hacker House a entregar sus 6 contratos pendientes.
+  - C-3PO entrega su contrato en Miners Cave.
+- **Resultado esperado:** ~2.000 XP instantánea, salto relevante en el leaderboard de `completedContracts` y alivio de inventario.
+
+### Fase 2: Despertar de la Industria & Crafteo (Días 3 a 7)
+- **Diagnóstico:** Hay más de 300.000 ítems secundarios durmiendo en inventario (70k packets, 40k bark, 34k graphite). Las skills de crafteo están vírgenes en Nivel 1.
+- **Acciones:**
+  - Habilitar en el worker de entrenamiento turnos en estaciones de trabajo (`central-workshops`):
+    - BB-8 a Central Forge: Smithing L1 → L5 (fundir `metal_bar` y forjar herramientas).
+    - C-3PO a Central Workbench: Crafting L1 → L5 (aserrar `saw_planks`).
+    - R2 en Hacker Terminal: Cybernetics L21 → L25 (`Refine Cipher Module`).
+- **Resultado esperado:** Consumo de excedente de peso, subida rápida de niveles secundarios y desbloqueo de crafteo de herramientas propias.
+
+### Fase 3: Expedición Amoeba Wilds (Semana 2)
+- **Diagnóstico:** 30 enemigos en Amoeba Wilds (`forest-rivers`). Tiers Hound L1 (30 HP, 4 ATK). Skills de combate (`combat`, `defence`, `vitality`, `bounty_hunting`) en L1.
+- **Protocolo de Seguridad Financiera (Riesgo Cero):**
+  - Transferir todos los cristales al droide de retaguardia (R2) para que el droide combatiente tenga **0 cristales en riesgo** y minimice el `officeFee`.
+- **Acciones:**
+  - Enviar a un droide explorador a cazar Ash Hounds L1 cuerpo a cuerpo.
+  - Farmear drops de `scrap_steel` y fragmentos cerámicos.
+
+### Fase 4: Sostenibilidad & Maestría Multi-Skill (Largo Plazo)
+- **Redefinición del Terreno:** El Construction Yard cuesta 1.000.000 💎 de entrada + 100.000 💎/día de mantenimiento (+10.000/día acumulativo). Con una ganancia de 5.000 💎/día, comprarlo llevaría a la quiebra en 48 horas.
+- **Nueva Meta:** La victoria no es un terreno estético, sino la **Maestría Multi-Skill** (droides compitiendo en los 6 rankings del juego y autosuficientes en herramientas y consumibles).
+
 ## Pendientes
 
 - Medir cuánto tarda cada nivel secundario y cuánta producción principal cuesta el turno diario.

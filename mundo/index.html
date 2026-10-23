@@ -103,6 +103,16 @@ select{background:#0b0d14;color:var(--tx);border:1px solid var(--line);border-ra
   <div class="note" id="notaSim"></div>
 </div>
 
+<h2>🧭 Roadmap de Expansión y Estrategia</h2>
+<div class="card">
+  <div class="big" style="grid-template-columns:repeat(auto-fit,minmax(220px,1fr))">
+    <div><b style="color:var(--acc)">Fase 1 · Gira de Contratos</b><span>Cobro de 17 contratos listos en mochila (Central Plaza y Charging House) · Inyección de XP instantánea y subida de ranking.</span></div>
+    <div><b style="color:#ffad33">Fase 2 · Industria & Crafteo</b><span>Crafteo en Central Forge y Terminal · Activar Smithing y Crafting para consumir 300k materias primas dormidas.</span></div>
+    <div><b style="color:#f2667a">Fase 3 · Amoeba Wilds</b><span>Combate cuerpo a cuerpo contra Ash Hounds L1 · Protocolo de seguridad: 0 cristales en riesgo para evitar penalización de muerte.</span></div>
+    <div><b style="color:#c792ff">Fase 4 · Maestría Multi-Skill</b><span>Superar el cuello de botella del terreno (1M + 100k/día de renta) logrando autosuficiencia en las 19 habilidades.</span></div>
+  </div>
+</div>
+
 <h2>Bitácora de la ciudad</h2>
 <div class="card"><ul class="log" id="bitacora"></ul></div>
 
@@ -341,7 +351,9 @@ function panel() {
 
 // ---------- Bitácora (sale de los datos reales) ----------
 function bitacora() {
-  const ev = [];
+  const ev = [
+    { f: "2026-10-23", t: "🎯 Giro Estratégico: Nuevo Roadmap de Expansión aprobado. Se prioriza cobrar 17 contratos listos, activar crafteo industrial en Central Workshops y preparar expedición segura a Amoeba Wilds." }
+  ];
   const porDroide = {};
   for (const r of D?.history?.days ?? []) (porDroide[r.agent] ??= []).push(r);
   for (const [nombre, dias] of Object.entries(porDroide)) {
