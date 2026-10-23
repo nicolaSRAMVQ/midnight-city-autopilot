@@ -61,13 +61,22 @@ body{padding-bottom:84px}
 .page.on{display:block;animation:fade .2s}
 @keyframes fade{from{opacity:.4}to{opacity:1}}
 .page>h2:first-child{margin-top:14px}
-.menu{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(4,1fr);background:rgba(17,19,28,.96);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
-.menu a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:10px;color:var(--mut);text-decoration:none;font-size:20px}
-.menu a span{font-size:11px;letter-spacing:.2px;text-align:center;line-height:1.15}
+.menu{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));background:rgba(17,19,28,.96);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+.menu a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:10px;color:var(--mut);text-decoration:none;font-size:18px;min-width:0;overflow:hidden}
+.menu a span{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;letter-spacing:0;text-align:center;line-height:1.15}
 .menu a.on{color:var(--tx);background:#1b1f2e}
+.stage3d{padding:0;overflow:hidden;border-radius:14px;height:min(78vh,820px);min-height:480px;border:1px solid #1f253d}
+.stage3d iframe{width:100%;height:100%;border:0;display:block}
+@media (max-width:759px){
+  body.tab-mundo{height:100dvh;overflow:hidden;display:flex;flex-direction:column;padding:10px 12px 74px}
+  body.tab-mundo header .sub{display:none}
+  body.tab-mundo .page.on{flex:1;min-height:0;display:flex;flex-direction:column}
+  body.tab-mundo .mundo-lead{display:none}
+  body.tab-mundo .stage3d{flex:1;height:auto;min-height:0}
+}
 @media (min-width:760px){
   body{padding-bottom:16px}
-  .menu{position:sticky;top:0;bottom:auto;margin:12px 0 4px;border:1px solid var(--line);border-radius:14px;grid-template-columns:repeat(4,auto);justify-content:start;gap:4px;padding:5px}
+  .menu{position:sticky;top:0;bottom:auto;margin:12px 0 4px;border:1px solid var(--line);border-radius:14px;grid-template-columns:repeat(5,auto);justify-content:start;gap:4px;padding:5px}
   .menu a{flex-direction:row;gap:8px;font-size:16px;padding:8px 14px}
   .menu a span{font-size:14px}
 }
@@ -81,9 +90,9 @@ body{padding-bottom:84px}
   <nav class="menu" id="menu">
     <a href="#hoy" data-tab="hoy">🏁 <span>Hoy</span></a>
     <a href="#graficos" data-tab="graficos">📈 <span>Gráficos</span></a>
-    <a href="#boxes" data-tab="boxes">🔧 <span>Boxes y pruebas</span></a>
+    <a href="#boxes" data-tab="boxes">🔧 <span>Boxes</span></a>
     <a href="#explorar" data-tab="explorar">🧭 <span>Explorar</span></a>
-    <a href="#mundo3d" data-tab="mundo3d">🎮 <span>Mundo 3D</span></a>
+    <a href="#mundo3d" data-tab="mundo3d">🎮 <span>Mundo</span></a>
   </nav>
 </header>
 
@@ -114,12 +123,13 @@ body{padding-bottom:84px}
 </section>
 
 <section class="page" data-page="mundo3d">
-  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;flex-wrap:wrap;gap:8px">
-    <h2 style="margin:0">🎮 Simulación 3D de Midnight City & Interacción Local</h2>
-    <a href="https://midnight-city.vercel.app" target="_blank" class="btn" style="text-decoration:none;font-size:12px">↗️ Abrir en midnight-city.vercel.app</a>
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+    <h2 style="margin:0">🎮 Mundo jugable</h2>
+    <a href="/mundo/" target="_blank" style="color:var(--acc);font-size:13px">Abrir en grande</a>
   </div>
-  <div class="card" style="padding:0;overflow:hidden;border-radius:14px;height:720px;border:1px solid #1f253d">
-    <iframe id="iframe3d" src="https://midnight-city.vercel.app" style="width:100%;height:100%;border:none" allow="autoplay"></iframe>
+  <p class="sub mundo-lead" style="margin-top:0">Caminá la ciudad con R2, BB-8 o C-3PO: contratos, forja, banco, terminal y Ash Hounds. Es una simulación en el navegador. No toma el control de los droides reales.</p>
+  <div class="card stage3d">
+    <iframe id="iframe3d" title="Midnight World" src="about:blank" allow="autoplay; fullscreen" tabindex="0"></iframe>
   </div>
 </section>
 
@@ -494,6 +504,15 @@ function showTab(t) {
   document.querySelectorAll("#menu a").forEach((a) => a.classList.toggle("on", a.dataset.tab === t));
   if (t === "graficos" && DATA) drawCharts(); // los gráficos miden el ancho: se dibujan cuando se ven
   if (t === "explorar" && !exploreLoaded) { exploreLoaded = true; loadExplore(); }
+  if (t === "mundo3d") {
+    const frame = document.getElementById("iframe3d");
+    if (frame && frame.dataset.ready !== "1") {
+      frame.dataset.ready = "1";
+      frame.src = "/mundo/?embed=1";
+    }
+    frame?.contentWindow?.focus();
+  }
+  document.body.classList.toggle("tab-mundo", t === "mundo3d");
   window.scrollTo({ top: 0 });
 }
 window.addEventListener("hashchange", () => showTab(location.hash.slice(1)));

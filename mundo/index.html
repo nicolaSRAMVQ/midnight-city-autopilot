@@ -27,12 +27,15 @@ h2{font-size:13px;text-transform:uppercase;letter-spacing:1.5px;color:var(--mut)
 #canvas3d{display:block;width:100%;height:100%;cursor:grab}
 #canvas3d:active{cursor:grabbing}
 .hud3d-top{position:absolute;top:10px;left:10px;right:10px;display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:8px;pointer-events:none;z-index:5}
-.hud-group{display:flex;gap:6px;pointer-events:auto}
+.hud-group{display:flex;gap:6px;pointer-events:auto;flex-wrap:wrap}
+@media (max-width:720px){
+  .hud3d-top{flex-direction:column;align-items:flex-start;max-width:100%}
+}
 .hud-btn{background:rgba(11,14,24,0.85);backdrop-filter:blur(8px);border:1px solid #2a314d;color:#cbd2ec;padding:6px 12px;border-radius:999px;font-size:12.5px;cursor:pointer;font-family:inherit;font-weight:600;transition:all .15s}
 .hud-btn:hover{border-color:var(--acc);color:#fff}
 .hud-btn.active{background:var(--acc);color:#07080d;border-color:var(--acc)}
 .hud-hint{position:absolute;bottom:10px;left:10px;background:rgba(7,9,15,0.8);backdrop-filter:blur(6px);padding:5px 12px;border-radius:8px;font-size:11.5px;color:#8f98b8;border:1px solid #1e2438;pointer-events:none;z-index:5}
-.district-banner{position:absolute;top:54px;left:50%;transform:translateX(-50%);background:rgba(12,16,28,0.9);border:1px solid var(--acc);border-radius:8px;padding:6px 16px;color:#fff;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;pointer-events:none;z-index:5;opacity:0;transition:opacity .3s;box-shadow:0 0 20px rgba(124,240,208,0.25)}
+.district-banner{position:absolute;top:138px;left:50%;transform:translateX(-50%);background:rgba(12,16,28,0.9);border:1px solid var(--acc);border-radius:8px;padding:6px 16px;color:#fff;font-size:13px;font-weight:700;letter-spacing:1px;text-transform:uppercase;pointer-events:none;z-index:5;opacity:0;transition:opacity .3s;box-shadow:0 0 20px rgba(124,240,208,0.25)}
 
 /* 2D Map */
 #mapa svg{display:block;width:100%;height:auto;touch-action:manipulation}
@@ -81,13 +84,48 @@ th{color:var(--mut);font-weight:500}
 .log{list-style:none;padding:0;margin:0;font-size:13.5px}
 .log li{padding:7px 0;border-bottom:1px solid var(--line);display:flex;gap:10px}
 .log li b{min-width:62px;color:var(--mut);font-weight:500;font-variant-numeric:tabular-nums}
+.quest{position:absolute;top:102px;left:50%;transform:translateX(-50%);background:rgba(8,12,20,.88);border:1px solid #1f5a4a;color:#d9fff4;padding:5px 12px;border-radius:999px;font-size:12px;font-weight:700;letter-spacing:.2px;z-index:5;pointer-events:none;white-space:nowrap;max-width:calc(100% - 24px);overflow:hidden;text-overflow:ellipsis}
+@media (max-width:720px){
+  .quest{top:168px}
+  .district-banner{top:208px}
+}
+.prompt{position:absolute;left:50%;bottom:46px;transform:translateX(-50%);z-index:5;background:rgba(8,10,16,.88);border:1px solid #2a314d;color:#e8eaf4;padding:8px 14px;border-radius:12px;font-size:13px;text-align:center;max-width:min(440px, calc(100% - 24px));pointer-events:none}
+.prompt .bar{height:6px;background:#1a2033;border-radius:4px;overflow:hidden;margin-top:6px}
+.prompt .bar i{display:block;height:100%;background:var(--acc)}
+.vitals{position:absolute;left:10px;bottom:10px;z-index:5;width:140px;pointer-events:none}
+.vitals span{display:block;font-size:11px;color:#9aa3c0;margin-bottom:3px}
+.hp{height:8px;background:#1a2033;border-radius:6px;overflow:hidden}
+.hp i{display:block;height:100%;width:100%;background:#ff5c6c}
+#mini{position:absolute;right:10px;bottom:10px;width:132px;height:132px;border-radius:12px;border:1px solid #2a314d;background:rgba(7,9,15,.72);z-index:5}
+#hurt{position:absolute;inset:0;background:rgba(255,40,70,.38);opacity:0;pointer-events:none;z-index:4;transition:opacity .12s}
+.floater{position:absolute;z-index:6;font-weight:800;pointer-events:none;text-shadow:0 2px 8px #000;animation:floatUp .9s ease-out forwards}
+@keyframes floatUp{to{transform:translateY(-36px);opacity:0}}
+#touch{position:absolute;inset:auto 0 8px 0;z-index:7;display:flex;justify-content:space-between;align-items:flex-end;padding:0 12px;pointer-events:none}
+#touch[hidden]{display:none}
+#viewport3d-wrap:has(#touch:not([hidden])) .vitals{bottom:132px}
+#viewport3d-wrap:has(#touch:not([hidden])) #mini{bottom:168px;width:92px;height:92px}
+#viewport3d-wrap:has(#touch:not([hidden])) .prompt{bottom:272px;left:12px;right:auto;transform:none;text-align:left;max-width:calc(100% - 24px)}
+#viewport3d-wrap:has(#touch:not([hidden])) .hud-hint{display:none}
+.side.collapsed{display:none !important}
+.stick{width:108px;height:108px;border-radius:50%;border:1px solid #31405f;background:rgba(8,12,20,.55);position:relative;pointer-events:auto;touch-action:none}
+.stick i{position:absolute;left:38px;top:38px;width:32px;height:32px;border-radius:50%;background:#7cf0d0}
+.tbtns{display:flex;flex-direction:column;gap:8px;pointer-events:auto}
+.tbtns button{width:64px;height:64px;border-radius:50%;border:0;background:#7cf0d0;color:#071018;font:inherit;font-size:13px;font-weight:800;box-shadow:0 0 16px rgba(124,240,208,.35)}
+#selftest{white-space:pre-wrap;font-size:12px;background:#0b0d14;border:1px solid var(--line);padding:10px;border-radius:8px}
+html.embed body{padding:0;max-width:none;height:100%;overflow:hidden}
+html.embed header,html.embed #viewMode,html.embed #resto{display:none}
+html.embed .layout{display:block;height:100vh;position:relative}
+html.embed #mapContainer,html.embed #view3D,html.embed #viewport3d-wrap{height:100%;border:0;border-radius:0}
+html.embed .side{position:absolute;top:54px;right:10px;width:min(320px,calc(100% - 20px));max-height:calc(100% - 130px);overflow:auto;z-index:8;background:rgba(12,14,22,.94)}
+html.embed .side.collapsed{display:none}
 </style>
+<script>if(new URLSearchParams(location.search).get("embed")==="1")document.documentElement.classList.add("embed");</script>
 </head>
 <body>
 <header>
   <div>
     <h1>🌃 Midnight World</h1>
-    <div class="sub">Cuadrilla autónoma en vivo · Simulación 3D interactiva, control local y obras.</div>
+    <div class="sub">Simulación local para caminar con la cuadrilla. No le manda órdenes a los droides reales.</div>
   </div>
   <div style="display:flex;align-items:center;gap:10px">
     <span class="pill" id="estado">cargando…</span>
@@ -114,12 +152,25 @@ th{color:var(--mut);font-weight:500}
             <button class="hud-btn" data-cam="C-3PO">👑 Seguir C-3PO</button>
           </div>
           <div class="hud-group">
-            <button class="hud-btn" id="audioToggle">🔊 Audio ON</button>
-            <button class="hud-btn" id="driveToggle">🎮 Conducir Droide</button>
+            <button class="hud-btn" id="fichaToggle" type="button">Ficha</button>
+            <button class="hud-btn" id="audioToggle" type="button">🔊 Audio ON</button>
+            <button class="hud-btn" id="driveToggle" type="button">🎮 Conducir</button>
           </div>
         </div>
-        <div class="district-banner" id="distBanner">Hacker House</div>
-        <div class="hud-hint" id="hudHint">🖱️ Arrastrá para rotar la cámara · Rueda para zoom · Clic en un droide para interactuar</div>
+        <div class="quest" id="questChip">Cargando la ciudad…</div>
+        <div class="district-banner" id="distBanner">Central Plaza</div>
+        <div class="prompt" id="prompt">Elegí un droide y tocá Conducir.</div>
+        <div class="vitals"><span>Vida de la simulación</span><div class="hp"><i id="hpFill"></i></div></div>
+        <canvas id="mini" width="132" height="132"></canvas>
+        <div id="hurt"></div>
+        <div class="hud-hint" id="hudHint">Arrastrá para orbitar · Clic en un droide · 1 2 3 para elegirlo</div>
+        <div id="touch" hidden>
+          <div class="stick" id="stick"><i></i></div>
+          <div class="tbtns">
+            <button id="tAtk" type="button">Golpe</button>
+            <button id="tUse" type="button">Usar</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -139,6 +190,7 @@ th{color:var(--mut);font-weight:500}
   <div class="card side" id="panel"></div>
 </div>
 
+<div id="resto">
 <h2>¿Cuándo podemos construir? <span class="sim">simulación</span></h2>
 <div class="card">
   <div class="big" id="kpiSim"></div>
@@ -161,9 +213,12 @@ th{color:var(--mut);font-weight:500}
 
 <h2>Bitácora de la ciudad</h2>
 <div class="card"><ul class="log" id="bitacora"></ul></div>
+<pre id="selftest" hidden></pre>
+</div>
 
 <div id="tip"></div>
 
+<script src="play.js"></script>
 <script>
 const API = "https://r2-telegram-reporter.vercel.app/api/agent-status";
 const $ = s => document.querySelector(s);
@@ -171,9 +226,9 @@ const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;
 const n0 = v => Math.round(v ?? 0).toLocaleString("es-AR");
 const corto = v => Math.abs(v) >= 1e6 ? (v/1e6).toLocaleString("es-AR",{maximumFractionDigits:2}) + " M" : Math.abs(v) >= 1e3 ? Math.round(v/1e3).toLocaleString("es-AR") + " k" : n0(v);
 const DROIDES = {
-  "R2": { color:"#4da3ff", ini:"R2", oficio:"hacker", home:{x:-25, z:-25, name:"Hacker House"} },
-  "BB-8": { color:"#ffad33", ini:"BB", oficio:"minero", home:{x:55, z:-35, name:"Miners Cave"} },
-  "C-3PO": { color:"#c792ff", ini:"3P", oficio:"leñador", home:{x:-55, z:-35, name:"Forest"} }
+  "R2": { color:"#4da3ff", ini:"R2", oficio:"hacker", home:{x:-48, z:-42, name:"Hacker House"} },
+  "BB-8": { color:"#ffad33", ini:"BB", oficio:"minero", home:{x:74, z:-30, name:"Volcano"} },
+  "C-3PO": { color:"#c792ff", ini:"3P", oficio:"leñador", home:{x:-78, z:-36, name:"Forest"} }
 };
 
 // ==================== SINTETIZADOR DE AUDIO PROCEDURAL (WEB AUDIO API) ====================
@@ -256,6 +311,22 @@ const AudioEngine = {
     gain.connect(this.ctx.destination);
     osc.start(now);
     osc.stop(now + 0.05);
+  },
+  blip(freq) {
+    if (this.muted) return;
+    this.init();
+    if (!this.ctx) return;
+    const now = this.ctx.currentTime;
+    const osc = this.ctx.createOscillator();
+    const gain = this.ctx.createGain();
+    osc.type = "square";
+    osc.frequency.setValueAtTime(freq, now);
+    gain.gain.setValueAtTime(0.05, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+    osc.connect(gain);
+    gain.connect(this.ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.09);
   }
 };
 
@@ -278,16 +349,17 @@ function init3D() {
 
   scene = new THREE.Scene();
   scene.background = new THREE.Color(0x06080e);
-  scene.fog = new THREE.FogExp2(0x06080e, 0.0075);
+  scene.fog = new THREE.FogExp2(0x06080e, 0.0032);
 
   camera = new THREE.PerspectiveCamera(45, width / height, 0.5, 1000);
-  camera.position.set(0, 85, 120);
+  camera.position.set(22, 26, 34);
 
   renderer = new THREE.WebGLRenderer({ canvas, antialias: true, powerPreference: "high-performance" });
   renderer.setSize(width, height);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
 
   controls = new THREE.OrbitControls(camera, renderer.domElement);
+  controls.target.set(0, 1.2, 2);
   controls.enableDamping = true;
   controls.dampingFactor = 0.06;
   controls.maxPolarAngle = Math.PI / 2.05;
@@ -295,10 +367,11 @@ function init3D() {
   controls.maxDistance = 240;
 
   // Luces
-  const ambLight = new THREE.AmbientLight(0x222c42, 1.2);
+  const ambLight = new THREE.AmbientLight(0x8ea0c8, 1.15);
   scene.add(ambLight);
+  scene.add(new THREE.HemisphereLight(0xd7ecff, 0x241628, 0.85));
 
-  const dirLight = new THREE.DirectionalLight(0x5da8ff, 0.8);
+  const dirLight = new THREE.DirectionalLight(0xfff4e8, 1.25);
   dirLight.position.set(40, 90, 40);
   scene.add(dirLight);
 
@@ -313,26 +386,35 @@ function init3D() {
   const ground = new THREE.Mesh(groundGeo, groundMat);
   ground.rotation.x = -Math.PI / 2;
   ground.position.y = -0.1;
+  ground.name = "Ground";
   scene.add(ground);
 
-  // Construir Distritos Cyberpunk en 3D
-  crearDistritos3D();
   crearDroides3D();
-  crearEnemigoHound();
-
-  // Eventos de entrada (teclado y clics)
-  window.addEventListener("keydown", e => {
-    keysPressed[e.code] = true;
-    if (["KeyW","KeyS","KeyA","KeyD","ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.code)) {
-      if (currentCamMode !== "free" && !isDriving) {
-        setDriving(true);
-      }
-    }
+  const params = new URLSearchParams(location.search);
+  MidnightPlay.start({
+    scene, camera, renderer, controls,
+    droids: droids3D,
+    homes: { "R2": DROIDES.R2.home, "BB-8": DROIDES["BB-8"].home, "C-3PO": DROIDES["C-3PO"].home },
+    colors: { "R2": DROIDES.R2.color, "BB-8": DROIDES["BB-8"].color, "C-3PO": DROIDES["C-3PO"].color },
+    audio: AudioEngine,
+    debug: params.has("debug"),
+    active: () => activeDroid,
+    setActive: (name) => { activeDroid = name; },
+    select: (name) => selectDroid(name),
+    camMode: () => currentCamMode,
+    setCamMode: (mode) => { currentCamMode = mode; },
+    onPick: onPointerDown,
+    onChange: () => mostrarDetalleDroide(activeDroid),
   });
-  window.addEventListener("keyup", e => { keysPressed[e.code] = false; });
-  canvas.addEventListener("pointerdown", onPointerDown);
 
   window.addEventListener("resize", onWindowResize);
+  if (params.get("shot") === "r2") {
+    activeDroid = "R2";
+    currentCamMode = "R2";
+    droids3D.R2.group.position.set(2, 0, 6);
+    MidnightPlay.setDriving(true);
+  }
+  if (params.has("selftest")) runSelfTest();
   animate();
 }
 
@@ -485,6 +567,7 @@ function crearDroides3D() {
   const r2Eye = new THREE.Mesh(new THREE.CylinderGeometry(0.18, 0.18, 0.3, 8), new THREE.MeshBasicMaterial({ color: 0x00e5ff }));
   r2Eye.rotation.x = Math.PI / 2;
   r2Eye.position.set(0, 2.5, 0.85);
+  r2Eye.name = "eye";
   r2Group.add(r2Eye);
 
   // Patas laterales
@@ -528,6 +611,7 @@ function crearDroides3D() {
   bbHeadGroup.add(bbHead);
   const bbEye = new THREE.Mesh(new THREE.SphereGeometry(0.16, 8, 8), new THREE.MeshBasicMaterial({ color: 0x111111 }));
   bbEye.position.set(0, 0.25, 0.55);
+  bbEye.name = "eye";
   bbHeadGroup.add(bbEye);
   const bbAntenna = new THREE.Mesh(new THREE.CylinderGeometry(0.02, 0.02, 0.6), new THREE.MeshBasicMaterial({ color: 0x888888 }));
   bbAntenna.position.set(0.18, 0.8, -0.1);
@@ -553,6 +637,7 @@ function crearDroides3D() {
   c3Group.add(c3Head);
   const c3EyeL = new THREE.Mesh(new THREE.SphereGeometry(0.08, 6, 6), new THREE.MeshBasicMaterial({ color: 0xffea00 }));
   c3EyeL.position.set(-0.16, 3.1, 0.32);
+  c3EyeL.name = "eye";
   const c3EyeR = c3EyeL.clone();
   c3EyeR.position.x = 0.16;
   c3Group.add(c3EyeL); c3Group.add(c3EyeR);
@@ -662,75 +747,21 @@ function animate() {
   requestAnimationFrame(animate);
   const delta = animClock.getDelta();
   const time = animClock.getElapsedTime();
-
-  // 1. Efectos ambientales
-  const core = scene.getObjectByName("Central_Core");
-  if (core) {
-    core.rotation.y += 0.015;
-    core.rotation.x += 0.008;
-    core.position.y = 6 + Math.sin(time * 2) * 0.4;
-  }
-
-  // 2. Patrulla de Ash Hound en Amoeba Wilds
-  if (houndMesh) {
-    const houndAngle = time * 0.6;
-    houndMesh.position.x = -55 + Math.cos(houndAngle) * 9;
-    houndMesh.position.z = 35 + Math.sin(houndAngle) * 9;
-    houndMesh.rotation.y = -houndAngle + Math.PI / 2;
-  }
-
-  // 3. Animaciones específicas de droides
-  if (droids3D.R2) {
-    droids3D.R2.holo.rotation.y += 0.02;
-    droids3D.R2.head.rotation.y = Math.sin(time * 1.5) * 0.4;
-  }
-  if (droids3D["BB-8"]) {
-    droids3D["BB-8"].headGroup.rotation.z = Math.sin(time * 2.5) * 0.08;
-    droids3D["BB-8"].headGroup.position.y = 2.05 + Math.sin(time * 4) * 0.03;
-  }
-  if (droids3D["C-3PO"]) {
-    droids3D["C-3PO"].axe.rotation.x = Math.PI / 4 + Math.sin(time * 3) * 0.35;
-  }
-
-  // 4. Conducción / Movimiento interactivo del droide activo
-  if (droids3D[activeDroid]) {
-    const d = droids3D[activeDroid];
-    let mx = 0, mz = 0;
-    if (keysPressed["KeyW"] || keysPressed["ArrowUp"]) mz -= 1;
-    if (keysPressed["KeyS"] || keysPressed["ArrowDown"]) mz += 1;
-    if (keysPressed["KeyA"] || keysPressed["ArrowLeft"]) mx -= 1;
-    if (keysPressed["KeyD"] || keysPressed["ArrowRight"]) mx += 1;
-
-    if (mx !== 0 || mz !== 0) {
-      const len = Math.hypot(mx, mz);
-      mx /= len; mz /= len;
-      d.group.position.x = Math.max(-95, Math.min(95, d.group.position.x + mx * d.speed));
-      d.group.position.z = Math.max(-95, Math.min(95, d.group.position.z + mz * d.speed));
-
-      const targetAngle = Math.atan2(mx, mz);
-      d.group.rotation.y = targetAngle;
-
-      if (activeDroid === "BB-8" && d.ball) {
-        d.ball.rotation.x += 0.25;
-      }
-
-      // Chequeo de distrito
-      detectarDistrito(d.group.position.x, d.group.position.z);
-    }
-  }
-
-  // 5. Modos de Cámara
-  if (currentCamMode !== "free" && droids3D[currentCamMode]) {
-    const targetPos = droids3D[currentCamMode].group.position;
-    const offset = new THREE.Vector3(0, 9, 16);
-    offset.applyAxisAngle(new THREE.Vector3(0, 1, 0), droids3D[currentCamMode].group.rotation.y);
-    const camDest = targetPos.clone().add(offset);
-    camera.position.lerp(camDest, 0.08);
-    controls.target.lerp(targetPos.clone().add(new THREE.Vector3(0, 2, 0)), 0.1);
-  }
-
-  controls.update();
+  if (window.MidnightPlay) MidnightPlay.step(delta, time);
+  if (controls.enabled) controls.update();
   renderer.render(scene, camera);
+}
+
+function runSelfTest() {
+  const math = MidnightPlay.frameMathSelfTest();
+  const ctrl = MidnightPlay.controlSelfTest();
+  const all = math.concat(ctrl);
+  const fail = all.filter((r) => !r[1]);
+  const pre = document.getElementById("selftest");
+  pre.hidden = false;
+  pre.textContent = all.map((r) => (r[1] ? "PASS " : "FAIL ") + r[0] + " " + JSON.stringify(r[2])).join("\n");
+  document.title = fail.length ? "FAIL " + fail.length : "PASS";
+  document.body.dataset.selftest = fail.length ? "fail" : "pass";
 }
 
 let lastDistrictName = "";
@@ -758,6 +789,7 @@ function detectarDistrito(x, z) {
 function mostrarDetalleDroide(nombre) {
   const a = (D?.live ?? []).find(x => x.name === nombre);
   const color = DROIDES[nombre]?.color || "#7cf0d0";
+  const sim = (window.MidnightPlay && MidnightPlay.sim()) || { xp: {}, left: {}, smith: 0, craft: 0, hack: 0, kills: 0, log: [] };
   const el = $("#panel");
   if (!el) return;
 
@@ -778,13 +810,24 @@ function mostrarDetalleDroide(nombre) {
     <div class="bar" style="margin-top:10px"><i style="width:${Math.min(100, a?.xpPercent || 50)}%;background:${color}"></i></div>
     <div class="note" style="margin-top:-4px">XP para próximo nivel: ${a?.xpPercent ?? 99}%</div>
 
-    <h2 style="margin:16px 0 8px">Acciones Locales 3D</h2>
-    <button class="btn action" onclick="AudioEngine['${nombre === 'R2' ? 'r2Beep' : nombre === 'BB-8' ? 'bb8Trill' : 'c3poChime'}']()">💬 Saludar (Beep ${nombre})</button>
-    <button class="btn action" onclick="setDriving(true)">🎮 Conducir en 3D (WASD)</button>
-    <button class="btn action" onclick="resetDroidPos('${nombre}')">📍 Regresar a Base (${DROIDES[nombre].home.name})</button>
-
-    <h2 style="margin:16px 0 8px">Mochila & Recursos</h2>
-    <div class="note">${nombre === 'R2' ? 'Lleva 70.000 Encrypted Packets y 47.000 Access Fragments listos para la terminal.' : nombre === 'BB-8' ? 'Lleva 34.000 Graphite y 27.000 Copper Ore listos para la forja.' : 'Lleva 40.000 Ironwood Bark y 40.000 Dusk Cedar.'}</div>
+    <h2 style="margin:16px 0 8px">Jugar en la simulación</h2>
+    <p class="note">Pasa solo en esta pantalla. El autopilot de Vercel sigue con los droides de verdad y acá no se abre sesión de juego.</p>
+    <div class="kv">
+      <span>XP local</span><b>${n0(sim.xp[nombre])}</b>
+      <span>Contratos listos</span><b>${sim.left[nombre] ?? 0}</b>
+      <span>Forja · banco · terminal</span><b>${sim.smith} · ${sim.craft} · ${sim.hack}</b>
+      <span>Hounds</span><b>${sim.kills}</b>
+    </div>
+    <button class="btn action" type="button" data-act="drive">🎮 Conducir (WASD)</button>
+    <button class="btn action" type="button" data-act="greet">💬 Saludar</button>
+    <button class="btn action" type="button" data-act="goto" data-id="contracts">📜 Ir a la mesa de contratos</button>
+    <button class="btn action" type="button" data-act="goto" data-id="forge">🔥 Ir a la forja</button>
+    <button class="btn action" type="button" data-act="goto" data-id="bench">🪵 Ir al banco</button>
+    <button class="btn action" type="button" data-act="goto" data-id="terminal">💻 Ir a la terminal</button>
+    <button class="btn action" type="button" data-act="goto" data-id="wilds">⚔️ Ir a Amoeba Wilds</button>
+    <button class="btn action" type="button" data-act="home">📍 Volver a ${esc(DROIDES[nombre].home.name)}</button>
+    <button class="btn action" type="button" data-act="reset-sim">↺ Reiniciar la simulación local</button>
+    ${(sim.log || []).map((line) => `<div class="note">${esc(line)}</div>`).join("")}
   `;
 }
 
@@ -816,7 +859,7 @@ $("#camModes").onclick = e => {
   if (c !== "free") selectDroid(c);
   else {
     controls.target.set(0, 0, 0);
-    setDriving(false);
+    MidnightPlay.setDriving(false);
   }
 };
 
@@ -825,9 +868,21 @@ $("#audioToggle").onclick = () => {
   $("#audioToggle").textContent = AudioEngine.muted ? "🔇 Audio OFF" : "🔊 Audio ON";
 };
 
-$("#driveToggle").onclick = () => {
-  setDriving(!isDriving);
-};
+$("#driveToggle").onclick = () => MidnightPlay.setDriving(!MidnightPlay.isDriving());
+$("#fichaToggle").onclick = () => $("#panel").classList.toggle("collapsed");
+$("#panel").addEventListener("click", (e) => {
+  const b = e.target.closest("[data-act]");
+  if (!b) return;
+  const act = b.dataset.act;
+  if (act === "drive") MidnightPlay.setDriving(true);
+  else if (act === "greet") {
+    if (activeDroid === "R2") AudioEngine.r2Beep();
+    else if (activeDroid === "BB-8") AudioEngine.bb8Trill();
+    else AudioEngine.c3poChime();
+  } else if (act === "goto") MidnightPlay.goTo(b.dataset.id);
+  else if (act === "home") MidnightPlay.goHome();
+  else if (act === "reset-sim") MidnightPlay.resetSim();
+});
 
 // ==================== 2D FALLBACK & SIMULACIÓN ====================
 const ZONAS = [
@@ -902,6 +957,32 @@ function bitacora() {
   $("#bitacora").innerHTML = ev.slice(0, 16).map(e => `<li><b>${esc(e.f.slice(5).split("-").reverse().join("/"))}</b><span>${esc(e.t)}</span></li>`).join("") || `<li>Sin datos todavía.</li>`;
 }
 
+function dibujarMapa() {
+  const zones = ZONAS.map((z) => {
+    const here = (D?.live ?? []).filter((a) => {
+      const loc = String(a.location || "").toLowerCase();
+      if (z.id === "forest" && loc.includes("forest")) return true;
+      if (z.id === "volcano" && loc.includes("volcano")) return true;
+      if (z.id === "central" && loc.includes("hacker")) return true;
+      return false;
+    }).map((a) => a.name);
+    const mark = (capa === "calor" && here.length) || (capa === "terrenos" && z.id === "construction-yard");
+    return `<g class="zone"><rect x="${z.x}" y="${z.y}" width="${z.w}" height="${z.h}" rx="16" fill="${mark ? "#1b2838" : "#121522"}"/><text x="${z.x + 14}" y="${z.y + 28}">${z.emoji} ${esc(z.id)}</text>${here.length ? `<text class="k" x="${z.x + 14}" y="${z.y + 48}">${esc(here.join(" · "))}</text>` : ""}</g>`;
+  }).join("");
+  $("#svgMapa").innerHTML = `<svg viewBox="0 0 ${W} ${H}">${zones}</svg>`;
+  $("#legMapa").textContent = capa === "terrenos"
+    ? "El construction yard sigue siendo el terreno de 1.000.000 💎, con alquiler que no cerramos."
+    : "Los nombres marcan dónde está cada droide en el juego, ahora.";
+}
+
+$("#capas").onclick = (e) => {
+  const c = e.target.dataset.c;
+  if (!c) return;
+  capa = c;
+  document.querySelectorAll("#capas button").forEach((b) => b.classList.toggle("on", b.dataset.c === c));
+  dibujarMapa();
+};
+
 async function cargar() {
   try {
     const [d, x] = await Promise.all([
@@ -911,16 +992,31 @@ async function cargar() {
     D = d; X = x;
     $("#estado").textContent = "en vivo";
     $("#estado").classList.add("live");
-    init3D();
-    mostrarDetalleDroide("R2");
+    mostrarDetalleDroide(activeDroid);
     proyeccion();
     bitacora();
+    dibujarMapa();
+    if (new URLSearchParams(location.search).get("vista") === "2d") {
+      document.querySelector('#viewMode [data-v="2d"]').click();
+    }
   } catch (e) {
     console.error(e);
-    $("#estado").textContent = "error de red";
+    $("#estado").textContent = "sin red · simulación local";
+    dibujarMapa();
   }
 }
 
+if (document.documentElement.classList.contains("embed") && window.innerWidth < 900) {
+  $("#panel").classList.add("collapsed");
+}
+try { init3D(); }
+catch (err) {
+  const pre = document.getElementById("selftest");
+  pre.hidden = false;
+  pre.textContent = "BOOT " + (err && err.stack || err);
+  document.title = "FAIL boot";
+  document.body.dataset.selftest = "fail";
+}
 cargar();
 </script>
 </body>
