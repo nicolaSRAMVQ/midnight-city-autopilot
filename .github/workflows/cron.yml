@@ -39,6 +39,7 @@ on:
   schedule:
     - cron: "*/5 * * * *"  # autopilot keep-alive, every 5 min (Namarie micelio acceleration)
     - cron: "*/10 * * * *" # v3.14: session log + silence detector, every 10 min
+    - cron: "0 12,21 * * *" # v3.40: reportes diarios a Telegram (09:00 y 18:00 ART)
   workflow_dispatch: # lets you fire any job manually from the Actions tab
     inputs:
       target:
@@ -59,7 +60,8 @@ jobs:
 
   report:
     if: >
-      github.event_name == 'workflow_dispatch' && inputs.target == 'report'
+      github.event.schedule == '0 12,21 * * *' ||
+      (github.event_name == 'workflow_dispatch' && inputs.target == 'report')
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Telegram report
