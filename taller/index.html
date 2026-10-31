@@ -8,6 +8,7 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/GLTFExporter.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <style>
 :root{--bg:#07080d;--card:#11131c;--line:#22263a;--tx:#e8eaf4;--mut:#8a90a8;--r2:#4da3ff;--bb8:#ffad33;--c3:#e8c15a;--acc:#7cf0d0}
 *{box-sizing:border-box}
@@ -29,6 +30,15 @@ button.on{background:var(--acc);color:#07080d;border-color:var(--acc)}
 .hud b{color:#fff}
 .top{position:absolute;left:12px;top:12px;display:flex;gap:6px;flex-wrap:wrap}
 .toast{position:absolute;left:50%;top:16px;transform:translateX(-50%);background:rgba(12,16,28,.92);border:1px solid var(--acc);border-radius:8px;padding:6px 14px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none}
+.build{position:absolute;left:12px;right:316px;bottom:12px;background:rgba(11,14,24,.9);backdrop-filter:blur(10px);border:1px solid #2a314d;border-radius:14px;padding:8px 10px;display:none}
+.build.show{display:block}
+.build .cats{display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap}
+.build .items{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
+.item{flex:0 0 auto;min-width:74px;text-align:center;background:#151a2b;border:1px solid #2a314d;border-radius:10px;padding:6px 8px;cursor:grab;user-select:none;font-size:12px;color:#cbd2ec}
+.item .ic{font-size:22px;display:block}
+.item.on{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset;color:#fff}
+.build .tip{color:var(--mut);font-size:11.5px;margin-top:6px}
+.drop{position:absolute;inset:0;border:3px dashed var(--acc);background:rgba(124,240,208,.08);display:none;align-items:center;justify-content:center;font-size:18px;pointer-events:none}
 @media (max-width:760px){.panel{top:auto;bottom:12px;right:12px;left:12px;width:auto;max-height:45vh}.hud{display:none}}
 </style>
 </head>
@@ -38,7 +48,9 @@ button.on{background:var(--acc);color:#07080d;border-color:var(--acc)}
 <div class="top">
   <button id="modeTaller" class="on">🛠️ Taller</button>
   <button id="modeDron">🛸 Volar con R2</button>
+  <button id="modeBuild">🏗️ Construir</button>
   <button id="home">🏠 Volver a la estación</button>
+  <button id="viewTop">🗺️ Vista de arriba</button>
 </div>
 
 <div class="panel">
@@ -63,6 +75,12 @@ button.on{background:var(--acc);color:#07080d;border-color:var(--acc)}
   <div class="sub" style="margin-top:8px">Se guarda en este navegador. El .glb se abre en Blender o en un programa de impresión 3D.</div>
 </div>
 
+<div class="build" id="build">
+  <div class="cats" id="cats"></div>
+  <div class="items" id="items"></div>
+  <div class="tip">Tocá una pieza y después el pasto (o arrastrala). <b>R</b> gira · <b>[ ]</b> achica/agranda · <b>Supr</b> borra · <b>Esc</b> suelta. Arrastrá un .glb desde la Mac para sumar tus propios modelos.</div>
+</div>
+<div class="drop" id="drop">Soltá el modelo 3D (.glb / .gltf) para ponerlo en el mundo</div>
 <div class="hud" id="hud"></div>
 <div class="toast" id="toast"></div>
 
@@ -303,6 +321,7 @@ addEventListener("keydown", (e) => { keys[e.code] = true; if (mode === "dron" &&
 addEventListener("keyup", (e) => { keys[e.code] = false; });
 
 function startDrone() {
+  if (mode === "construir") leaveBuild();
   mode = "dron";
   const d = { ...designs["R2"], parts: { ...designs["R2"].parts, helices: true } };
   drone = BUILDERS["R2"](d); addParts(drone, d, "R2"); drone.scale.setScalar(0.8 * d.scale);
@@ -313,6 +332,7 @@ function startDrone() {
   setMode(); toast("🛸 R2 en modo dron. ¡A recorrer el bosque!");
 }
 function home() {
+  if (mode === "construir") leaveBuild();
   if (drone) { scene.remove(drone); drone = null; }
   droids["R2"].visible = true;
   mode = "taller"; controls.enabled = true;
@@ -369,12 +389,158 @@ $("home").onclick = home;
 function setMode() {
   $("modeTaller").classList.toggle("on", mode === "taller");
   $("modeDron").classList.toggle("on", mode === "dron");
+  $("modeBuild").classList.toggle("on", mode === "construir");
+  $("hud").style.display = mode === "construir" ? "none" : "";
   $("hud").innerHTML = mode === "dron"
     ? "<b>W / ↑</b> avanzar · <b>S / ↓</b> atrás · <b>A D / ← →</b> girar · <b>Espacio / E</b> subir · <b>Q</b> bajar · <b>Shift der.</b> turbo"
     : "Arrastrá para girar la vista · rueda para acercar · elegí un droide en el panel para ir a su cápsula";
 }
 let toastT;
 function toast(t) { const el = $("toast"); el.textContent = t; el.style.opacity = 1; clearTimeout(toastT); toastT = setTimeout(() => (el.style.opacity = 0), 2200); }
+
+
+// ───────────────────────── Construir (estilo Tycoon) ─────────────────────────
+const EXTRAS = {
+  roca(g) { add(g, new THREE.DodecahedronGeometry(0.9, 0), mat(0x8a8f96, { roughness: 1 }), [0, 0.5, 0]).scale.set(1.3, 0.8, 1); },
+  arbusto(g) { canopy(g, 0x4c8a3c, 4, 0.7, 0.6, 0.7); },
+  flores(g) { [0xff6fa3, 0xffd34d, 0xb48cff, 0xffffff].forEach((c, i) => { for (let k = 0; k < 4; k++) { add(g, new THREE.SphereGeometry(0.13, 8, 6), mat(c), [rand(-0.8, 0.8), 0.35, rand(-0.8, 0.8)]); } add(g, new THREE.CylinderGeometry(0.02, 0.02, 0.3, 4), mat(0x3f7a35), [rand(-0.6, 0.6), 0.15, rand(-0.6, 0.6)]); }); },
+  bambu(g) { for (let i = 0; i < 7; i++) { const h = rand(4, 7); add(g, new THREE.CylinderGeometry(0.09, 0.1, h, 6), mat(0x7fae4a), [rand(-0.7, 0.7), h / 2, rand(-0.7, 0.7)]); } },
+  farol(g) { add(g, new THREE.BoxGeometry(0.5, 1.4, 0.5), mat(0x77736b), [0, 0.7, 0]); add(g, new THREE.BoxGeometry(0.9, 0.15, 0.9), mat(0x5f5b54), [0, 1.5, 0]); add(g, new THREE.BoxGeometry(0.3, 0.3, 0.3), mat(0xffd59a, { emissive: 0xffb860, emissiveIntensity: 1.2 }), [0, 1.2, 0]); },
+  banco(g) { add(g, new THREE.BoxGeometry(2, 0.12, 0.6), mat(0x9b6b43), [0, 0.55, 0]); [-0.8, 0.8].forEach((x) => add(g, new THREE.BoxGeometry(0.12, 0.55, 0.5), mat(0x3a3a40), [x, 0.27, 0])); },
+  piedra(g) { add(g, new THREE.CylinderGeometry(0.6, 0.65, 0.12, 10), mat(0x9a9aa2, { roughness: 0.95 }), [0, 0.08, 0], false); },
+  estanque(g) { add(g, new THREE.CircleGeometry(3, 32), mat(0x3d86b8, { metalness: 0.4, roughness: 0.15, transparent: true, opacity: 0.88 }), [0, 0.07, 0], false).rotation.x = -Math.PI / 2; for (let i = 0; i < 10; i++) { const a = (i / 10) * 6.28; add(g, new THREE.DodecahedronGeometry(0.35, 0), mat(0x8a8f96), [Math.cos(a) * 3.1, 0.15, Math.sin(a) * 3.1]); } },
+  puente(g) { const wood = mat(0xb5532f); for (let i = -4; i <= 4; i++) add(g, new THREE.BoxGeometry(0.4, 0.1, 1.6), wood, [i * 0.42, 0.6 + Math.cos(i / 4 * 1.2) * 0.5, 0]); [-0.8, 0.8].forEach((z) => add(g, new THREE.BoxGeometry(3.8, 0.08, 0.08), wood, [0, 1.6, z])); },
+  torii(g) { const red = mat(0xd63a2a); [-1.4, 1.4].forEach((x) => add(g, new THREE.CylinderGeometry(0.16, 0.18, 4, 10), red, [x, 2, 0])); add(g, new THREE.BoxGeometry(4, 0.25, 0.4), mat(0x222222), [0, 4.1, 0]); add(g, new THREE.BoxGeometry(3.4, 0.2, 0.3), red, [0, 3.4, 0]); },
+  caja(g) { add(g, new THREE.BoxGeometry(1, 1, 1), mat(0x6f7c96, { metalness: 0.5 }), [0, 0.5, 0]); add(g, new THREE.BoxGeometry(1.02, 0.12, 1.02), mat(0x7cf0d0, { emissive: 0x2a9c88 }), [0, 0.8, 0]); },
+  antena(g) { add(g, new THREE.CylinderGeometry(0.08, 0.15, 5, 8), mat(0x9aa3b8, { metalness: 0.7 }), [0, 2.5, 0]); add(g, new THREE.SphereGeometry(0.9, 16, 8, 0, 6.28, 0, 1.2), mat(0xdfe6f0, { side: THREE.DoubleSide, metalness: 0.4 }), [0, 5, 0]).rotation.x = 0.6; add(g, new THREE.SphereGeometry(0.12, 10, 10), mat(0xff3355, { emissive: 0xff3355 }), [0, 5.3, 0]); },
+  solar(g) { add(g, new THREE.CylinderGeometry(0.08, 0.08, 1.2, 6), mat(0x55606f), [0, 0.6, 0]); const pnl = add(g, new THREE.BoxGeometry(2.2, 0.06, 1.4), mat(0x1d3d78, { metalness: 0.8, roughness: 0.2 }), [0, 1.25, 0]); pnl.rotation.x = -0.5; },
+  capsula(g) { add(g, new THREE.CylinderGeometry(1.4, 1.5, 0.3, 32), mat(0x2b3248, { metalness: 0.8 }), [0, 0.15, 0]); add(g, new THREE.CylinderGeometry(1.4, 1.4, 3.2, 32, 1, true), mat(0xbfe6ff, { transparent: true, opacity: 0.15, side: THREE.DoubleSide }), [0, 1.9, 0], false); add(g, new THREE.TorusGeometry(1.45, 0.05, 8, 40), mat(0x7cf0d0, { emissive: 0x7cf0d0 }), [0, 0.32, 0], false).rotation.x = Math.PI / 2; },
+};
+const CATALOG = [
+  ["🌳 Naturaleza", [["sakura", "🌸", "Sakura"], ["ginkgo", "🍂", "Ginkgo"], ["roble", "🌳", "Roble"], ["arce", "🍁", "Arce"], ["milenario", "🌲", "Milenario"], ["bambu", "🎋", "Bambú"], ["arbusto", "🌿", "Arbusto"], ["flores", "🌼", "Flores"], ["roca", "🪨", "Roca"]]],
+  ["⛩️ Jardín", [["piedra", "⚪", "Camino"], ["estanque", "💧", "Estanque"], ["puente", "🌉", "Puente"], ["torii", "⛩️", "Torii"], ["farol", "🏮", "Farol"], ["banco", "🪑", "Banco"]]],
+  ["🛠️ Taller", [["capsula", "🧪", "Cápsula"], ["caja", "📦", "Caja"], ["antena", "📡", "Antena"], ["solar", "☀️", "Panel solar"]]],
+];
+function makeItem(kind) {
+  const g = new THREE.Group();
+  if (TREES[kind]) TREES[kind](g); else if (EXTRAS[kind]) EXTRAS[kind](g);
+  g.userData.kind = kind;
+  return g;
+}
+
+const built = new THREE.Group(); scene.add(built);
+const LAYOUT_KEY = "taller.layout.v1";
+let tool = null, ghost = null, selected = null, selBox = null, catIdx = 0;
+const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+
+function saveLayout() {
+  const list = built.children.filter((o) => !o.userData.imported).map((o) => ({ k: o.userData.kind, x: o.position.x, z: o.position.z, r: o.rotation.y, s: o.scale.x }));
+  localStorage.setItem(LAYOUT_KEY, JSON.stringify(list));
+}
+function placeItem(kind, x, z, r = 0, sc = 1) {
+  const g = makeItem(kind); g.position.set(x, 0, z); g.rotation.y = r; g.scale.setScalar(sc);
+  built.add(g); return g;
+}
+JSON.parse(localStorage.getItem(LAYOUT_KEY) || "[]").forEach((o) => placeItem(o.k, o.x, o.z, o.r, o.s));
+
+function pointOnGround(clientX, clientY) {
+  const r = canvas.getBoundingClientRect();
+  ndc.set(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  const hit = new THREE.Vector3();
+  return ray.ray.intersectPlane(groundPlane, hit) ? hit : null;
+}
+const snap = (v) => Math.round(v);
+
+function setTool(kind) {
+  tool = kind;
+  if (ghost) { scene.remove(ghost); ghost = null; }
+  if (kind) {
+    ghost = makeItem(kind);
+    ghost.traverse((o) => { if (o.isMesh) { o.material = o.material.clone(); o.material.transparent = true; o.material.opacity = 0.5; o.castShadow = false; } });
+    ghost.visible = false; scene.add(ghost);
+    select(null);
+  }
+  renderBuild();
+}
+function select(obj) {
+  selected = obj;
+  if (selBox) { scene.remove(selBox); selBox = null; }
+  if (obj) { selBox = new THREE.BoxHelper(obj, 0x7cf0d0); scene.add(selBox); }
+}
+function renderBuild() {
+  $("cats").innerHTML = CATALOG.map(([name], i) => `<button data-c="${i}" class="${i === catIdx ? "on" : ""}">${name}</button>`).join("");
+  $("items").innerHTML = CATALOG[catIdx][1].map(([k, ic, label]) => `<div class="item ${k === tool ? "on" : ""}" draggable="true" data-k="${k}"><span class="ic">${ic}</span>${label}</div>`).join("");
+}
+$("cats").addEventListener("click", (e) => { const c = e.target.dataset.c; if (c == null) return; catIdx = Number(c); renderBuild(); });
+$("items").addEventListener("click", (e) => { const el = e.target.closest(".item"); if (!el) return; setTool(tool === el.dataset.k ? null : el.dataset.k); });
+$("items").addEventListener("dragstart", (e) => { const el = e.target.closest(".item"); if (el) e.dataTransfer.setData("text/taller", el.dataset.k); });
+
+let downAt = null;
+canvas.addEventListener("pointerdown", (e) => { downAt = [e.clientX, e.clientY]; });
+canvas.addEventListener("pointermove", (e) => {
+  if (mode !== "construir" || !ghost) return;
+  const p = pointOnGround(e.clientX, e.clientY);
+  ghost.visible = !!p;
+  if (p) ghost.position.set(snap(p.x), 0, snap(p.z));
+});
+canvas.addEventListener("pointerup", (e) => {
+  if (mode !== "construir" || !downAt) return;
+  const moved = Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5; downAt = null;
+  if (moved) return; // fue un arrastre para girar la vista
+  if (tool) {
+    const p = pointOnGround(e.clientX, e.clientY); if (!p) return;
+    placeItem(tool, snap(p.x), snap(p.z), ghost ? ghost.rotation.y : 0); saveLayout();
+    return;
+  }
+  const r = canvas.getBoundingClientRect();
+  ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  const hit = ray.intersectObjects(built.children, true)[0];
+  let obj = hit ? hit.object : null;
+  while (obj && obj.parent !== built) obj = obj.parent;
+  select(obj);
+});
+addEventListener("keydown", (e) => {
+  if (mode !== "construir") return;
+  const target = selected || ghost;
+  if (e.code === "KeyR" && target) { target.rotation.y += Math.PI / 4; if (selected) saveLayout(); }
+  if ((e.code === "BracketRight" || e.code === "BracketLeft") && selected) { selected.scale.multiplyScalar(e.code === "BracketRight" ? 1.15 : 0.87); saveLayout(); }
+  if ((e.code === "Delete" || e.code === "Backspace") && selected) { built.remove(selected); select(null); saveLayout(); e.preventDefault(); }
+  if (e.code === "Escape") { setTool(null); select(null); }
+});
+
+// Soltar piezas del catálogo o modelos .glb/.gltf desde la Mac
+canvas.addEventListener("dragover", (e) => { e.preventDefault(); if (e.dataTransfer.types.includes("Files")) $("drop").style.display = "flex"; });
+canvas.addEventListener("dragleave", () => ($("drop").style.display = "none"));
+canvas.addEventListener("drop", (e) => {
+  e.preventDefault(); $("drop").style.display = "none";
+  const p = pointOnGround(e.clientX, e.clientY) || new THREE.Vector3(0, 0, 20);
+  const kind = e.dataTransfer.getData("text/taller");
+  if (kind) { if (mode !== "construir") enterBuild(); placeItem(kind, snap(p.x), snap(p.z)); saveLayout(); return; }
+  const file = [...e.dataTransfer.files].find((f) => /\.(glb|gltf)$/i.test(f.name));
+  if (!file) { toast("Por ahora entran modelos .glb o .gltf"); return; }
+  file.arrayBuffer().then((buf) => new THREE.GLTFLoader().parse(buf, "", (gltf) => {
+    const g = gltf.scene;
+    const box = new THREE.Box3().setFromObject(g), size = box.getSize(new THREE.Vector3());
+    g.scale.setScalar(4 / Math.max(size.x, size.y, size.z, 0.001)); // que entre a escala del mundo (~4 m)
+    const b2 = new THREE.Box3().setFromObject(g); g.position.y -= b2.min.y;
+    const holder = new THREE.Group(); holder.add(g); holder.position.set(snap(p.x), 0, snap(p.z));
+    holder.userData = { kind: "glb", imported: true, name: file.name };
+    holder.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    built.add(holder); if (mode !== "construir") enterBuild(); select(holder);
+    toast(`📦 ${file.name} en el mundo (los modelos importados todavía no se guardan al recargar)`);
+  }, (err) => toast("No pude leer ese modelo: " + err.message)));
+});
+
+function enterBuild() {
+  if (mode === "dron") home();
+  mode = "construir"; controls.enabled = true;
+  $("build").classList.add("show"); renderBuild(); setMode();
+}
+function leaveBuild() { setTool(null); select(null); $("build").classList.remove("show"); }
+$("modeBuild").onclick = () => (mode === "construir" ? (leaveBuild(), (mode = "taller"), setMode()) : enterBuild());
+$("viewTop").onclick = () => { if (mode === "dron") home(); camera.position.set(38, 46, 38); controls.target.set(0, 0, 0); };
 
 // ───────────────────────── Loop ─────────────────────────
 function resize() { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
@@ -392,10 +558,14 @@ function tick() {
   }
   petalGeo.attributes.position.needsUpdate = true;
   if (mode === "dron" && drone) updateDrone(dt); else controls.update();
+  if (selBox) selBox.update();
   renderer.render(scene, camera);
   requestAnimationFrame(tick);
 }
 renderPanel(); setMode(); tick();
+if (location.hash === "#construir") enterBuild();
+// Para probar: #demo pone unas piezas de ejemplo
+if (location.hash === "#demo" && !built.children.length) { enterBuild(); [["torii",0,24],["estanque",8,26],["puente",8,26],["farol",-4,22],["farol",4,22],["bambu",-8,26],["flores",-3,27],["roca",12,22],["antena",-12,18]].forEach(([k,x,z])=>placeItem(k,x,z)); camera.position.set(10,14,44); controls.target.set(0,1,24); }
 </script>
 </body>
 </html>
