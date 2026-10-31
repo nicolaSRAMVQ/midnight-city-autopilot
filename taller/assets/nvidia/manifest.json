@@ -1,0 +1,162 @@
+[
+ {
+  "id": "mesa_modular",
+  "icon": "🛠️",
+  "label": "Mesa modular",
+  "source": "furniture_workbench_modular_a01",
+  "kb": 2921,
+  "credit": "NVIDIA SimReady Assets (CC BY 4.0)"
+ },
+ {
+  "id": "mesa_trabajo",
+  "icon": "🪚",
+  "label": "Mesa de trabajo",
+  "source": "furniture_workbench_standard_d01",
+  "kb": 3215,
+  "credit": "NVIDIA SimReady Assets (CC BY 4.0)"
+ },
+ {
+  "id": "gabinete_herramientas",
+  "icon": "🧰",
+  "label": "Gabinete",
+  "source": "equipment_rolling_tool_cabinet_a01",
+  "kb": 4305,
+  "credit": "NVIDIA SimReady Assets (CC BY 4.0)"
+ },
+ {
+  "id": "carro_mecanico",
+  "icon": "🛒",
+  "label": "Carro mecánico",
+  "source": "equipment_mechanic_tool_cart_g01",
+  "kb": 2619,
+  "credit": "NVIDIA SimReady Assets (CC BY 4.0)"
+ },
+ {
+  "id": "carro_organizador",
+  "icon": "🗄️",
+  "label": "Organizador",
+  "source": "equipment_tool_organizer_cart_j01",
+  "kb": 4569,
+  "credit": "NVIDIA SimReady Assets (CC BY 4.0)"
+ },
+ {
+  "id": "carro_robot",
+  "icon": "🤖",
+  "label": "Carro robot",
+  "source": "equipment_robot_trolley_a01",
+  "kb": 4112,
+  "credit": "NVIDIA SimReady Assets (CC BY 4.0)"
+ },
+ {
+  "id": "cargador_robot",
+  "icon": "🔋",
+  "label": "Cargador",
+  "source": "equipment_robot_charger_a01",
+  "kb": 3359,
+  "credit": "NVIDIA SimReady Assets (CC BY 4.0)"
+ },
+ {
+  "id": "morsa",
+  "icon": "🗜️",
+  "label": "Morsa",
+  "source": "equipment_bench_vise_a01",
+  "kb": 1397,
+  "credit": "NVIDIA SimReady Assets (CC BY 4.0)"
+ },
+ {
+  "id": "estante",
+  "icon": "📚",
+  "label": "Estante",
+  "source": "storage_shelf_basic_a01",
+  "kb": 854,
+  "credit": "NVIDIA SimReady Assets (CC BY 4.0)"
+ },
+ {
+  "id": "escalera",
+  "icon": "🪜",
+  "label": "Escalera",
+  "source": "ladder_rolling_yellow_a02",
+  "kb": 3990,
+  "credit": "NVIDIA SimReady Assets (CC BY 4.0)"
+ },
+ {
+  "id": "montacargas",
+  "icon": "🚜",
+  "label": "Montacargas",
+  "source": "vehicle_forklift_orange_a01",
+  "kb": 5013,
+  "credit": "NVIDIA SimReady Assets (CC BY 4.0)"
+ },
+ {
+  "id": "cajon",
+  "icon": "📦",
+  "label": "Cajón",
+  "source": "crate_blue_a01",
+  "kb": 1956,
+  "credit": "NVIDIA SimReady Assets (CC BY 4.0)"
+ },
+ {
+  "id": "barril",
+  "icon": "🛢️",
+  "label": "Barril",
+  "source": "warehouse_barrel_plastic_a01",
+  "kb": 854,
+  "credit": "NVIDIA SimReady Assets (CC BY 4.0)"
+ },
+ {
+  "id": "taladro",
+  "icon": "🔩",
+  "label": "Taladro",
+  "source": "powerTool_drill_a01",
+  "kb": 1338,
+  "credit": "NVIDIA SimReady Assets (CC BY 4.0)"
+ },
+ {
+  "id": "llave",
+  "icon": "🔧",
+  "label": "Llave",
+  "source": "handTool_torque_wrench_a01",
+  "kb": 1398,
+  "credit": "NVIDIA SimReady Assets (CC BY 4.0)"
+ },
+ {
+  "id": "monitor",
+  "icon": "🖥️",
+  "label": "Monitor",
+  "source": "monitor_a01",
+  "kb": 1254,
+  "credit": "NVIDIA SimReady Assets (CC BY 4.0)"
+ },
+ {
+  "id": "silla",
+  "icon": "🪑",
+  "label": "Silla",
+  "source": "chair_office_amf_black_a01",
+  "kb": 922,
+  "credit": "NVIDIA SimReady Assets (CC BY 4.0)"
+ },
+ {
+  "id": "sillon",
+  "icon": "🛋️",
+  "label": "Sillón",
+  "source": "sofa_soft_b01",
+  "kb": 1435,
+  "credit": "NVIDIA SimReady Assets (CC BY 4.0)"
+ },
+ {
+  "id": "escritorio",
+  "icon": "💼",
+  "label": "Escritorio",
+  "source": "desk_a01",
+  "kb": 590,
+  "credit": "NVIDIA SimReady Assets (CC BY 4.0)"
+ },
+ {
+  "id": "tetera",
+  "icon": "🫖",
+  "label": "Tetera de Utah",
+  "source": "dishware_utah_teapot_a01",
+  "kb": 1134,
+  "credit": "NVIDIA SimReady Assets (CC BY 4.0)"
+ }
+]

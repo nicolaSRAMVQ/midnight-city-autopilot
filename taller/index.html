@@ -365,6 +365,8 @@ const kinds = ["sakura", "ginkgo", "roble", "arce", "roble", "sakura", "arce", "
 for (let i = 0; i < 230; i++) {
   const a = rand(0, Math.PI * 2), r = rand(26, 140);
   if (Math.abs(Math.sin(a * 2)) < 0.12) continue; // senderos en cruz
+  const tx = Math.cos(a) * r, tz = Math.sin(a) * r;
+  if (Math.abs(tx) < 18 && tz > 12 && tz < 46) continue; // patio libre frente al taller para construir
   plant(kinds[i % kinds.length], Math.cos(a) * r, Math.sin(a) * r, r < 45 ? 0.9 : 1.15);
 }
 // Jardín japonés: árbol milenario junto al estanque, camino de piedras y faroles
@@ -498,6 +500,7 @@ const CATALOG = [
 ];
 // Modelos de NVIDIA SimReady (CC BY 4.0) convertidos a .glb: se cargan una vez y se clonan.
 const NV_BASE = "assets/nvidia/", nvCache = {};
+const NV_SCALE = 1.6; // vienen en metros reales; los droides del taller miden ~2,5
 let NV_LIST = [];
 function loadNV(id) {
   nvCache[id] = nvCache[id] || new Promise((ok, fail) => new THREE.GLTFLoader().load(NV_BASE + id + ".glb", (g) => {
@@ -510,13 +513,15 @@ fetch(NV_BASE + "manifest.json").then((r) => r.json()).then((list) => {
   NV_LIST = list;
   CATALOG.push(["🔧 NVIDIA", list.map((a) => ["nv:" + a.id, a.icon, a.label])]);
   if ($("build").classList.contains("show")) renderBuild();
+  // Para probar: #nvdemo pone en fila todos los modelos de NVIDIA frente al taller
+  if (location.hash === "#nvdemo") { list.forEach((a, i) => placeItem("nv:" + a.id, -10 + (i % 5) * 5, 18 + Math.floor(i / 5) * 4.5)); camera.position.set(4, 10, 44); controls.target.set(0, 0, 24); }
   // piezas de NVIDIA guardadas en el jardín: se completan cuando llega su modelo
 }).catch(() => {});
 
 function makeItem(kind) {
   const g = new THREE.Group();
   if (kind.startsWith("nv:")) {
-    loadNV(kind.slice(3)).then((src) => { const c = src.clone(true); g.add(c); if (g.userData.ghost) ghostify(g); }).catch(() => toast("No pude cargar " + kind.slice(3)));
+    loadNV(kind.slice(3)).then((src) => { const c = src.clone(true); c.scale.setScalar(NV_SCALE); g.add(c); if (g.userData.ghost) ghostify(g); }).catch(() => toast("No pude cargar " + kind.slice(3)));
   } else if (TREES[kind]) TREES[kind](g); else if (EXTRAS[kind]) EXTRAS[kind](g);
   g.userData.kind = kind;
   return g;
