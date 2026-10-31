@@ -1,0 +1,401 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>El Taller · Midnight</title>
+<meta name="robots" content="noindex">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/GLTFExporter.js"></script>
+<style>
+:root{--bg:#07080d;--card:#11131c;--line:#22263a;--tx:#e8eaf4;--mut:#8a90a8;--r2:#4da3ff;--bb8:#ffad33;--c3:#e8c15a;--acc:#7cf0d0}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+#c{display:block;width:100vw;height:100vh}
+.panel{position:absolute;top:12px;right:12px;width:290px;max-height:calc(100vh - 24px);overflow:auto;background:rgba(11,14,24,.86);backdrop-filter:blur(10px);border:1px solid #2a314d;border-radius:14px;padding:14px}
+.panel h1{font-size:17px;margin:0 0 2px;letter-spacing:.5px}
+.panel .sub{color:var(--mut);font-size:12px;margin-bottom:10px}
+.panel h2{font-size:11px;text-transform:uppercase;letter-spacing:1.4px;color:var(--mut);margin:14px 0 6px;font-weight:600}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0}
+.row label{color:#cbd2ec;font-size:13px}
+input[type=color]{width:42px;height:26px;border:1px solid #2a314d;border-radius:6px;background:none;padding:0}
+input[type=range]{width:130px}
+.btns{display:flex;flex-wrap:wrap;gap:6px}
+button{background:#151a2b;border:1px solid #2a314d;color:#cbd2ec;padding:6px 11px;border-radius:999px;font:600 12.5px inherit;font-family:inherit;cursor:pointer}
+button:hover{border-color:var(--acc);color:#fff}
+button.on{background:var(--acc);color:#07080d;border-color:var(--acc)}
+.hud{position:absolute;left:12px;bottom:12px;background:rgba(7,9,15,.82);border:1px solid #1e2438;border-radius:10px;padding:8px 12px;color:#9aa3c4;font-size:12px;max-width:min(560px,calc(100vw - 330px))}
+.hud b{color:#fff}
+.top{position:absolute;left:12px;top:12px;display:flex;gap:6px;flex-wrap:wrap}
+.toast{position:absolute;left:50%;top:16px;transform:translateX(-50%);background:rgba(12,16,28,.92);border:1px solid var(--acc);border-radius:8px;padding:6px 14px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none}
+@media (max-width:760px){.panel{top:auto;bottom:12px;right:12px;left:12px;width:auto;max-height:45vh}.hud{display:none}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div class="top">
+  <button id="modeTaller" class="on">🛠️ Taller</button>
+  <button id="modeDron">🛸 Volar con R2</button>
+  <button id="home">🏠 Volver a la estación</button>
+</div>
+
+<div class="panel">
+  <h1>El Taller</h1>
+  <div class="sub">Las cápsulas de la cuadrilla. Elegí un droide, cambiale piezas y colores, y exportalo en 3D para el día que lo construyamos de verdad.</div>
+  <h2>Droide</h2>
+  <div class="btns" id="pick"></div>
+  <h2>Colores</h2>
+  <div class="row"><label>Cuerpo</label><input type="color" id="cBody"></div>
+  <div class="row"><label>Detalles</label><input type="color" id="cTrim"></div>
+  <div class="row"><label>Ojo / luces</label><input type="color" id="cEye"></div>
+  <h2>Forma</h2>
+  <div class="row"><label>Tamaño</label><input type="range" id="scale" min="0.6" max="1.6" step="0.05"></div>
+  <h2>Piezas</h2>
+  <div class="btns" id="parts"></div>
+  <h2>Guardar</h2>
+  <div class="btns">
+    <button id="save">💾 Guardar</button>
+    <button id="reset">↺ Original</button>
+    <button id="export">📦 Exportar .glb</button>
+  </div>
+  <div class="sub" style="margin-top:8px">Se guarda en este navegador. El .glb se abre en Blender o en un programa de impresión 3D.</div>
+</div>
+
+<div class="hud" id="hud"></div>
+<div class="toast" id="toast"></div>
+
+<script>
+// ───────────────────────── Escena ─────────────────────────
+const canvas = document.getElementById("c");
+const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.outputEncoding = THREE.sRGBEncoding;
+
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x9fc4e8);
+scene.fog = new THREE.Fog(0xb7d3ec, 60, 190);
+
+const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 500);
+camera.position.set(0, 7, 17);
+const controls = new THREE.OrbitControls(camera, canvas);
+controls.target.set(0, 2, 0);
+controls.maxPolarAngle = Math.PI * 0.48;
+controls.minDistance = 5; controls.maxDistance = 90;
+controls.enableDamping = true;
+
+scene.add(new THREE.HemisphereLight(0xdfefff, 0x4a6b3a, 0.75));
+const sun = new THREE.DirectionalLight(0xfff1d6, 1.05);
+sun.position.set(40, 60, 25);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+Object.assign(sun.shadow.camera, { left: -70, right: 70, top: 70, bottom: -70, near: 1, far: 200 });
+scene.add(sun);
+
+const mat = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0.1, ...o });
+const add = (parent, geo, material, pos = [0, 0, 0], cast = true) => {
+  const m = new THREE.Mesh(geo, material);
+  m.position.set(...pos); m.castShadow = cast; m.receiveShadow = true;
+  parent.add(m); return m;
+};
+const rand = (a, b) => a + Math.random() * (b - a);
+
+// Pasto con ondulaciones suaves
+const groundGeo = new THREE.PlaneGeometry(400, 400, 120, 120);
+groundGeo.rotateX(-Math.PI / 2);
+const gp = groundGeo.attributes.position;
+for (let i = 0; i < gp.count; i++) {
+  const x = gp.getX(i), z = gp.getZ(i), d = Math.hypot(x, z);
+  if (d > 24) gp.setY(i, Math.sin(x * 0.05) * Math.cos(z * 0.04) * 1.2 * Math.min(1, (d - 24) / 30));
+}
+groundGeo.computeVertexNormals();
+add(scene, groundGeo, mat(0x5f8f45, { roughness: 0.95 }), [0, 0, 0], false);
+
+// ───────────────────────── El taller (estilo Jarvis) ─────────────────────────
+const garage = new THREE.Group(); scene.add(garage);
+add(garage, new THREE.CylinderGeometry(15, 15.4, 0.4, 64), mat(0x1a1f2e, { metalness: 0.6, roughness: 0.35 }), [0, 0.2, 0]);
+const grid = new THREE.PolarGridHelper(14.5, 12, 6, 64, 0x2f6f66, 0x1f3f3c);
+grid.position.y = 0.42; garage.add(grid);
+// Columnas y techo de vidrio
+for (let i = 0; i < 8; i++) {
+  const a = ((i + 0.5) / 8) * Math.PI * 2; // corridas medio paso: ninguna tapa una cápsula
+  add(garage, new THREE.BoxGeometry(0.5, 7, 0.5), mat(0x2b3248, { metalness: 0.7, roughness: 0.3 }), [Math.cos(a) * 14.6, 3.9, Math.sin(a) * 14.6]);
+}
+add(garage, new THREE.TorusGeometry(14.6, 0.07, 8, 64), mat(0x7cf0d0, { emissive: 0x2a9c88, emissiveIntensity: 0.8 }), [0, 7.4, 0]).rotation.x = Math.PI / 2;
+const roof = add(garage, new THREE.CircleGeometry(14.6, 64), mat(0xbfe6ff, { transparent: true, opacity: 0.12, metalness: 0.2 }), [0, 7.4, 0], false);
+roof.rotation.x = Math.PI / 2;
+// Mesa holográfica central
+add(garage, new THREE.CylinderGeometry(1.6, 1.9, 1.1, 32), mat(0x232a3d, { metalness: 0.7 }), [0, 0.95, 0]);
+const holo = add(garage, new THREE.CylinderGeometry(1.5, 1.5, 0.05, 32), mat(0x7cf0d0, { emissive: 0x7cf0d0, emissiveIntensity: 1.2, transparent: true, opacity: 0.6 }), [0, 1.55, 0], false);
+const holoRing = add(garage, new THREE.TorusGeometry(1.1, 0.03, 8, 48), mat(0x7cf0d0, { emissive: 0x7cf0d0, emissiveIntensity: 1.5 }), [0, 2.4, 0], false);
+const holoLight = new THREE.PointLight(0x7cf0d0, 0.8, 12); holoLight.position.set(0, 2.5, 0); garage.add(holoLight);
+
+// Tres cápsulas en arco
+const CAPS = [
+  { key: "R2", angle: -0.75 },
+  { key: "BB-8", angle: 0 },
+  { key: "C-3PO", angle: 0.75 },
+];
+const capsules = {};
+CAPS.forEach(({ key, angle }) => {
+  const g = new THREE.Group();
+  g.position.set(Math.sin(angle) * 9, 0.4, -Math.cos(angle) * 9);
+  g.lookAt(0, 0.4, 0);
+  add(g, new THREE.CylinderGeometry(2, 2.2, 0.35, 40), mat(0x2b3248, { metalness: 0.8, roughness: 0.25 }), [0, 0.18, 0]);
+  const ring = add(g, new THREE.TorusGeometry(2.05, 0.06, 8, 48), mat(0x7cf0d0, { emissive: 0x7cf0d0, emissiveIntensity: 1 }), [0, 0.38, 0], false);
+  ring.rotation.x = Math.PI / 2;
+  add(g, new THREE.CylinderGeometry(2, 2, 4.6, 40, 1, true), mat(0xbfe6ff, { transparent: true, opacity: 0.14, side: THREE.DoubleSide, metalness: 0.3 }), [0, 2.65, 0], false);
+  add(g, new THREE.CylinderGeometry(2.1, 2.1, 0.25, 40), mat(0x2b3248, { metalness: 0.8 }), [0, 5, 0]);
+  const spot = new THREE.PointLight(0xdff6ff, 0.6, 7); spot.position.set(0, 4.6, 0); g.add(spot);
+  garage.add(g);
+  capsules[key] = { group: g, ring };
+});
+
+// ───────────────────────── Los droides (editables) ─────────────────────────
+const DEFAULTS = {
+  "R2": { body: "#e9eef5", trim: "#2f6fd6", eye: "#ff3355", scale: 1, parts: { antena: true, helices: false, brazo: false } },
+  "BB-8": { body: "#f2efe8", trim: "#f08a24", eye: "#1a1a1a", scale: 1, parts: { antena: true, helices: false, brazo: false } },
+  "C-3PO": { body: "#e3b84c", trim: "#b8862b", eye: "#ffe9a6", scale: 1, parts: { antena: false, helices: false, brazo: true } },
+};
+const PART_LABELS = { antena: "📡 Antena", helices: "🌀 Hélices de dron", brazo: "🦾 Brazo extra" };
+const saved = JSON.parse(localStorage.getItem("taller.v1") || "{}");
+const designs = {};
+for (const k of Object.keys(DEFAULTS)) designs[k] = { ...DEFAULTS[k], ...(saved[k] || {}), parts: { ...DEFAULTS[k].parts, ...((saved[k] || {}).parts || {}) } };
+
+function buildR2(d) {
+  const g = new THREE.Group(), body = mat(d.body, { metalness: 0.5, roughness: 0.3 }), trim = mat(d.trim, { metalness: 0.4, roughness: 0.35 });
+  const eye = mat(d.eye, { emissive: d.eye, emissiveIntensity: 1.2 });
+  add(g, new THREE.CylinderGeometry(0.62, 0.62, 1.3, 32), body, [0, 1.25, 0]);
+  add(g, new THREE.SphereGeometry(0.62, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), mat(d.body, { metalness: 0.85, roughness: 0.2 }), [0, 1.9, 0]);
+  for (let i = 0; i < 4; i++) add(g, new THREE.BoxGeometry(0.22, 0.5, 0.05), trim, [Math.sin(i * 1.57) * 0.6, 1.3, Math.cos(i * 1.57) * 0.6]).rotation.y = i * 1.57;
+  add(g, new THREE.TorusGeometry(0.62, 0.05, 8, 32), trim, [0, 1.92, 0]).rotation.x = Math.PI / 2;
+  add(g, new THREE.SphereGeometry(0.13, 16, 16), eye, [0, 2.2, 0.5]);
+  [-1, 1].forEach((s) => {
+    add(g, new THREE.BoxGeometry(0.2, 1.3, 0.35), body, [s * 0.75, 1.05, 0]);
+    add(g, new THREE.BoxGeometry(0.32, 0.18, 0.5), trim, [s * 0.75, 0.38, 0]);
+  });
+  add(g, new THREE.BoxGeometry(0.3, 0.3, 0.3), trim, [0, 0.45, 0]);
+  return g;
+}
+function buildBB8(d) {
+  const g = new THREE.Group(), body = mat(d.body, { roughness: 0.35 }), trim = mat(d.trim, { roughness: 0.4 });
+  add(g, new THREE.SphereGeometry(0.95, 40, 24), body, [0, 0.95, 0]);
+  [[0, 0], [Math.PI / 2, 0], [0, Math.PI / 2]].forEach(([rx, ry]) => {
+    const r = add(g, new THREE.TorusGeometry(0.62, 0.09, 8, 40), trim, [0, 0.95, 0]); r.rotation.set(rx, ry, 0);
+  });
+  add(g, new THREE.SphereGeometry(0.5, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), body, [0, 1.95, 0]);
+  add(g, new THREE.CylinderGeometry(0.5, 0.5, 0.08, 32), trim, [0, 1.95, 0]);
+  add(g, new THREE.SphereGeometry(0.13, 16, 16), mat(d.eye, { metalness: 0.9, roughness: 0.1 }), [0, 2.2, 0.38]);
+  return g;
+}
+function buildC3PO(d) {
+  const g = new THREE.Group(), gold = mat(d.body, { metalness: 0.45, roughness: 0.3, emissive: d.body, emissiveIntensity: 0.08 }), trim = mat(d.trim, { metalness: 0.4, roughness: 0.4 });
+  const eye = mat(d.eye, { emissive: d.eye, emissiveIntensity: 1.5 });
+  add(g, new THREE.BoxGeometry(0.9, 1.05, 0.5), gold, [0, 2.15, 0]);
+  add(g, new THREE.BoxGeometry(0.7, 0.45, 0.45), trim, [0, 1.45, 0]);
+  add(g, new THREE.SphereGeometry(0.34, 24, 16), gold, [0, 2.95, 0]);
+  [-1, 1].forEach((s) => {
+    add(g, new THREE.SphereGeometry(0.07, 12, 12), eye, [s * 0.12, 2.98, 0.29]);
+    add(g, new THREE.CylinderGeometry(0.11, 0.1, 0.95, 12), gold, [s * 0.6, 2.05, 0]);
+    add(g, new THREE.CylinderGeometry(0.14, 0.12, 1.2, 12), gold, [s * 0.22, 0.65, 0]);
+  });
+  return g;
+}
+const BUILDERS = { "R2": buildR2, "BB-8": buildBB8, "C-3PO": buildC3PO };
+
+function addParts(g, d, key) {
+  const trim = mat(d.trim, { metalness: 0.5 }), eye = mat(d.eye, { emissive: d.eye, emissiveIntensity: 1 });
+  const top = key === "C-3PO" ? 3.3 : key === "BB-8" ? 2.45 : 2.5;
+  if (d.parts.antena) {
+    add(g, new THREE.CylinderGeometry(0.02, 0.02, 0.6, 6), trim, [0.2, top + 0.2, 0]);
+    add(g, new THREE.SphereGeometry(0.06, 10, 10), eye, [0.2, top + 0.52, 0]);
+  }
+  if (d.parts.helices) {
+    g.userData.rotors = [];
+    [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([x, z]) => {
+      add(g, new THREE.CylinderGeometry(0.03, 0.03, 0.9, 6), trim, [x * 0.55, top - 0.15, z * 0.55]).rotation.z = x * 0.6;
+      const rotor = add(g, new THREE.BoxGeometry(0.9, 0.02, 0.08), mat(0x222831, { metalness: 0.6 }), [x * 0.85, top + 0.15, z * 0.85]);
+      g.userData.rotors.push(rotor);
+    });
+  }
+  if (d.parts.brazo) {
+    const arm = add(g, new THREE.CylinderGeometry(0.06, 0.06, 0.8, 8), trim, [0.75, 1.7, 0.25]); arm.rotation.z = -0.9;
+    add(g, new THREE.BoxGeometry(0.16, 0.16, 0.16), trim, [1.1, 1.95, 0.25]);
+  }
+}
+
+const droids = {};
+function buildDroid(key) {
+  const d = designs[key], g = BUILDERS[key](d);
+  addParts(g, d, key);
+  g.scale.setScalar(d.scale);
+  g.name = key;
+  return g;
+}
+function placeDroid(key) {
+  const old = droids[key];
+  if (old) old.parent.remove(old);
+  const g = buildDroid(key);
+  capsules[key].group.add(g); g.position.set(0, 0.35, 0);
+  droids[key] = g;
+}
+Object.keys(DEFAULTS).forEach(placeDroid);
+
+// ───────────────────────── El bosque ─────────────────────────
+const trunkMat = mat(0x5b3b24, { roughness: 0.9 }), oldBark = mat(0x4a3322, { roughness: 1 });
+const blossoms = [];
+function canopy(g, color, spots, y, spread, size) {
+  const m = mat(color, { roughness: 0.85 });
+  for (let i = 0; i < spots; i++) add(g, new THREE.IcosahedronGeometry(size * rand(0.7, 1.1), 1), m, [rand(-spread, spread), y + rand(-spread * 0.5, spread * 0.6), rand(-spread, spread)]);
+}
+const TREES = {
+  sakura(g) { add(g, new THREE.CylinderGeometry(0.22, 0.38, 3.2, 8), trunkMat, [0, 1.6, 0]); canopy(g, 0xf6b6cf, 7, 4, 1.6, 1.3); blossoms.push(g); },
+  ginkgo(g) { add(g, new THREE.CylinderGeometry(0.25, 0.4, 5, 8), trunkMat, [0, 2.5, 0]); [0, 1, 2].forEach((i) => add(g, new THREE.ConeGeometry(2.1 - i * 0.55, 2, 9), mat(0xf2c230, { roughness: 0.8 }), [0, 4.2 + i * 1.3, 0])); },
+  roble(g) { add(g, new THREE.CylinderGeometry(0.45, 0.7, 3.6, 9), trunkMat, [0, 1.8, 0]); canopy(g, 0x3f7a35, 9, 4.6, 2.2, 1.6); },
+  arce(g) { add(g, new THREE.CylinderGeometry(0.28, 0.45, 3.4, 8), trunkMat, [0, 1.7, 0]); canopy(g, [0xd2452a, 0xe8752a, 0xb8322a][Math.floor(rand(0, 3))], 7, 4.2, 1.7, 1.3); },
+  milenario(g) {
+    add(g, new THREE.CylinderGeometry(1.4, 2.6, 9, 12), oldBark, [0, 4.5, 0]);
+    for (let i = 0; i < 6; i++) { const r = add(g, new THREE.CylinderGeometry(0.25, 0.6, 3.5, 6), oldBark, [Math.cos(i) * 2.2, 0.6, Math.sin(i) * 2.2]); r.rotation.set(Math.sin(i) * 0.9, 0, -Math.cos(i) * 0.9); }
+    canopy(g, 0x2f6a2e, 16, 11, 5.5, 2.8);
+  },
+};
+function plant(kind, x, z, s = 1) {
+  const g = new THREE.Group(); TREES[kind](g);
+  g.position.set(x, 0, z); g.rotation.y = rand(0, 6.28); g.scale.setScalar(s * rand(0.85, 1.15));
+  scene.add(g); return g;
+}
+// Bosque en anillos alrededor del taller, con claros y senderos
+const kinds = ["sakura", "ginkgo", "roble", "arce", "roble", "sakura", "arce", "ginkgo"];
+for (let i = 0; i < 230; i++) {
+  const a = rand(0, Math.PI * 2), r = rand(26, 140);
+  if (Math.abs(Math.sin(a * 2)) < 0.12) continue; // senderos en cruz
+  plant(kinds[i % kinds.length], Math.cos(a) * r, Math.sin(a) * r, r < 45 ? 0.9 : 1.15);
+}
+// Jardín japonés: árbol milenario junto al estanque, camino de piedras y faroles
+const pond = add(scene, new THREE.CircleGeometry(9, 48), mat(0x3d86b8, { metalness: 0.4, roughness: 0.15, transparent: true, opacity: 0.88 }), [34, 0.06, -26], false);
+pond.rotation.x = -Math.PI / 2;
+plant("milenario", 48, -36, 1);
+plant("sakura", 25, -16, 1.2); plant("sakura", 40, -14, 1.1); plant("arce", 22, -34, 1.1);
+for (let i = 0; i < 18; i++) {
+  const t = i / 17, x = 15 + t * 14, z = -t * 10 + Math.sin(t * 6) * 1.5;
+  add(scene, new THREE.CylinderGeometry(0.6, 0.65, 0.12, 10), mat(0x9a9aa2, { roughness: 0.95 }), [x, 0.08, z], false);
+}
+[[24, -24], [42, -20], [30, -38]].forEach(([x, z]) => {
+  add(scene, new THREE.BoxGeometry(0.5, 1.4, 0.5), mat(0x77736b), [x, 0.7, z]);
+  add(scene, new THREE.BoxGeometry(0.9, 0.15, 0.9), mat(0x5f5b54), [x, 1.5, z]);
+  const l = new THREE.PointLight(0xffd59a, 0.5, 8); l.position.set(x, 1.2, z); scene.add(l);
+});
+
+// Pétalos de sakura cayendo
+const petalCount = 500, petalGeo = new THREE.BufferGeometry(), petalPos = new Float32Array(petalCount * 3);
+for (let i = 0; i < petalCount; i++) { petalPos[i * 3] = rand(-80, 80); petalPos[i * 3 + 1] = rand(0, 14); petalPos[i * 3 + 2] = rand(-80, 80); }
+petalGeo.setAttribute("position", new THREE.BufferAttribute(petalPos, 3));
+const petals = new THREE.Points(petalGeo, new THREE.PointsMaterial({ color: 0xffc4d8, size: 0.18 }));
+scene.add(petals);
+
+// ───────────────────────── Dron R2 ─────────────────────────
+let mode = "taller", drone = null, yaw = 0;
+const keys = {};
+addEventListener("keydown", (e) => { keys[e.code] = true; if (mode === "dron" && ["Space", "ArrowUp", "ArrowDown"].includes(e.code)) e.preventDefault(); });
+addEventListener("keyup", (e) => { keys[e.code] = false; });
+
+function startDrone() {
+  mode = "dron";
+  const d = { ...designs["R2"], parts: { ...designs["R2"].parts, helices: true } };
+  drone = BUILDERS["R2"](d); addParts(drone, d, "R2"); drone.scale.setScalar(0.8 * d.scale);
+  const p = new THREE.Vector3(); capsules["R2"].group.getWorldPosition(p);
+  drone.position.set(p.x, 3, p.z); yaw = Math.atan2(-p.x, -p.z) + Math.PI;
+  scene.add(drone); droids["R2"].visible = false;
+  controls.enabled = false;
+  setMode(); toast("🛸 R2 en modo dron. ¡A recorrer el bosque!");
+}
+function home() {
+  if (drone) { scene.remove(drone); drone = null; }
+  droids["R2"].visible = true;
+  mode = "taller"; controls.enabled = true;
+  camera.position.set(0, 9, 22); controls.target.set(0, 2, 0);
+  setMode(); toast("🏠 De vuelta en la estación");
+}
+function updateDrone(dt) {
+  const turn = (keys.ArrowLeft || keys.KeyA ? 1 : 0) - (keys.ArrowRight || keys.KeyD ? 1 : 0);
+  const fwd = (keys.ArrowUp || keys.KeyW ? 1 : 0) - (keys.ArrowDown || keys.KeyS ? 1 : 0);
+  const up = (keys.Space || keys.KeyE ? 1 : 0) - (keys.ShiftLeft || keys.KeyQ ? 1 : 0);
+  const fast = keys.ShiftRight ? 2.2 : 1;
+  yaw += turn * dt * 1.8;
+  drone.position.x += Math.sin(yaw) * fwd * dt * 14 * fast;
+  drone.position.z += Math.cos(yaw) * fwd * dt * 14 * fast;
+  drone.position.y = Math.min(45, Math.max(1.2, drone.position.y + up * dt * 8));
+  drone.rotation.set(fwd * 0.18, yaw, -turn * 0.15);
+  (drone.userData.rotors || []).forEach((r, i) => (r.rotation.y += dt * (30 + i)));
+  const behind = new THREE.Vector3(-Math.sin(yaw) * 9, 4, -Math.cos(yaw) * 9).add(drone.position);
+  camera.position.lerp(behind, 0.08);
+  camera.lookAt(drone.position.x, drone.position.y + 1, drone.position.z);
+}
+
+// ───────────────────────── Panel del editor ─────────────────────────
+let current = "R2";
+const $ = (id) => document.getElementById(id);
+function renderPanel() {
+  $("pick").innerHTML = Object.keys(DEFAULTS).map((k) => `<button data-k="${k}" class="${k === current ? "on" : ""}">${k}</button>`).join("");
+  const d = designs[current];
+  $("cBody").value = d.body; $("cTrim").value = d.trim; $("cEye").value = d.eye; $("scale").value = d.scale;
+  $("parts").innerHTML = Object.entries(PART_LABELS).map(([p, l]) => `<button data-p="${p}" class="${d.parts[p] ? "on" : ""}">${l}</button>`).join("");
+}
+function focusCapsule(key) {
+  const p = new THREE.Vector3(); capsules[key].group.getWorldPosition(p);
+  controls.target.set(p.x, 2, p.z);
+  camera.position.set(p.x * 0.45, 4.5, p.z * 0.45);
+}
+$("pick").addEventListener("click", (e) => { const k = e.target.dataset.k; if (!k) return; current = k; renderPanel(); if (mode === "taller") focusCapsule(k); });
+$("parts").addEventListener("click", (e) => { const p = e.target.dataset.p; if (!p) return; designs[current].parts[p] = !designs[current].parts[p]; placeDroid(current); renderPanel(); });
+[["cBody", "body"], ["cTrim", "trim"], ["cEye", "eye"]].forEach(([id, f]) => $(id).addEventListener("input", (e) => { designs[current][f] = e.target.value; placeDroid(current); }));
+$("scale").addEventListener("input", (e) => { designs[current].scale = Number(e.target.value); placeDroid(current); });
+$("save").onclick = () => { localStorage.setItem("taller.v1", JSON.stringify(designs)); toast("💾 Guardado"); };
+$("reset").onclick = () => { designs[current] = JSON.parse(JSON.stringify(DEFAULTS[current])); placeDroid(current); renderPanel(); toast(`↺ ${current} volvió al original`); };
+$("export").onclick = () => {
+  new THREE.GLTFExporter().parse(buildDroid(current), (glb) => {
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([glb], { type: "model/gltf-binary" }));
+    a.download = `${current.toLowerCase()}-taller.glb`; a.click();
+    toast(`📦 ${current} exportado`);
+  }, { binary: true });
+};
+$("modeTaller").onclick = home;
+$("modeDron").onclick = () => (mode === "dron" ? null : startDrone());
+$("home").onclick = home;
+function setMode() {
+  $("modeTaller").classList.toggle("on", mode === "taller");
+  $("modeDron").classList.toggle("on", mode === "dron");
+  $("hud").innerHTML = mode === "dron"
+    ? "<b>W / ↑</b> avanzar · <b>S / ↓</b> atrás · <b>A D / ← →</b> girar · <b>Espacio / E</b> subir · <b>Q</b> bajar · <b>Shift der.</b> turbo"
+    : "Arrastrá para girar la vista · rueda para acercar · elegí un droide en el panel para ir a su cápsula";
+}
+let toastT;
+function toast(t) { const el = $("toast"); el.textContent = t; el.style.opacity = 1; clearTimeout(toastT); toastT = setTimeout(() => (el.style.opacity = 0), 2200); }
+
+// ───────────────────────── Loop ─────────────────────────
+function resize() { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
+addEventListener("resize", resize); resize();
+const clock = new THREE.Clock();
+function tick() {
+  const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
+  holoRing.rotation.x = Math.PI / 2 + Math.sin(t) * 0.3; holoRing.rotation.y = t;
+  holo.material.opacity = 0.45 + Math.sin(t * 2) * 0.15;
+  Object.values(capsules).forEach(({ ring }, i) => (ring.material.emissiveIntensity = 0.7 + Math.sin(t * 2 + i) * 0.4));
+  Object.values(droids).forEach((g, i) => { g.rotation.y = Math.sin(t * 0.4 + i) * 0.35; (g.userData.rotors || []).forEach((r) => (r.rotation.y += dt * 20)); });
+  for (let i = 0; i < petalCount; i++) {
+    petalPos[i * 3 + 1] -= dt * 0.8; petalPos[i * 3] += Math.sin(t + i) * dt * 0.4;
+    if (petalPos[i * 3 + 1] < 0) petalPos[i * 3 + 1] = rand(8, 14);
+  }
+  petalGeo.attributes.position.needsUpdate = true;
+  if (mode === "dron" && drone) updateDrone(dt); else controls.update();
+  renderer.render(scene, camera);
+  requestAnimationFrame(tick);
+}
+renderPanel(); setMode(); tick();
+</script>
+</body>
+</html>
