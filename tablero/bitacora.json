@@ -1,6 +1,13 @@
 [
   {
     "fecha": "2026-10-31",
+    "tipo": "diagnostico",
+    "titulo": "Cuánto le costaron los viajes a BB-8",
+    "detalle": "Los intentos de BB-8 por el pico arrancaron el 23/10 (4 el 22 y después 30–43 por día). Ese mismo día su xp diaria cayó de ~800–930 k (17 al 21/10) a ~530–650 k: un 30–35 % menos. Igual subió de #161 a #136 porque el resto de la ciudad avanzó más lento. C-3PO viaja por el hacha 30–50 veces por día desde el 12/10 (se le rompe seguido) y su ritmo se mantuvo en ~600 k: en él es el costo normal y no una falla.",
+    "estado": "hecho"
+  },
+  {
+    "fecha": "2026-10-31",
     "tipo": "cambio",
     "titulo": "v3.43: el mantenedor no corta viajes ni compras",
     "detalle": "Hipótesis: el keep-alive reconecta a cada droide cada minuto y eso cortaba la caminata hasta el vendedor. En 10 días BB-8 hizo 265 intentos de comprar el pico de obsidiana y C-3PO 265 del hacha de basalto, sin ninguna compra confirmada (R2: 3). BB-8 está minando sin pico (−18 % de velocidad). Cambio: el keep-alive se saltea si el droide está en un viaje o una compra. A medir: compras confirmadas y % del día trabajando de acá a 48 h.",
