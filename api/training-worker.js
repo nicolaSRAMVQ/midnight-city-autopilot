@@ -46,6 +46,10 @@ async function trainAgent(agent, row, shared) {
       // mid-flight voids its token and it got HTTP 401 (~100 alerts/day from 4/10).
       const minute = new Date().getUTCMinutes() % 5;
       if (minute === 0 || minute === 1) return { agent: agent.name, idle: true, keepAlive: "skipped_autopilot_minute" };
+      // v3.43: no reconectar en medio de un viaje o una compra. BB-8 y C-3PO llevaban 265
+      // intentos de comprar herramienta en 10 días sin ninguna compra confirmada (31/10).
+      const inFlight = initial?.context?.agent?.activeAction?.kind ?? "";
+      if (/trade|travel/.test(inFlight)) return { agent: agent.name, idle: true, keepAlive: `skipped_${inFlight}` };
       await connect(agent.id);
       return { agent: agent.name, idle: true, keepAlive: true };
     }

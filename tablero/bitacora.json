@@ -1,6 +1,20 @@
 [
   {
     "fecha": "2026-10-31",
+    "tipo": "cambio",
+    "titulo": "v3.43: el mantenedor no corta viajes ni compras",
+    "detalle": "Hipótesis: el keep-alive reconecta a cada droide cada minuto y eso cortaba la caminata hasta el vendedor. En 10 días BB-8 hizo 265 intentos de comprar el pico de obsidiana y C-3PO 265 del hacha de basalto, sin ninguna compra confirmada (R2: 3). BB-8 está minando sin pico (−18 % de velocidad). Cambio: el keep-alive se saltea si el droide está en un viaje o una compra. A medir: compras confirmadas y % del día trabajando de acá a 48 h.",
+    "estado": "a medir"
+  },
+  {
+    "fecha": "2026-10-31",
+    "tipo": "diagnostico",
+    "titulo": "El equipo no acelera el trabajo",
+    "detalle": "Las 360 piezas de equipo del juego dan ataque, defensa, puntería o vitalidad y piden skills de combate. No suben la velocidad de minar, talar ni hackear. Lo que rinde son las herramientas, y el piloto ya compra la mejor para cada nivel. Próximas mejoras: alloy_decoder en hacking 41 (R2), neon_pickaxe y neon_axe recién en nivel 61. Conclusión: no conviene gastar los cristales de R2 en equipo para trabajar; sirven para la fase de combate.",
+    "estado": "hecho"
+  },
+  {
+    "fecha": "2026-10-31",
     "tipo": "diagnostico",
     "titulo": "Por qué trabajan menos (de ~80 % a 60–70 %)",
     "detalle": "En la última semana, cuando no están trabajando, el motivo principal es viajar a comprar la herramienta: BB-8 206 veces (pico de obsidiana), C-3PO 149 (hacha de basalto), R2 91 (decodificador). El juego deja llevar una sola herramienta y se gasta, así que cada rotura es un viaje. Le siguen los viajes a vender por sobrecarga y el turno diario de entrenamiento. C-3PO tuvo un pico raro de ~270 viajes a vender por día el 28 y 29/10.",
@@ -24,8 +38,8 @@
     "fecha": "2026-10-31",
     "tipo": "proximo",
     "titulo": "Próximos pasos",
-    "detalle": "1) Bajar los viajes por herramienta y revisar el pico de ventas de C-3PO. 2) Ver si hay equipo que valga los 275 k cristales de R2. 3) Medir cuánta xp por hora da la forja antes de arrancar la fase 2 con un droide.",
-    "estado": "pendiente"
+    "detalle": "1) ✅ Hipótesis de los viajes por herramienta (v3.43, a medir). Falta revisar el pico de ~270 viajes a vender de C-3PO del 28 y 29/10. 2) ✅ Equipo: no acelera el trabajo, ver diagnóstico. 3) Medir cuánta xp por hora da la forja antes de arrancar la fase 2 con un droide.",
+    "estado": "en curso"
   },
   {
     "fecha": "2026-10-23",
