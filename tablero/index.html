@@ -93,6 +93,7 @@ body{padding-bottom:84px}
     <a href="#boxes" data-tab="boxes">🔧 <span>Boxes</span></a>
     <a href="#explorar" data-tab="explorar">🧭 <span>Explorar</span></a>
     <a href="#mundo3d" data-tab="mundo3d">🎮 <span>Mundo</span></a>
+    <a href="#bitacora" data-tab="bitacora">📓 <span>Bitácora</span></a>
   </nav>
 </header>
 
@@ -120,6 +121,12 @@ body{padding-bottom:84px}
 <section class="page" data-page="explorar">
   <h2>🧭 Explorar Midnight City</h2>
   <div id="explore"><div class="card sub">Cargando lo que tiene el juego…</div></div>
+</section>
+
+<section class="page" data-page="bitacora">
+  <h2>📓 Bitácora de estrategia</h2>
+  <p class="sub" style="margin-top:0">Qué cambiamos, qué encontramos y qué sigue, con fecha. Lo más nuevo arriba.</p>
+  <div id="bitacora"><div class="card sub">Cargando…</div></div>
 </section>
 
 <section class="page" data-page="mundo3d">
@@ -507,14 +514,33 @@ async function loadExplore() {
 }
 
 // ───── Menú: una sección por pantalla (mobile first). La URL (#hoy, #graficos…) recuerda dónde estás. ─────
-const TABS = ["hoy", "graficos", "boxes", "explorar", "mundo3d"];
+const TABS = ["hoy", "graficos", "boxes", "explorar", "mundo3d", "bitacora"];
 let exploreLoaded = false;
+
+// ───── Bitácora: tablero/bitacora.json, a mano, una entrada por decisión o hallazgo ─────
+const BIT_TIPOS = { cambio: "🔁 Cambio", diagnostico: "🔎 Diagnóstico", incidente: "⚠️ Incidente", proximo: "🧭 Próximo" };
+let bitacoraLoaded = false;
+async function loadBitacora() {
+  const box = document.getElementById("bitacora");
+  try {
+    const items = await (await fetch("bitacora.json", { cache: "no-store" })).json();
+    items.sort((a, b) => b.fecha.localeCompare(a.fecha));
+    box.innerHTML = items.map((e) => `<div class="card" style="margin-bottom:10px">
+      <div class="sub" style="display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap">
+        <span>${e.fecha.split("-").reverse().join("/")} · ${BIT_TIPOS[e.tipo] ?? e.tipo}</span><span>${e.estado ?? ""}</span></div>
+      <b style="display:block;margin:6px 0 4px">${e.titulo}</b>
+      <div style="font-size:14px;line-height:1.5">${e.detalle}</div></div>`).join("");
+  } catch {
+    box.innerHTML = '<div class="card sub">No pude leer la bitácora. Probá recargar.</div>';
+  }
+}
 function showTab(t) {
   if (!TABS.includes(t)) t = "hoy";
   document.querySelectorAll(".page").forEach((p) => p.classList.toggle("on", p.dataset.page === t));
   document.querySelectorAll("#menu a").forEach((a) => a.classList.toggle("on", a.dataset.tab === t));
   if (t === "graficos" && DATA) drawCharts(); // los gráficos miden el ancho: se dibujan cuando se ven
   if (t === "explorar" && !exploreLoaded) { exploreLoaded = true; loadExplore(); }
+  if (t === "bitacora" && !bitacoraLoaded) { bitacoraLoaded = true; loadBitacora(); }
   if (t === "mundo3d") {
     const frame = document.getElementById("iframe3d");
     if (frame && frame.dataset.ready !== "1") {

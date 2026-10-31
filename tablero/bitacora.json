@@ -1,0 +1,58 @@
+[
+  {
+    "fecha": "2026-10-31",
+    "tipo": "diagnostico",
+    "titulo": "Por qué trabajan menos (de ~80 % a 60–70 %)",
+    "detalle": "En la última semana, cuando no están trabajando, el motivo principal es viajar a comprar la herramienta: BB-8 206 veces (pico de obsidiana), C-3PO 149 (hacha de basalto), R2 91 (decodificador). El juego deja llevar una sola herramienta y se gasta, así que cada rotura es un viaje. Le siguen los viajes a vender por sobrecarga y el turno diario de entrenamiento. C-3PO tuvo un pico raro de ~270 viajes a vender por día el 28 y 29/10.",
+    "estado": "en curso"
+  },
+  {
+    "fecha": "2026-10-31",
+    "tipo": "diagnostico",
+    "titulo": "Dónde estamos parados",
+    "detalle": "C-3PO #80 y BB-8 #136 suben fuerte; R2 bajó de #199 a #212 y saca 150–300 k xp/día contra 400 k antes. Fase 1 (contratos) avanzó: 24, 12 y 13 completados. Fase 2 (forja y fabricación) y fase 3 (combate en Amoeba Wilds) no arrancaron: smithing, crafting y combat siguen en cero. Los ítems acumulados crecieron a ~1,27 M. R2 tiene 275 k cristales parados.",
+    "estado": "hecho"
+  },
+  {
+    "fecha": "2026-10-31",
+    "tipo": "cambio",
+    "titulo": "v3.41: vuelve el ranking",
+    "detalle": "El observer cambió de formato el 22/10 y el puesto quedó vacío en el menú de Telegram, el tablero, los resúmenes y el historial. Se lee ahora desde la lista paginada. Desplegado y verificado: R2 #212, BB-8 #136, C-3PO #80 de 3.925.",
+    "estado": "hecho"
+  },
+  {
+    "fecha": "2026-10-31",
+    "tipo": "proximo",
+    "titulo": "Próximos pasos",
+    "detalle": "1) Bajar los viajes por herramienta y revisar el pico de ventas de C-3PO. 2) Ver si hay equipo que valga los 275 k cristales de R2. 3) Medir cuánta xp por hora da la forja antes de arrancar la fase 2 con un droide.",
+    "estado": "pendiente"
+  },
+  {
+    "fecha": "2026-10-23",
+    "tipo": "cambio",
+    "titulo": "Nuevo plan en 4 fases",
+    "detalle": "Se deja de perseguir el terreno de 1.000.000 💎 (alquiler de 100 k/día impagable). Plan: 1) entregar los 17 contratos listos, 2) forja y fabricación para usar los ítems acumulados, 3) expedición segura a Amoeba Wilds con 0 cristales en riesgo, 4) varias skills y presencia en todos los rankings.",
+    "estado": "hecho"
+  },
+  {
+    "fecha": "2026-10-22",
+    "tipo": "incidente",
+    "titulo": "El ranking deja de leerse",
+    "detalle": "A las 18:50 UTC el observer dejó de devolver el puesto en el formato viejo. Último registro: R2 #199, BB-8 #161, C-3PO #120.",
+    "estado": "resuelto el 31/10"
+  },
+  {
+    "fecha": "2026-10-10",
+    "tipo": "cambio",
+    "titulo": "Fin del experimento de entrenamiento: queda el turno diario",
+    "detalle": "Tras probar 4 formas de entrenar skills secundarias (A libre, B pausa de 3 h, C tope nivel 5, D solo turno diario), queda vigente la E: un turno diario de entrenamiento por droide.",
+    "estado": "vigente"
+  },
+  {
+    "fecha": "2026-10-03",
+    "tipo": "cambio",
+    "titulo": "Arranca el registro y el experimento",
+    "detalle": "El piloto empieza a guardar todo en Supabase (cada 5 min el piloto, cada 10 min la foto de cada droide) y arranca el experimento de entrenamiento por fases.",
+    "estado": "hecho"
+  }
+]
