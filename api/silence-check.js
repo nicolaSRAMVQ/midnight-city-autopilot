@@ -13,6 +13,7 @@
 import { AGENTS } from "../lib/agents.js";
 import { tryReadWithoutConnecting } from "../lib/mcity-maintenance.js";
 import { rpc } from "../lib/supabase.js";
+import { fetchBoard } from "../lib/dashboard.js";
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
@@ -34,18 +35,9 @@ async function fetchLastAutopilotOk() {
 
 const SKILL_BY_PROFESSION = { hacker: "hacking", miner: "mining", lumberjack: "woodcutting" };
 
-async function fetchRank(agentId) {
-  try {
-    const base = (process.env.MCITY_OBSERVER_URL || "").replace(/\/$/, "");
-    const r = await fetch(`${base}/api/leaderboards?board=experience&agentId=${encodeURIComponent(agentId)}`, { signal: AbortSignal.timeout(6000) });
-    return r.ok ? ((await r.json())?.entry?.rank ?? null) : null;
-  } catch {
-    return null;
-  }
-}
-
 async function snapshot(agent) {
-  const [data, rank] = await Promise.all([tryReadWithoutConnecting(agent.id), fetchRank(agent.id)]);
+  const [data, board] = await Promise.all([tryReadWithoutConnecting(agent.id), fetchBoard(agent.id)]);
+  const rank = board?.rank ?? null;
   if (data === null) return { agent: agent.name, dormant: true };
   const items = data.inventory?.inventory ?? {};
   const skillId = SKILL_BY_PROFESSION[agent.profession];

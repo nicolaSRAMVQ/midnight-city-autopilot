@@ -183,7 +183,7 @@ function card(a, days, ranks) {
   const state = a.error ? "⚠️ sin lectura" : a.working ? "⚒️ trabajando" : "🏕️ parado";
   return `<div class="card">
     <div class="drow"><span class="name" style="color:${COLORS[a.name]}">${esc(a.name)}</span><span class="sub">${state}</span></div>
-    <div class="drow" style="margin-top:6px"><span class="rank">${now ? "#" + now : "–"}</span><span class="sub">${TOTAL && now ? `de ${nf(TOTAL)} · top ${Math.max(1, Math.round((now / TOTAL) * 100))} %` : "ranking XP"}</span></div>
+    <div class="drow" style="margin-top:6px"><span class="rank">${now ? "#" + now : "–"}</span><span class="sub">${(b.total || TOTAL) && now ? `de ${nf(b.total || TOTAL)} · top ${Math.max(1, Math.round((now / (b.total || TOTAL)) * 100))} %` : "puesto global"}</span></div>
     <div class="deltas">${deltaBox(now, rankAt(ranks, a.name, 864e5, true), "1 día")}${deltaBox(now, rankAt(ranks, a.name, 7 * 864e5), "7 días")}${deltaBox(now, rankAt(ranks, a.name, 30 * 864e5), "30 días")}</div>
     <div class="kv"><span>${esc(a.skill)} → L${(a.level ?? 0) + 1}</span><span>${nf(pctLevel, 1)} %</span></div>
     <div class="bar"><i style="width:${pctLevel}%;background:${COLORS[a.name]}"></i></div>
@@ -303,6 +303,10 @@ function rankCard(ranks, back, width) {
 const latest = ({ series }, fmt) => series.map((s) => { const v = [...s.vals].reverse().find((x) => x != null); return `<span style="color:${COLORS[s.agent]}">${s.agent} ${v == null ? "–" : fmt(v)}</span>`; }).join(" · ");
 
 function drawCharts() {
+  if (!DATA?.history || DATA.history.error) {
+    document.getElementById("charts").innerHTML = '<div class="card sub">El historial no respondió: la base se pasó de tiempo. El puesto global de ahora está en Hoy.</div>';
+    return;
+  }
   const days = DATA.history.days || [], ranks = DATA.history.ranks || [];
   const width = (document.getElementById("charts").clientWidth || 640) - 30;
   const trips = (d) => d.sell_overload + d.sell_liquidity;
@@ -384,17 +388,24 @@ async function load() {
   try {
     const r = await fetch(API, { cache: "no-store" });
     DATA = await r.json();
-    const h = DATA.history || {};
-    if (h.error) throw new Error(h.error);
+    const h = DATA.history && !DATA.history.error ? DATA.history : {};
     const days = h.days || [], ranks = h.ranks || [];
     TOTAL = DATA.totalAgents;
     const live = ORDER.map((n) => DATA.live.find((a) => a.name === n)).filter(Boolean);
-    document.getElementById("cards").innerHTML = live.map((a) => card(a, days, ranks)).join("");
+    document.getElementById("cards").innerHTML = live.map((a) => card(a, days, ranks)).join("") || '<div class="card sub">No llegaron los droides.</div>';
     document.getElementById("legend").innerHTML = ORDER.map((a) => `<span><i style="background:${COLORS[a]}"></i>${a}</span>`).join("");
+    if (DATA.history?.error) {
+      document.getElementById("err").textContent = "El historial tardó demasiado. El puesto global de ahora sí está en Hoy.";
+      document.getElementById("boxes").innerHTML = '<p class="sub">Sin historial de boxes ahora.</p>';
+      document.getElementById("test").innerHTML = '<p class="sub">Sin historial de la prueba ahora.</p>';
+      document.getElementById("phases").innerHTML = '<p class="sub">Sin historial de fases ahora.</p>';
+    } else {
+      document.getElementById("err").textContent = "";
+      document.getElementById("boxes").innerHTML = boxesTable(days);
+      document.getElementById("test").innerHTML = testBlock(days);
+      document.getElementById("phases").innerHTML = phasesBlock(h.phases || []);
+    }
     drawCharts();
-    document.getElementById("boxes").innerHTML = boxesTable(days);
-    document.getElementById("test").innerHTML = testBlock(days);
-    document.getElementById("phases").innerHTML = phasesBlock(h.phases || []);
     const t = new Date(DATA.timestamp).toLocaleString("es-AR", { timeZone: "America/Argentina/Buenos_Aires", day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" });
     document.getElementById("upd").textContent = `Datos en vivo de ${t} · se actualiza solo cada 5 minutos · * = historial más corto que el período`;
   } catch (e) {

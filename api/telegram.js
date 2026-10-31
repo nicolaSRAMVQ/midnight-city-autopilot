@@ -108,8 +108,7 @@ async function run(action) {
   }
   if (DASH_VIEWS[action] || action.startsWith("agent:")) {
     try {
-      const data = await getDashboardData(30);
-      if (data.history?.error) throw new Error(data.history.error);
+      const data = await getDashboardData(21);
       const text = action.startsWith("agent:") ? agentCard(data, action.slice(6)) : DASH_VIEWS[action](data);
       return sendTelegramMessage(text.slice(0, 4096), MENU);
     } catch {

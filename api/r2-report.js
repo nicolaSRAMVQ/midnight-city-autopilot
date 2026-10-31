@@ -22,7 +22,7 @@ import {
 import { getTrainingRows } from "../lib/training.js";
 import { rpc } from "../lib/supabase.js";
 import { MEGA_MENU } from "../lib/telegram-views.js";
-import { DASHBOARD_URL, fetchAgentCount } from "../lib/dashboard.js";
+import { DASHBOARD_URL, fetchAgentCount, fetchBoard } from "../lib/dashboard.js";
 
 const TELEGRAM_BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const TELEGRAM_CHAT_ID = process.env.TELEGRAM_CHAT_ID;
@@ -169,7 +169,10 @@ function crewIntro(window, all, trainingRows) {
 
 // "#254 ▲12 (4,5 %) en 7 días": compara con el puesto más viejo de la última semana.
 // "de 1.345 (top 18 %)": the base the rank is measured against.
-const ofTotal = (m) => (m.totalAgents ? ` de ${num(m.totalAgents)} (top ${Math.max(1, Math.round((m.rank / m.totalAgents) * 100))} %)` : "");
+const ofTotal = (m) => {
+  const base = m.rankTotal || m.totalAgents;
+  return base && m.rank ? ` de ${num(base)} (top ${Math.max(1, Math.round((m.rank / base) * 100))} %)` : "";
+};
 
 function rankText(m) {
   if (!m.rank) return "";
@@ -179,18 +182,6 @@ function rankText(m) {
   const pct = Math.abs((diff / b.rank) * 100).toFixed(1).replace(".", ",");
   const days = Math.max(1, Math.round((Date.now() - Date.parse(b.at)) / 864e5));
   return ` #${m.rank}${ofTotal(m)} ${diff > 0 ? "▲" : "▼"}${Math.abs(diff)} (${pct} %) en ${days >= 7 ? "7 días" : `${days} día${days > 1 ? "s" : ""}`}`;
-}
-
-// Puesto en el ranking general de experiencia del juego (no necesita token ni sesión).
-async function fetchRank(agentId) {
-  try {
-    const base = (process.env.MCITY_OBSERVER_URL || "").replace(/\/$/, "");
-    const r = await fetch(`${base}/api/leaderboards?board=experience&agentId=${encodeURIComponent(agentId)}`, { signal: AbortSignal.timeout(8000) });
-    if (!r.ok) return null;
-    return (await r.json())?.entry?.rank ?? null;
-  } catch {
-    return null;
-  }
 }
 
 async function buildAgentData(agent, readOnly) {
@@ -248,10 +239,10 @@ export async function buildReport({ mode = "full", readOnly = false } = {}) {
   const all = await Promise.all(
     AGENTS.map(async (agent) => {
       try {
-        const [r, rank] = await Promise.all([buildAgentData(agent, readOnly), fetchRank(agent.id)]);
+        const [r, board] = await Promise.all([buildAgentData(agent, readOnly), fetchBoard(agent.id)]);
         const ok = r.data?.context && r.data?.needs && r.data?.inventory && r.data?.progression;
         const base = (rankBase ?? []).find((b) => b.agent === agent.name)
-        return { ...r, metrics: ok ? { ...agentMetrics(agent, r.data, gameContent), rank, rankBase: base ?? null, totalAgents } : null };
+        return { ...r, metrics: ok ? { ...agentMetrics(agent, r.data, gameContent), rank: board?.rank ?? null, rankTotal: board?.total ?? null, rankBase: base ?? null, totalAgents } : null };
       } catch (error) {
         return { agent, metrics: null, error: error.message };
       }
