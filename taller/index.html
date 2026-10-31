@@ -9,6 +9,8 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/exporters/GLTFExporter.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/BufferGeometryUtils.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
 <style>
 :root{--bg:#07080d;--card:#11131c;--line:#22263a;--tx:#e8eaf4;--mut:#8a90a8;--r2:#4da3ff;--bb8:#ffad33;--c3:#e8c15a;--acc:#7cf0d0}
 *{box-sizing:border-box}
@@ -73,6 +75,7 @@ button.on{background:var(--acc);color:#07080d;border-color:var(--acc)}
     <button id="export">📦 Exportar .glb</button>
   </div>
   <div class="sub" style="margin-top:8px">Se guarda en este navegador. El .glb se abre en Blender o en un programa de impresión 3D.</div>
+  <div class="sub" style="margin-top:10px;font-size:11px">Modelos de taller: <a href="https://huggingface.co/datasets/nvidia/simready-assets" target="_blank" style="color:var(--acc)">NVIDIA SimReady Assets</a>, licencia <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" style="color:var(--acc)">CC BY 4.0</a>, convertidos a glTF y con texturas reducidas.</div>
 </div>
 
 <div class="build" id="build">
@@ -92,10 +95,17 @@ renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputEncoding = THREE.sRGBEncoding;
+// Luz realista: tono de cine y reflejos de ambiente (el metal de los modelos de NVIDIA los necesita)
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 0.72;
+renderer.physicallyCorrectLights = false;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x9fc4e8);
 scene.fog = new THREE.Fog(0xb7d3ec, 60, 190);
+scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new THREE.RoomEnvironment(), 0.04).texture;
+// El ambiente da reflejos al metal; en lo orgánico (pasto, hojas, corteza) se nota menos para no lavar los colores
+const ENV_SOFT = 0.35;
 
 const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 500);
 camera.position.set(0, 7, 17);
@@ -105,7 +115,7 @@ controls.maxPolarAngle = Math.PI * 0.48;
 controls.minDistance = 5; controls.maxDistance = 90;
 controls.enableDamping = true;
 
-scene.add(new THREE.HemisphereLight(0xdfefff, 0x4a6b3a, 0.75));
+scene.add(new THREE.HemisphereLight(0xdfefff, 0x4a6b3a, 0.3));
 const sun = new THREE.DirectionalLight(0xfff1d6, 1.05);
 sun.position.set(40, 60, 25);
 sun.castShadow = true;
@@ -113,7 +123,7 @@ sun.shadow.mapSize.set(2048, 2048);
 Object.assign(sun.shadow.camera, { left: -70, right: 70, top: 70, bottom: -70, near: 1, far: 200 });
 scene.add(sun);
 
-const mat = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0.1, ...o });
+const mat = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0.1, envMapIntensity: (o.metalness ?? 0.1) > 0.3 ? 1 : ENV_SOFT, ...o });
 const add = (parent, geo, material, pos = [0, 0, 0], cast = true) => {
   const m = new THREE.Mesh(geo, material);
   m.position.set(...pos); m.castShadow = cast; m.receiveShadow = true;
@@ -269,16 +279,81 @@ function canopy(g, color, spots, y, spread, size) {
   const m = mat(color, { roughness: 0.85 });
   for (let i = 0; i < spots; i++) add(g, new THREE.IcosahedronGeometry(size * rand(0.7, 1.1), 1), m, [rand(-spread, spread), y + rand(-spread * 0.5, spread * 0.6), rand(-spread, spread)]);
 }
+// Árboles procedurales: tronco que se abre en ramas, racimos de hojas con colores variados.
+// Se arman unas variantes por especie y se reusan (geometría compartida) para que el bosque sea liviano.
+const BARK = { sakura: 0x4a3530, ginkgo: 0x6b5a48, roble: 0x5b4632, arce: 0x5a3d2e, milenario: 0x463628 };
+const LEAF = { sakura: [0xf7c5d8, 0xf2a7c3, 0xfbe0ea, 0xffffff], ginkgo: [0xf4c430, 0xe8b020, 0xf8d860], roble: [0x3f7a35, 0x4f8a3c, 0x2f6a2e, 0x5a9440],
+               arce: [0xd2452a, 0xe8752a, 0xb8322a, 0xf09030], milenario: [0x2f6a2e, 0x3d7a34, 0x285a28, 0x4a8040] };
+// profundidad, largo del tronco, radio, apertura de ramas, ramas por nivel, tamaño de racimo, hojas por racimo
+const SHAPE = { sakura: [3, 2.4, 0.26, 0.85, 3, 0.75, 4], ginkgo: [3, 4.0, 0.28, 0.32, 3, 0.62, 4], roble: [3, 2.8, 0.46, 0.75, 3, 0.95, 4],
+                arce: [3, 2.6, 0.3, 0.65, 3, 0.8, 4], milenario: [4, 6.0, 1.5, 0.7, 3, 1.5, 4] };
+const leafMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.75, envMapIntensity: ENV_SOFT });
+const barkMats = {};
+const V3 = THREE.Vector3, UP = new V3(0, 1, 0);
+function branchGeo(a, b, r0, r1) {
+  const len = a.distanceTo(b), geo = new THREE.CylinderGeometry(r1, r0, len, 7, 1);
+  geo.translate(0, len / 2, 0);
+  geo.applyMatrix4(new THREE.Matrix4().makeRotationFromQuaternion(new THREE.Quaternion().setFromUnitVectors(UP, b.clone().sub(a).normalize())));
+  geo.translate(a.x, a.y, a.z);
+  return geo;
+}
+function blobGeo(c, size, hex) {
+  const geo = new THREE.IcosahedronGeometry(size, 1), pos = geo.attributes.position, col = new Float32Array(pos.count * 3);
+  const base = new THREE.Color(hex);
+  for (let i = 0; i < pos.count; i++) {
+    const k = 1 + rand(-0.18, 0.18);
+    pos.setXYZ(i, pos.getX(i) * k, pos.getY(i) * k * 0.85, pos.getZ(i) * k);
+    const shade = 0.82 + (pos.getY(i) / size) * 0.15 + rand(-0.05, 0.05); // más claro arriba
+    col[i * 3] = base.r * shade; col[i * 3 + 1] = base.g * shade; col[i * 3 + 2] = base.b * shade;
+  }
+  geo.setAttribute("color", new THREE.BufferAttribute(col, 3));
+  geo.translate(c.x, c.y, c.z); geo.computeVertexNormals();
+  return geo;
+}
+function growTree(kind) {
+  const [depth, len, rad, spread, nb, leaf, perTip] = SHAPE[kind], bark = [], leaves = [], colors = LEAF[kind];
+  const grow = (from, dir, length, radius, level) => {
+    // un poco de curva natural: el tramo se dobla apenas a mitad de camino
+    const mid = from.clone().addScaledVector(dir, length * 0.5).add(new V3(rand(-0.12, 0.12), 0, rand(-0.12, 0.12)).multiplyScalar(length));
+    const end = mid.clone().addScaledVector(dir, length * 0.5);
+    bark.push(branchGeo(from, mid, radius, radius * 0.8), branchGeo(mid, end, radius * 0.8, radius * 0.62));
+    if (level >= depth) {
+      for (let i = 0; i < perTip; i++) leaves.push(blobGeo(end.clone().add(new V3(rand(-1, 1), rand(-0.4, 0.8), rand(-1, 1)).multiplyScalar(leaf * 0.8)), leaf * rand(0.65, 1.05), colors[Math.floor(rand(0, colors.length))]));
+      return;
+    }
+    const n = level === 0 ? nb + 1 : nb + (Math.random() < 0.3 ? 1 : 0);
+    for (let i = 0; i < n; i++) {
+      const a = (i / n) * Math.PI * 2 + rand(-0.5, 0.5), tilt = spread * rand(0.7, 1.2) * (level === 0 ? 0.8 : 1);
+      const nd = new V3(Math.sin(tilt) * Math.cos(a), Math.cos(tilt), Math.sin(tilt) * Math.sin(a)).lerp(dir, 0.3).normalize();
+      grow(end, nd, length * rand(0.58, 0.74), radius * 0.6, level + 1);
+    }
+    if (level > 0 && Math.random() < 0.5) leaves.push(blobGeo(end, leaf * 0.7, colors[0])); // follaje también en ramas internas
+  };
+  grow(new V3(0, 0, 0), new V3(rand(-0.06, 0.06), 1, rand(-0.06, 0.06)).normalize(), len, rad, 0);
+  if (kind === "milenario") { // raíces que asoman
+    for (let i = 0; i < 7; i++) { const a = (i / 7) * 6.28 + rand(-0.3, 0.3); bark.push(branchGeo(new V3(0, 1.4, 0), new V3(Math.cos(a) * 3.2, -0.3, Math.sin(a) * 3.2), rad * 0.55, 0.12)); }
+  }
+  const g = new THREE.Group();
+  barkMats[kind] = barkMats[kind] || mat(BARK[kind], { roughness: 0.95 });
+  const b = new THREE.Mesh(THREE.BufferGeometryUtils.mergeBufferGeometries(bark), barkMats[kind]);
+  const l = new THREE.Mesh(THREE.BufferGeometryUtils.mergeBufferGeometries(leaves), leafMat);
+  [b, l].forEach((m) => { m.castShadow = true; m.receiveShadow = true; g.add(m); });
+  return g;
+}
+const VARIANTS = {};
+function treeOf(kind) {
+  VARIANTS[kind] = VARIANTS[kind] || Array.from({ length: kind === "milenario" ? 1 : 4 }, () => growTree(kind));
+  const v = VARIANTS[kind][Math.floor(rand(0, VARIANTS[kind].length))];
+  const g = new THREE.Group();
+  v.children.forEach((m) => { const c = new THREE.Mesh(m.geometry, m.material); c.castShadow = c.receiveShadow = true; g.add(c); });
+  return g;
+}
 const TREES = {
-  sakura(g) { add(g, new THREE.CylinderGeometry(0.22, 0.38, 3.2, 8), trunkMat, [0, 1.6, 0]); canopy(g, 0xf6b6cf, 7, 4, 1.6, 1.3); blossoms.push(g); },
-  ginkgo(g) { add(g, new THREE.CylinderGeometry(0.25, 0.4, 5, 8), trunkMat, [0, 2.5, 0]); [0, 1, 2].forEach((i) => add(g, new THREE.ConeGeometry(2.1 - i * 0.55, 2, 9), mat(0xf2c230, { roughness: 0.8 }), [0, 4.2 + i * 1.3, 0])); },
-  roble(g) { add(g, new THREE.CylinderGeometry(0.45, 0.7, 3.6, 9), trunkMat, [0, 1.8, 0]); canopy(g, 0x3f7a35, 9, 4.6, 2.2, 1.6); },
-  arce(g) { add(g, new THREE.CylinderGeometry(0.28, 0.45, 3.4, 8), trunkMat, [0, 1.7, 0]); canopy(g, [0xd2452a, 0xe8752a, 0xb8322a][Math.floor(rand(0, 3))], 7, 4.2, 1.7, 1.3); },
-  milenario(g) {
-    add(g, new THREE.CylinderGeometry(1.4, 2.6, 9, 12), oldBark, [0, 4.5, 0]);
-    for (let i = 0; i < 6; i++) { const r = add(g, new THREE.CylinderGeometry(0.25, 0.6, 3.5, 6), oldBark, [Math.cos(i) * 2.2, 0.6, Math.sin(i) * 2.2]); r.rotation.set(Math.sin(i) * 0.9, 0, -Math.cos(i) * 0.9); }
-    canopy(g, 0x2f6a2e, 16, 11, 5.5, 2.8);
-  },
+  sakura(g) { g.add(treeOf("sakura")); blossoms.push(g); },
+  ginkgo(g) { g.add(treeOf("ginkgo")); },
+  roble(g) { g.add(treeOf("roble")); },
+  arce(g) { g.add(treeOf("arce")); },
+  milenario(g) { g.add(treeOf("milenario")); },
 };
 function plant(kind, x, z, s = 1) {
   const g = new THREE.Group(); TREES[kind](g);
@@ -421,9 +496,28 @@ const CATALOG = [
   ["⛩️ Jardín", [["piedra", "⚪", "Camino"], ["estanque", "💧", "Estanque"], ["puente", "🌉", "Puente"], ["torii", "⛩️", "Torii"], ["farol", "🏮", "Farol"], ["banco", "🪑", "Banco"]]],
   ["🛠️ Taller", [["capsula", "🧪", "Cápsula"], ["caja", "📦", "Caja"], ["antena", "📡", "Antena"], ["solar", "☀️", "Panel solar"]]],
 ];
+// Modelos de NVIDIA SimReady (CC BY 4.0) convertidos a .glb: se cargan una vez y se clonan.
+const NV_BASE = "assets/nvidia/", nvCache = {};
+let NV_LIST = [];
+function loadNV(id) {
+  nvCache[id] = nvCache[id] || new Promise((ok, fail) => new THREE.GLTFLoader().load(NV_BASE + id + ".glb", (g) => {
+    g.scene.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+    ok(g.scene);
+  }, undefined, fail));
+  return nvCache[id];
+}
+fetch(NV_BASE + "manifest.json").then((r) => r.json()).then((list) => {
+  NV_LIST = list;
+  CATALOG.push(["🔧 NVIDIA", list.map((a) => ["nv:" + a.id, a.icon, a.label])]);
+  if ($("build").classList.contains("show")) renderBuild();
+  // piezas de NVIDIA guardadas en el jardín: se completan cuando llega su modelo
+}).catch(() => {});
+
 function makeItem(kind) {
   const g = new THREE.Group();
-  if (TREES[kind]) TREES[kind](g); else if (EXTRAS[kind]) EXTRAS[kind](g);
+  if (kind.startsWith("nv:")) {
+    loadNV(kind.slice(3)).then((src) => { const c = src.clone(true); g.add(c); if (g.userData.ghost) ghostify(g); }).catch(() => toast("No pude cargar " + kind.slice(3)));
+  } else if (TREES[kind]) TREES[kind](g); else if (EXTRAS[kind]) EXTRAS[kind](g);
   g.userData.kind = kind;
   return g;
 }
@@ -457,11 +551,15 @@ function setTool(kind) {
   if (ghost) { scene.remove(ghost); ghost = null; }
   if (kind) {
     ghost = makeItem(kind);
-    ghost.traverse((o) => { if (o.isMesh) { o.material = o.material.clone(); o.material.transparent = true; o.material.opacity = 0.5; o.castShadow = false; } });
+    ghost.userData.ghost = true;
+    ghostify(ghost);
     ghost.visible = false; scene.add(ghost);
     select(null);
   }
   renderBuild();
+}
+function ghostify(g) {
+  g.traverse((o) => { if (o.isMesh && !o.userData.ghosted) { o.material = o.material.clone(); o.material.transparent = true; o.material.opacity = 0.5; o.castShadow = false; o.userData.ghosted = true; } });
 }
 function select(obj) {
   selected = obj;
