@@ -1,7 +1,7 @@
 # Cuadrilla Midnight — Proyecto
 
 Fuente única de verdad del proyecto. Si otro documento contradice este, vale este.
-Última actualización: 2026-10-09 (autopilot v3.29).
+Última actualización: 2026-11-10 (autopilot v3.44).
 
 ## Qué es
 
@@ -306,3 +306,11 @@ del cinder_axe. Verificar siempre contra `SKILL.md`, `references/` y
 - Telegram: botonera grande (Ranking, Ritmo, Economía, Boxes, Prueba de ventas, Piloto, un botón por droide, link al tablero). Textos en `lib/telegram-views.js`. El resumen diario termina con el link.
 - Herramientas: probé comprar de a 4 y el juego lo rechaza ("inventory can hold at most 1"). Revertido: `TOOL_SPARES = 1`. El hacha de C-3PO se rompe ~cada 40 min y cada recompra es un viaje de ~8 min al volcán (4 a 5 h/día). Pendiente: probar sin hacha después de la prueba de ventas, para ver si conviene.
 - El historial de puestos arrancó el 11/10 ~05:00 UTC: las variaciones a 1/7/30 días aparecen a medida que pasa el tiempo.
+
+## v3.44 (10/11/2026)
+- **Maximización del % de tiempo trabajado (de ~60% a 90%+):**
+  - **C-3PO:** desactivada la compra de `basalt_axe` (`buyTool: false`). Elimina 35 viajes/día al Volcán y ahorra 4–5 horas de caminata diaria.
+  - **BB-8:** `sellAtQuantity` subido de 30 a 80 ore. Con 146k cristales en banco, reduce a la mitad las idas a Central.
+  - **Comida:** `FOOD_RESERVE_TARGET` duplicado de 6 a 12 smoothies, reduciendo a la mitad los viajes a la tienda.
+  - **Protección de viajes:** `v3.43` en producción (el keep-alive no reconecta ni cancela si el droide está en viaje o compra).
+  - **Dashboard:** optimizado a 7 días en Supabase (`midnight_dashboard`), eliminando el statement timeout (HTTP 500 code 57014).
