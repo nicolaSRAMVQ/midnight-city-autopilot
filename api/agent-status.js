@@ -68,9 +68,14 @@ export default async function handler(req, res) {
       return res.status(200).json(await getExploration());
     }
     if (req.query?.view === "dashboard") {
-      res.setHeader("Cache-Control", "s-maxage=120, stale-while-revalidate=600");
       const days = req.query?.days ? Math.min(Number(req.query.days), 14) : 7;
-      return res.status(200).json(await getDashboardData(days));
+      const data = await getDashboardData(days);
+      if (data.history?.error) {
+        res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+      } else {
+        res.setHeader("Cache-Control", "s-maxage=120, stale-while-revalidate=600");
+      }
+      return res.status(200).json(data);
     }
     const agents = await Promise.all(AGENTS.map(getAgentStatus));
     res.status(200).json({ success: true, timestamp: new Date().toISOString(), agents });
