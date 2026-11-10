@@ -4,7 +4,7 @@
 
 export default function handler(req, res) {
   res.status(200).json({
-    version: "v3.44-max-efficiency",
+    version: "v3.45-fase2-crafting",
     timestamp: new Date().toISOString(),
     format: "Tolkien Newsletter",
     headers: ["CRÓNICA MATINAL", "PARTE MERIDIANO", "RELATO VESPERTINO", "SUSSURRO NOCTURNO"],
@@ -20,7 +20,9 @@ export default function handler(req, res) {
       "c3po-no-axe-savings",
       "bb8-bulk-sell-80",
       "food-buffer-12",
-      "dashboard-7d-opt"
+      "dashboard-7d-opt",
+      "fase2-forge-smithing",
+      "fase2-workbench-crafting"
     ],
   });
 }

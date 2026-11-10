@@ -77,21 +77,28 @@ async function trainAgent(agent, row, shared) {
   if (/trade|travel/.test(context.agent.activeAction?.kind ?? "")) return { agent: agent.name, waiting: context.agent.activeAction.kind };
 
   const deadline = Date.now() + LOOP_BUDGET_MS;
+  const isCraft = Boolean(active.isCraft || /smelt|saw|forge|refine/.test(active.source_id));
   let pulls = 0;
   let lastReason = null;
-  // A pull from the previous minute may still be walking to its node: let it land.
+  // A pull or craft from the previous minute may still be finishing: let it land.
   let current = context.agent.activeAction;
-  while (current?.kind === "gather" && Date.now() + 5_000 < deadline) {
+  while ((current?.kind === "gather" || current?.kind === "craft") && Date.now() + 5_000 < deadline) {
     await new Promise((r) => setTimeout(r, 3_000));
     current = (await read("context")).agent.activeAction;
   }
   while (Date.now() + 5_000 < deadline) {
     let r;
     try {
+      const action = isCraft
+        ? { kind: "craft", recipeId: active.source_id, batches: 1 }
+        : { kind: "gather", sourceId: active.source_id };
+      const match = isCraft
+        ? (p) => p.kind === "item_crafted" && p.recipeId === active.source_id
+        : (p) => p.kind === "resource_gathered";
       r = await submitAndWait(
         lease,
-        { kind: "gather", sourceId: active.source_id },
-        (p) => p.kind === "resource_gathered",
+        action,
+        match,
         Math.min(PULL_WAIT_MS, deadline - Date.now()),
       );
     } catch (error) {
@@ -106,19 +113,23 @@ async function trainAgent(agent, row, shared) {
       lastReason = r.reason;
       break; // rejected: the next minute (or the autopilot) sorts it out
     }
-    // Timeout: each node gives ~5 pulls and then regenerates, so the agent is walking
-    // to a fresh node. Breaking here wasted the rest of the minute (3/10: BB-8 averaged
-    // ~1 pull in those minutes vs ~11 otherwise); let the pull land and keep going.
-    let walking = (await read("context")).agent.activeAction;
-    while (walking?.kind === "gather" && Date.now() + 3_000 < deadline) {
-      await new Promise((resolve) => setTimeout(resolve, 3_000));
-      walking = (await read("context")).agent.activeAction;
-    }
-    if (walking?.kind === "gather") {
-      lastReason = "timeout";
+    if (!isCraft) {
+      // Timeout: each node gives ~5 pulls and then regenerates, so the agent is walking
+      // to a fresh node. Breaking here wasted the rest of the minute (3/10: BB-8 averaged
+      // ~1 pull in those minutes vs ~11 otherwise); let the pull land and keep going.
+      let walking = (await read("context")).agent.activeAction;
+      while (walking?.kind === "gather" && Date.now() + 3_000 < deadline) {
+        await new Promise((resolve) => setTimeout(resolve, 3_000));
+        walking = (await read("context")).agent.activeAction;
+      }
+      if (walking?.kind === "gather") {
+        lastReason = "timeout";
+        break;
+      }
+      pulls += 1;
+    } else {
       break;
     }
-    pulls += 1;
   }
   return { agent: agent.name, skill: active.skill, level, target: active.target_level, pulls, stop: lastReason };
 }
