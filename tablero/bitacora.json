@@ -1,5 +1,12 @@
 [
   {
+    "fecha": "2026-11-10",
+    "tipo": "cambio",
+    "titulo": "v3.44: optimización de tiempo útil y protección de trabajo",
+    "detalle": "Plan para llevar el % de trabajo del 65 % al 90 %+: 1) C-3PO desactiva la compra de basalt_axe (evita 35 viajes/día al volcán y ahorra 4–5 h diarias de caminata). 2) BB-8 sube sellAtQuantity de 30 a 80 ore (tiene 146 k cristales, reduce a menos de la mitad las salidas de la mina). 3) Reserva de comida sube de 6 a 12 smoothies. 4) Dashboard optimizado a 7 días para evitar timeout en Supabase. A medir: % tiempo trabajando y XP neta diaria.",
+    "estado": "en curso"
+  },
+  {
     "fecha": "2026-10-31",
     "tipo": "diagnostico",
     "titulo": "Cuánto le costaron los viajes a BB-8",
