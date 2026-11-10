@@ -11,157 +11,402 @@
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/utils/BufferGeometryUtils.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/environments/RoomEnvironment.js"></script>
+<script src="droids3d.js"></script>
 <style>
-:root{--bg:#07080d;--card:#11131c;--line:#22263a;--tx:#e8eaf4;--mut:#8a90a8;--r2:#4da3ff;--bb8:#ffad33;--c3:#e8c15a;--acc:#7cf0d0}
+:root{
+  --bg:#07080d;--card:rgba(12,15,26,0.9);--card2:#161b2e;--line:#262e48;
+  --tx:#eef0f8;--mut:#8d96b2;--acc:#7cf0d0;--r2:#4da3ff;--bb8:#ffad33;--c3:#f5c451;--danger:#ff5c6c;
+}
 *{box-sizing:border-box}
-html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:14px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;overflow:hidden}
+html,body{margin:0;height:100%;background:var(--bg);color:var(--tx);font:13.5px/1.4 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;overflow:hidden;user-select:none}
 #c{display:block;width:100vw;height:100vh}
-.panel{position:absolute;top:12px;right:12px;width:290px;max-height:calc(100vh - 24px);overflow:auto;background:rgba(11,14,24,.86);backdrop-filter:blur(10px);border:1px solid #2a314d;border-radius:14px;padding:14px}
-.panel h1{font-size:17px;margin:0 0 2px;letter-spacing:.5px}
-.panel .sub{color:var(--mut);font-size:12px;margin-bottom:10px}
-.panel h2{font-size:11px;text-transform:uppercase;letter-spacing:1.4px;color:var(--mut);margin:14px 0 6px;font-weight:600}
-.row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:6px 0}
-.row label{color:#cbd2ec;font-size:13px}
-input[type=color]{width:42px;height:26px;border:1px solid #2a314d;border-radius:6px;background:none;padding:0}
-input[type=range]{width:130px}
-.btns{display:flex;flex-wrap:wrap;gap:6px}
-button{background:#151a2b;border:1px solid #2a314d;color:#cbd2ec;padding:6px 11px;border-radius:999px;font:600 12.5px inherit;font-family:inherit;cursor:pointer}
+
+/* Barra superior unificada (nunca pisa al panel lateral) */
+.topbar{
+  position:fixed;top:12px;left:12px;right:12px;z-index:20;
+  display:flex;align-items:center;justify-content:space-between;gap:10px;
+  pointer-events:none;flex-wrap:wrap;
+}
+.topbar-group{
+  display:flex;align-items:center;gap:6px;pointer-events:auto;
+  background:var(--card);backdrop-filter:blur(12px);
+  border:1px solid var(--line);border-radius:999px;padding:5px 7px;
+  box-shadow:0 8px 24px rgba(0,0,0,.38);
+}
+button{
+  background:var(--card2);border:1px solid var(--line);color:#d5dcf2;
+  padding:6px 12px;border-radius:999px;font:600 12.5px inherit;cursor:pointer;
+  transition:all .15s;display:inline-flex;align-items:center;gap:5px;white-space:nowrap;
+}
 button:hover{border-color:var(--acc);color:#fff}
-button.on{background:var(--acc);color:#07080d;border-color:var(--acc)}
-.hud{position:absolute;left:12px;bottom:12px;background:rgba(7,9,15,.82);border:1px solid #1e2438;border-radius:10px;padding:8px 12px;color:#9aa3c4;font-size:12px;max-width:min(560px,calc(100vw - 330px))}
-.hud b{color:#fff}
-.top{position:absolute;left:12px;top:12px;display:flex;gap:6px;flex-wrap:wrap}
-.toast{position:absolute;left:50%;top:16px;transform:translateX(-50%);background:rgba(12,16,28,.92);border:1px solid var(--acc);border-radius:8px;padding:6px 14px;font-size:13px;opacity:0;transition:opacity .3s;pointer-events:none}
-.build{position:absolute;left:12px;right:316px;bottom:12px;background:rgba(11,14,24,.9);backdrop-filter:blur(10px);border:1px solid #2a314d;border-radius:14px;padding:8px 10px;display:none}
-.build.show{display:block}
-.build .cats{display:flex;gap:6px;margin-bottom:6px;flex-wrap:wrap}
-.build .items{display:flex;gap:6px;overflow-x:auto;padding-bottom:2px}
-.item{flex:0 0 auto;min-width:74px;text-align:center;background:#151a2b;border:1px solid #2a314d;border-radius:10px;padding:6px 8px;cursor:grab;user-select:none;font-size:12px;color:#cbd2ec}
-.item .ic{font-size:22px;display:block}
-.item.on{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset;color:#fff}
-.build .tip{color:var(--mut);font-size:11.5px;margin-top:6px}
-.drop{position:absolute;inset:0;border:3px dashed var(--acc);background:rgba(124,240,208,.08);display:none;align-items:center;justify-content:center;font-size:18px;pointer-events:none}
-@media (max-width:760px){.panel{top:auto;bottom:12px;right:12px;left:12px;width:auto;max-height:45vh}.hud{display:none}}
+button.on{background:var(--acc);color:#061014;border-color:var(--acc);font-weight:700}
+button.danger:hover{border-color:var(--danger);color:var(--danger)}
+button.sm{padding:4px 9px;font-size:11.5px}
+
+/* Panel lateral derecho colapsable (Modo Edición) */
+.sidepanel{
+  position:fixed;top:64px;right:12px;bottom:12px;width:360px;z-index:15;
+  background:var(--card);backdrop-filter:blur(14px);
+  border:1px solid var(--line);border-radius:16px;
+  display:flex;flex-direction:column;overflow:hidden;
+  box-shadow:0 12px 36px rgba(0,0,0,.45);
+  transition:transform .22s ease,opacity .2s ease;
+}
+.sidepanel.collapsed{transform:translateX(calc(100% + 20px));opacity:0;pointer-events:none}
+.sp-head{
+  display:flex;align-items:center;justify-content:space-between;
+  padding:10px 12px;border-bottom:1px solid var(--line);background:rgba(8,10,18,.55);
+}
+.sp-tabs{display:flex;gap:4px;flex:1}
+.sp-tabs button{flex:1;justify-content:center;padding:6px 8px;font-size:12px;border-radius:10px}
+.sp-body{flex:1;overflow-y:auto;padding:12px}
+.sp-sec{display:none}
+.sp-sec.on{display:block}
+
+h2{font-size:11px;text-transform:uppercase;letter-spacing:1.2px;color:var(--mut);margin:12px 0 6px;font-weight:700}
+h2:first-child{margin-top:0}
+.sub{color:var(--mut);font-size:12px;line-height:1.4}
+.row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin:7px 0}
+.row label{color:#d5dcf2;font-size:12.5px}
+input[type=color]{width:38px;height:24px;border:1px solid var(--line);border-radius:6px;background:none;padding:0;cursor:pointer}
+input[type=range]{flex:1;max-width:170px;accent-color:var(--acc)}
+input[type=search]{
+  width:100%;background:#0c0f1a;border:1px solid var(--line);color:var(--tx);
+  padding:8px 11px;border-radius:10px;font:inherit;outline:none;
+}
+input[type=search]:focus{border-color:var(--acc)}
+.btns{display:flex;flex-wrap:wrap;gap:5px}
+
+/* Grilla de Mods y Catálogo NVIDIA */
+.mod-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:6px}
+.mod-card{
+  background:var(--card2);border:1px solid var(--line);border-radius:10px;
+  padding:7px 9px;cursor:pointer;display:flex;align-items:center;gap:8px;transition:all .15s;
+}
+.mod-card:hover{border-color:var(--acc)}
+.mod-card.on{border-color:var(--acc);background:rgba(124,240,208,.13)}
+.mod-card .ic{font-size:20px}
+.mod-card b{display:block;font-size:12.5px;color:#fff}
+.mod-card span{font-size:11px;color:var(--mut)}
+
+.cat-pills{display:flex;gap:5px;overflow-x:auto;padding:6px 0;margin-bottom:6px;scrollbar-width:thin}
+.nv-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:6px}
+.nv-card{
+  background:#0e1220;border:1px solid var(--line);border-radius:11px;
+  padding:7px;display:flex;flex-direction:column;gap:5px;position:relative;
+  transition:border-color .15s;
+}
+.nv-card:hover{border-color:var(--acc)}
+.nv-card.active{border-color:var(--acc);box-shadow:0 0 0 1px var(--acc) inset}
+.nv-thumb{
+  width:100%;aspect-ratio:4/3;background:#080a12;border-radius:8px;
+  overflow:hidden;display:flex;align-items:center;justify-content:center;position:relative;
+}
+.nv-thumb img{width:100%;height:100%;object-fit:contain;display:block}
+.nv-badge{
+  position:absolute;top:5px;left:5px;font-size:10px;padding:2px 6px;
+  border-radius:999px;background:rgba(7,9,16,.82);color:var(--mut);border:1px solid var(--line);
+}
+.nv-badge.ok{color:#3ddc84;border-color:#1e5c3a}
+.nv-title{font-size:12px;font-weight:600;color:#e8ecf8;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nv-sub{font-size:10.5px;color:var(--mut);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.nv-actions{display:flex;gap:4px;margin-top:auto}
+.nv-actions button{flex:1;justify-content:center;padding:4px 6px;font-size:11.5px;border-radius:7px}
+.nv-actions button.del{flex:0 0 auto;padding:4px 7px}
+
+/* Inspector flotante del objeto seleccionado (abajo a la izquierda en Modo Edición) */
+.inspector{
+  position:fixed;left:12px;bottom:12px;z-index:16;width:min(480px,calc(100vw - 396px));
+  background:var(--card);backdrop-filter:blur(14px);border:1px solid var(--acc);
+  border-radius:14px;padding:10px 14px;display:none;
+  box-shadow:0 10px 30px rgba(0,0,0,.5);
+}
+.inspector.show{display:block}
+.ins-head{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:8px}
+.ins-head b{color:var(--acc);font-size:13.5px}
+.ins-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.ins-ctrl label{display:flex;justify-content:space-between;font-size:11.5px;color:var(--mut);margin-bottom:3px}
+.ins-ctrl input[type=range]{width:100%;max-width:none}
+
+/* Dock inferior de Modo Juego (Elegir droide + Transformar en vivo con teclas 1-0) */
+.playdock{
+  position:fixed;left:50%;bottom:14px;transform:translateX(-50%);z-index:16;
+  background:var(--card);backdrop-filter:blur(14px);border:1px solid var(--line);
+  border-radius:16px;padding:8px 12px;display:none;flex-direction:column;gap:7px;
+  max-width:calc(100vw - 24px);box-shadow:0 12px 34px rgba(0,0,0,.5);
+}
+.playdock.show{display:flex}
+.pd-top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.pd-mods{display:flex;gap:5px;overflow-x:auto;padding-bottom:2px}
+.pd-mod{
+  padding:5px 10px;border-radius:10px;font-size:12px;background:var(--card2);
+  border:1px solid var(--line);color:#d5dcf2;cursor:pointer;display:flex;align-items:center;gap:5px;
+}
+.pd-mod kbd{font-size:10px;background:#0a0d16;padding:1px 5px;border-radius:4px;color:var(--mut);border:1px solid #222840}
+.pd-mod.on{background:var(--acc);color:#061014;border-color:var(--acc);font-weight:700}
+.pd-mod.on kbd{background:rgba(0,0,0,.2);color:#061014;border-color:transparent}
+.pd-hint{font-size:11.5px;color:var(--mut);text-align:center}
+.pd-hint b{color:#fff}
+
+.toast{
+  position:fixed;left:50%;top:64px;transform:translateX(-50%);z-index:30;
+  background:rgba(10,14,24,.95);border:1px solid var(--acc);border-radius:999px;
+  padding:7px 16px;font-size:13px;font-weight:600;opacity:0;transition:opacity .25s;pointer-events:none;
+  box-shadow:0 6px 20px rgba(0,0,0,.45);
+}
+.drop{
+  position:fixed;inset:0;z-index:40;border:3px dashed var(--acc);
+  background:rgba(124,240,208,.08);display:none;align-items:center;justify-content:center;
+  font-size:18px;font-weight:700;pointer-events:none;
+}
+body.ui-hidden .sidepanel,body.ui-hidden .inspector,body.ui-hidden .playdock{display:none !important}
+@media (max-width:820px){
+  .sidepanel{top:auto;left:12px;right:12px;bottom:12px;width:auto;height:48vh}
+  .inspector{width:calc(100vw - 24px);bottom:calc(48vh + 20px)}
+  .ins-grid{grid-template-columns:1fr}
+}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
 
-<div class="top">
-  <button id="modeTaller" class="on">🛠️ Taller</button>
-  <button id="modeDron">🛸 Volar con R2</button>
-  <button id="modeBuild">🏗️ Construir</button>
-  <button id="home">🏠 Volver a la estación</button>
-  <button id="viewTop">🗺️ Vista de arriba</button>
-</div>
-
-<div class="panel">
-  <h1>El Taller</h1>
-  <div class="sub">Las cápsulas de la cuadrilla. Elegí un droide, cambiale piezas y colores, y exportalo en 3D para el día que lo construyamos de verdad.</div>
-  <h2>Droide</h2>
-  <div class="btns" id="pick"></div>
-  <h2>Colores</h2>
-  <div class="row"><label>Cuerpo</label><input type="color" id="cBody"></div>
-  <div class="row"><label>Detalles</label><input type="color" id="cTrim"></div>
-  <div class="row"><label>Ojo / luces</label><input type="color" id="cEye"></div>
-  <h2>Forma</h2>
-  <div class="row"><label>Tamaño</label><input type="range" id="scale" min="0.6" max="1.6" step="0.05"></div>
-  <h2>Piezas</h2>
-  <div class="btns" id="parts"></div>
-  <h2>Guardar</h2>
-  <div class="btns">
-    <button id="save">💾 Guardar</button>
-    <button id="reset">↺ Original</button>
-    <button id="export">📦 Exportar .glb</button>
+<!-- Barra Superior Unificada -->
+<div class="topbar">
+  <div class="topbar-group">
+    <button id="btnModePlay">🎮 Modo Juego</button>
+    <button id="btnModeEdit" class="on">🏗️ Modo Edición</button>
   </div>
-  <div class="sub" style="margin-top:8px">Se guarda en este navegador. El .glb se abre en Blender o en un programa de impresión 3D.</div>
-  <div class="sub" style="margin-top:10px;font-size:11px">Modelos de taller: <a href="https://huggingface.co/datasets/nvidia/simready-assets" target="_blank" style="color:var(--acc)">NVIDIA SimReady Assets</a>, licencia <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" style="color:var(--acc)">CC BY 4.0</a>, convertidos a glTF y con texturas reducidas.</div>
+  <div class="topbar-group">
+    <button id="btnStation" title="Volver al centro del Taller">🏠 Estación</button>
+    <button id="btnTopView" title="Vista satelital desde arriba">🗺️ Aérea</button>
+    <button id="btnTogglePanel" title="Minimizar o mostrar el menú derecho">▾ Menú</button>
+    <button id="btnHideUI" title="Pantalla limpia (Tecla H)">👁️</button>
+  </div>
 </div>
 
-<div class="build" id="build">
-  <div class="cats" id="cats"></div>
-  <div class="items" id="items"></div>
-  <div class="tip">Tocá una pieza y después el pasto (o arrastrala). <b>R</b> gira · <b>[ ]</b> achica/agranda · <b>Supr</b> borra · <b>Esc</b> suelta. Arrastrá un .glb desde la Mac para sumar tus propios modelos.</div>
+<!-- Panel Lateral Colapsable (Modo Edición) -->
+<aside class="sidepanel" id="sidepanel">
+  <div class="sp-head">
+    <div class="sp-tabs">
+      <button class="on" data-tab="droids">🤖 Droides</button>
+      <button data-tab="nvidia">📦 NVIDIA <span id="nvCountBadge">(2595)</span></button>
+      <button data-tab="world">🌳 Mundo</button>
+    </div>
+  </div>
+
+  <div class="sp-body">
+    <!-- PESTAÑA 1: DROIDES Y MODS -->
+    <div class="sp-sec on" id="sec-droids">
+      <h2>Elegir Droide de la Cuadrilla</h2>
+      <div class="btns" id="pickDroid"></div>
+
+      <h2>Transformación / Mod (10 formas)</h2>
+      <div class="mod-grid" id="modGrid"></div>
+
+      <div id="transformerRow" style="display:none;margin-top:8px;background:#0c101d;padding:8px 10px;border-radius:10px;border:1px solid var(--line)">
+        <div class="row" style="margin:0">
+          <label>🏎️ Auto ↔ 🤖 Robot</label>
+          <button class="sm on" id="btnMorphAnim">⚡ Transformar</button>
+        </div>
+        <div class="row" style="margin:6px 0 0">
+          <span class="sub">Pose</span>
+          <input type="range" id="poseSlider" min="0" max="1" step="0.02" value="1">
+        </div>
+      </div>
+
+      <h2>Estilo (Skins de la Comandera)</h2>
+      <div class="btns" id="skinGrid"></div>
+
+      <h2>Colores y Escala</h2>
+      <div class="row"><label>Cuerpo</label><input type="color" id="cBody"></div>
+      <div class="row"><label>Detalles / Armadura</label><input type="color" id="cTrim"></div>
+      <div class="row"><label>Fotoreceptor / Energía</label><input type="color" id="cEye"></div>
+      <div class="row"><label>Tamaño (<span id="lblDroidScale">1.0x</span>)</label><input type="range" id="scaleDroid" min="0.6" max="1.8" step="0.05"></div>
+
+      <h2>Accesorios Extra</h2>
+      <div class="btns" id="partsGrid"></div>
+
+      <h2>Guardar o Exportar</h2>
+      <div class="btns">
+        <button id="btnSaveDroid" class="on">💾 Guardar</button>
+        <button id="btnPlayThis">🎮 Probar en Modo Juego</button>
+        <button id="btnExportGlb">📦 Exportar .glb</button>
+        <button id="btnResetDroid">↺ Original</button>
+      </div>
+    </div>
+
+    <!-- PESTAÑA 2: CATÁLOGO NVIDIA SIMREADY (2.595 GLB) -->
+    <div class="sp-sec" id="sec-nvidia">
+      <div style="display:flex;gap:6px;align-items:center">
+        <input type="search" id="nvSearch" placeholder="🔎 Buscar (mesa, robot, caja, taladro, silla…)">
+      </div>
+      <div class="cat-pills" id="nvCats"></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:6px;margin-bottom:6px">
+        <span class="sub" id="nvStats">Cargando catálogo…</span>
+        <button class="sm danger" id="btnCleanUnused" title="Borra de la Mac los .glb descargados que no estén puestos en el mundo">🧹 Limpiar no usados</button>
+      </div>
+      <div class="nv-grid" id="nvGrid"></div>
+      <div style="text-align:center;margin-top:10px">
+        <button id="btnNvMore" style="display:none;width:100%;justify-content:center">Mostrar más modelos…</button>
+      </div>
+      <div class="sub" style="margin-top:12px;font-size:11px">
+        Fuente: <a href="https://huggingface.co/datasets/codepawl/simready-glb" target="_blank" style="color:var(--acc)">codepawl/simready-glb</a> ·
+        Modelos originales de <a href="https://huggingface.co/datasets/nvidia/simready-assets" target="_blank" style="color:var(--acc)">NVIDIA SimReady</a> (<a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" style="color:var(--acc)">CC BY 4.0</a>).
+      </div>
+    </div>
+
+    <!-- PESTAÑA 3: MUNDO, BOSQUE Y JARDÍN -->
+    <div class="sp-sec" id="sec-world">
+      <div class="sub" style="margin-bottom:8px">Tocá una pieza y después hacé clic en el mapa para ponerla. También podés arrastrar cualquier objeto ya puesto para moverlo o cambiarle el tamaño.</div>
+      <div id="worldCatalog"></div>
+      <h2>Acciones del Escenario</h2>
+      <div class="btns">
+        <button id="btnLoadNvShowcase">🔧 Poner muestra NVIDIA</button>
+        <button id="btnClearWorld" class="danger">🗑️ Vaciar objetos puestos</button>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<!-- Inspector flotante para editar el asset seleccionado (Arrastrar, Tamaño, Giro, Altura) -->
+<div class="inspector" id="inspector">
+  <div class="ins-head">
+    <div>
+      <b id="insTitle">Objeto seleccionado</b>
+      <span class="sub" style="margin-left:6px">Arrastralo en el mapa para moverlo</span>
+    </div>
+    <div class="btns">
+      <button class="sm" id="btnInsDup" title="Duplicar (Tecla D)">📄 Duplicar</button>
+      <button class="sm danger" id="btnInsDel" title="Borrar (Supr)">🗑️ Borrar</button>
+      <button class="sm" id="btnInsClose" title="Soltar selección (Esc)">✕</button>
+    </div>
+  </div>
+  <div class="ins-grid">
+    <div class="ins-ctrl">
+      <label><span>Tamaño</span><b id="lblInsScale">1.0x</b></label>
+      <input type="range" id="rngInsScale" min="0.2" max="5" step="0.05" value="1">
+    </div>
+    <div class="ins-ctrl">
+      <label><span>Rotación</span><b id="lblInsRot">0°</b></label>
+      <input type="range" id="rngInsRot" min="0" max="360" step="5" value="0">
+    </div>
+    <div class="ins-ctrl">
+      <label><span>Altura (Y)</span><b id="lblInsY">0.0m</b></label>
+      <input type="range" id="rngInsY" min="0" max="4" step="0.05" value="0">
+    </div>
+  </div>
 </div>
-<div class="drop" id="drop">Soltá el modelo 3D (.glb / .gltf) para ponerlo en el mundo</div>
-<div class="hud" id="hud"></div>
+
+<!-- Dock inferior de Modo Juego (Conducir y Transformar en vivo) -->
+<div class="playdock" id="playdock">
+  <div class="pd-top">
+    <div class="btns" id="playPickDroid"></div>
+    <div class="btns">
+      <button class="sm" id="btnPlayMorph" style="display:none">⚡ Auto ↔ Robot (T)</button>
+      <button class="sm" id="btnPlayCam">🎥 Cámara: Seguir</button>
+    </div>
+  </div>
+  <div class="pd-mods" id="playModsBar"></div>
+  <div class="pd-hint" id="playHint">
+    <b>W A S D / Flechas</b> mover · <b>Espacio</b> saltar/subir · <b>Q</b> bajar · <b>Shift</b> turbo · <b>1–0</b> transformar mod en vivo · <b>Tab</b> volver a Edición
+  </div>
+</div>
+
+<div class="drop" id="drop">Soltá el archivo .glb o .gltf para sumarlo al Taller</div>
 <div class="toast" id="toast"></div>
 
 <script>
-// ───────────────────────── Escena ─────────────────────────
-const canvas = document.getElementById("c");
+const $ = (id) => document.getElementById(id);
+let toastTimer;
+function toast(msg, ms = 2500) {
+  const el = $("toast");
+  el.textContent = msg;
+  el.style.opacity = 1;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => (el.style.opacity = 0), ms);
+}
+
+// ───────────────────────── Escena Three.js ─────────────────────────
+const canvas = $("c");
 const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
 renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 renderer.outputEncoding = THREE.sRGBEncoding;
-// Luz realista: tono de cine y reflejos de ambiente (el metal de los modelos de NVIDIA los necesita)
 renderer.toneMapping = THREE.ACESFilmicToneMapping;
-renderer.toneMappingExposure = 0.72;
-renderer.physicallyCorrectLights = false;
+renderer.toneMappingExposure = 0.78;
 
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x9fc4e8);
-scene.fog = new THREE.Fog(0xb7d3ec, 60, 190);
+scene.fog = new THREE.Fog(0xb7d3ec, 65, 200);
 scene.environment = new THREE.PMREMGenerator(renderer).fromScene(new THREE.RoomEnvironment(), 0.04).texture;
-// El ambiente da reflejos al metal; en lo orgánico (pasto, hojas, corteza) se nota menos para no lavar los colores
 const ENV_SOFT = 0.35;
 
-const camera = new THREE.PerspectiveCamera(55, 1, 0.1, 500);
-camera.position.set(0, 7, 17);
+const camera = new THREE.PerspectiveCamera(52, innerWidth / innerHeight, 0.1, 500);
+camera.position.set(0, 7.5, 19);
 const controls = new THREE.OrbitControls(camera, canvas);
 controls.target.set(0, 2, 0);
-controls.maxPolarAngle = Math.PI * 0.48;
-controls.minDistance = 5; controls.maxDistance = 90;
+controls.maxPolarAngle = Math.PI * 0.485;
+controls.minDistance = 3.5;
+controls.maxDistance = 110;
 controls.enableDamping = true;
 
-scene.add(new THREE.HemisphereLight(0xdfefff, 0x4a6b3a, 0.3));
-const sun = new THREE.DirectionalLight(0xfff1d6, 1.05);
-sun.position.set(40, 60, 25);
+scene.add(new THREE.HemisphereLight(0xdfefff, 0x4a6b3a, 0.35));
+const sun = new THREE.DirectionalLight(0xfff1d6, 1.08);
+sun.position.set(42, 64, 28);
 sun.castShadow = true;
 sun.shadow.mapSize.set(2048, 2048);
-Object.assign(sun.shadow.camera, { left: -70, right: 70, top: 70, bottom: -70, near: 1, far: 200 });
+Object.assign(sun.shadow.camera, { left: -75, right: 75, top: 75, bottom: -75, near: 1, far: 210 });
 scene.add(sun);
 
-const mat = (color, o = {}) => new THREE.MeshStandardMaterial({ color, roughness: 0.6, metalness: 0.1, envMapIntensity: (o.metalness ?? 0.1) > 0.3 ? 1 : ENV_SOFT, ...o });
+const mat = (color, o = {}) => new THREE.MeshStandardMaterial({
+  color, roughness: 0.6, metalness: 0.1,
+  envMapIntensity: (o.metalness ?? 0.1) > 0.3 ? 1 : ENV_SOFT, ...o
+});
 const add = (parent, geo, material, pos = [0, 0, 0], cast = true) => {
   const m = new THREE.Mesh(geo, material);
-  m.position.set(...pos); m.castShadow = cast; m.receiveShadow = true;
-  parent.add(m); return m;
+  m.position.set(...pos);
+  m.castShadow = cast;
+  m.receiveShadow = true;
+  parent.add(m);
+  return m;
 };
 const rand = (a, b) => a + Math.random() * (b - a);
 
-// Pasto con ondulaciones suaves
+// Pasto con colinas suaves en la periferia
 const groundGeo = new THREE.PlaneGeometry(400, 400, 120, 120);
 groundGeo.rotateX(-Math.PI / 2);
 const gp = groundGeo.attributes.position;
 for (let i = 0; i < gp.count; i++) {
   const x = gp.getX(i), z = gp.getZ(i), d = Math.hypot(x, z);
-  if (d > 24) gp.setY(i, Math.sin(x * 0.05) * Math.cos(z * 0.04) * 1.2 * Math.min(1, (d - 24) / 30));
+  if (d > 26) gp.setY(i, Math.sin(x * 0.05) * Math.cos(z * 0.04) * 1.2 * Math.min(1, (d - 26) / 30));
 }
 groundGeo.computeVertexNormals();
-add(scene, groundGeo, mat(0x5f8f45, { roughness: 0.95 }), [0, 0, 0], false);
+const groundMesh = add(scene, groundGeo, mat(0x5f8f45, { roughness: 0.95 }), [0, 0, 0], false);
 
-// ───────────────────────── El taller (estilo Jarvis) ─────────────────────────
-const garage = new THREE.Group(); scene.add(garage);
-add(garage, new THREE.CylinderGeometry(15, 15.4, 0.4, 64), mat(0x1a1f2e, { metalness: 0.6, roughness: 0.35 }), [0, 0.2, 0]);
+// ───────────────────────── Estación del Taller (Estilo Jarvis) ─────────────────────────
+const garage = new THREE.Group();
+scene.add(garage);
+add(garage, new THREE.CylinderGeometry(15, 15.4, 0.4, 64), mat(0x1a1f2e, { metalness: 0.65, roughness: 0.32 }), [0, 0.2, 0]);
 const grid = new THREE.PolarGridHelper(14.5, 12, 6, 64, 0x2f6f66, 0x1f3f3c);
-grid.position.y = 0.42; garage.add(grid);
-// Columnas y techo de vidrio
+grid.position.y = 0.42;
+garage.add(grid);
+
 for (let i = 0; i < 8; i++) {
-  const a = ((i + 0.5) / 8) * Math.PI * 2; // corridas medio paso: ninguna tapa una cápsula
+  const a = ((i + 0.5) / 8) * Math.PI * 2;
   add(garage, new THREE.BoxGeometry(0.5, 7, 0.5), mat(0x2b3248, { metalness: 0.7, roughness: 0.3 }), [Math.cos(a) * 14.6, 3.9, Math.sin(a) * 14.6]);
 }
 add(garage, new THREE.TorusGeometry(14.6, 0.07, 8, 64), mat(0x7cf0d0, { emissive: 0x2a9c88, emissiveIntensity: 0.8 }), [0, 7.4, 0]).rotation.x = Math.PI / 2;
 const roof = add(garage, new THREE.CircleGeometry(14.6, 64), mat(0xbfe6ff, { transparent: true, opacity: 0.12, metalness: 0.2 }), [0, 7.4, 0], false);
 roof.rotation.x = Math.PI / 2;
-// Mesa holográfica central
+
 add(garage, new THREE.CylinderGeometry(1.6, 1.9, 1.1, 32), mat(0x232a3d, { metalness: 0.7 }), [0, 0.95, 0]);
 const holo = add(garage, new THREE.CylinderGeometry(1.5, 1.5, 0.05, 32), mat(0x7cf0d0, { emissive: 0x7cf0d0, emissiveIntensity: 1.2, transparent: true, opacity: 0.6 }), [0, 1.55, 0], false);
 const holoRing = add(garage, new THREE.TorusGeometry(1.1, 0.03, 8, 48), mat(0x7cf0d0, { emissive: 0x7cf0d0, emissiveIntensity: 1.5 }), [0, 2.4, 0], false);
-const holoLight = new THREE.PointLight(0x7cf0d0, 0.8, 12); holoLight.position.set(0, 2.5, 0); garage.add(holoLight);
+const holoLight = new THREE.PointLight(0x7cf0d0, 0.85, 13);
+holoLight.position.set(0, 2.5, 0);
+garage.add(holoLight);
 
-// Tres cápsulas en arco
 const CAPS = [
   { key: "R2", angle: -0.75 },
   { key: "BB-8", angle: 0 },
@@ -172,121 +417,102 @@ CAPS.forEach(({ key, angle }) => {
   const g = new THREE.Group();
   g.position.set(Math.sin(angle) * 9, 0.4, -Math.cos(angle) * 9);
   g.lookAt(0, 0.4, 0);
-  add(g, new THREE.CylinderGeometry(2, 2.2, 0.35, 40), mat(0x2b3248, { metalness: 0.8, roughness: 0.25 }), [0, 0.18, 0]);
-  const ring = add(g, new THREE.TorusGeometry(2.05, 0.06, 8, 48), mat(0x7cf0d0, { emissive: 0x7cf0d0, emissiveIntensity: 1 }), [0, 0.38, 0], false);
+  add(g, new THREE.CylinderGeometry(2.1, 2.3, 0.35, 40), mat(0x2b3248, { metalness: 0.8, roughness: 0.25 }), [0, 0.18, 0]);
+  const ring = add(g, new THREE.TorusGeometry(2.15, 0.06, 8, 48), mat(0x7cf0d0, { emissive: 0x7cf0d0, emissiveIntensity: 1 }), [0, 0.38, 0], false);
   ring.rotation.x = Math.PI / 2;
-  add(g, new THREE.CylinderGeometry(2, 2, 4.6, 40, 1, true), mat(0xbfe6ff, { transparent: true, opacity: 0.14, side: THREE.DoubleSide, metalness: 0.3 }), [0, 2.65, 0], false);
-  add(g, new THREE.CylinderGeometry(2.1, 2.1, 0.25, 40), mat(0x2b3248, { metalness: 0.8 }), [0, 5, 0]);
-  const spot = new THREE.PointLight(0xdff6ff, 0.6, 7); spot.position.set(0, 4.6, 0); g.add(spot);
+  add(g, new THREE.CylinderGeometry(2.1, 2.1, 4.8, 40, 1, true), mat(0xbfe6ff, { transparent: true, opacity: 0.13, side: THREE.DoubleSide, metalness: 0.3 }), [0, 2.75, 0], false);
+  add(g, new THREE.CylinderGeometry(2.2, 2.2, 0.25, 40), mat(0x2b3248, { metalness: 0.8 }), [0, 5.2, 0]);
+  const spot = new THREE.PointLight(0xdff6ff, 0.65, 8);
+  spot.position.set(0, 4.8, 0);
+  g.add(spot);
   garage.add(g);
   capsules[key] = { group: g, ring };
 });
 
-// ───────────────────────── Los droides (editables) ─────────────────────────
+// ───────────────────────── Droides, Skins y 10 Mods Transformables ─────────────────────────
 const DEFAULTS = {
-  "R2": { body: "#e9eef5", trim: "#2f6fd6", eye: "#ff3355", scale: 1, parts: { antena: true, helices: false, brazo: false } },
-  "BB-8": { body: "#f2efe8", trim: "#f08a24", eye: "#1a1a1a", scale: 1, parts: { antena: true, helices: false, brazo: false } },
-  "C-3PO": { body: "#e3b84c", trim: "#b8862b", eye: "#ffe9a6", scale: 1, parts: { antena: false, helices: false, brazo: true } },
+  "R2":    { mod: "droide", skin: "clasico", body: "#f2f5fa", trim: "#2563eb", eye: "#38bdf8", scale: 1, pose: 1, parts: { antena: true, helices: false, brazo: false } },
+  "BB-8":  { mod: "droide", skin: "clasico", body: "#f4f1ea", trim: "#f08a24", eye: "#ff2942", scale: 1, pose: 1, parts: { antena: true, helices: false, brazo: false } },
+  "C-3PO": { mod: "droide", skin: "dorado",  body: "#ecc354", trim: "#b58324", eye: "#fef08a", scale: 1, pose: 1, parts: { antena: false, helices: false, brazo: false } },
 };
-const PART_LABELS = { antena: "📡 Antena", helices: "🌀 Hélices de dron", brazo: "🦾 Brazo extra" };
-const saved = JSON.parse(localStorage.getItem("taller.v1") || "{}");
+const PART_LABELS = { antena: "📡 Antena", helices: "🌀 Hélices extra", brazo: "🦾 Brazo utilitario" };
+const savedDroids = JSON.parse(localStorage.getItem("taller.v2") || localStorage.getItem("taller.v1") || "{}");
 const designs = {};
-for (const k of Object.keys(DEFAULTS)) designs[k] = { ...DEFAULTS[k], ...(saved[k] || {}), parts: { ...DEFAULTS[k].parts, ...((saved[k] || {}).parts || {}) } };
-
-function buildR2(d) {
-  const g = new THREE.Group(), body = mat(d.body, { metalness: 0.5, roughness: 0.3 }), trim = mat(d.trim, { metalness: 0.4, roughness: 0.35 });
-  const eye = mat(d.eye, { emissive: d.eye, emissiveIntensity: 1.2 });
-  add(g, new THREE.CylinderGeometry(0.62, 0.62, 1.3, 32), body, [0, 1.25, 0]);
-  add(g, new THREE.SphereGeometry(0.62, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), mat(d.body, { metalness: 0.85, roughness: 0.2 }), [0, 1.9, 0]);
-  for (let i = 0; i < 4; i++) add(g, new THREE.BoxGeometry(0.22, 0.5, 0.05), trim, [Math.sin(i * 1.57) * 0.6, 1.3, Math.cos(i * 1.57) * 0.6]).rotation.y = i * 1.57;
-  add(g, new THREE.TorusGeometry(0.62, 0.05, 8, 32), trim, [0, 1.92, 0]).rotation.x = Math.PI / 2;
-  add(g, new THREE.SphereGeometry(0.13, 16, 16), eye, [0, 2.2, 0.5]);
-  [-1, 1].forEach((s) => {
-    add(g, new THREE.BoxGeometry(0.2, 1.3, 0.35), body, [s * 0.75, 1.05, 0]);
-    add(g, new THREE.BoxGeometry(0.32, 0.18, 0.5), trim, [s * 0.75, 0.38, 0]);
-  });
-  add(g, new THREE.BoxGeometry(0.3, 0.3, 0.3), trim, [0, 0.45, 0]);
-  return g;
-}
-function buildBB8(d) {
-  const g = new THREE.Group(), body = mat(d.body, { roughness: 0.35 }), trim = mat(d.trim, { roughness: 0.4 });
-  add(g, new THREE.SphereGeometry(0.95, 40, 24), body, [0, 0.95, 0]);
-  [[0, 0], [Math.PI / 2, 0], [0, Math.PI / 2]].forEach(([rx, ry]) => {
-    const r = add(g, new THREE.TorusGeometry(0.62, 0.09, 8, 40), trim, [0, 0.95, 0]); r.rotation.set(rx, ry, 0);
-  });
-  add(g, new THREE.SphereGeometry(0.5, 32, 16, 0, Math.PI * 2, 0, Math.PI / 2), body, [0, 1.95, 0]);
-  add(g, new THREE.CylinderGeometry(0.5, 0.5, 0.08, 32), trim, [0, 1.95, 0]);
-  add(g, new THREE.SphereGeometry(0.13, 16, 16), mat(d.eye, { metalness: 0.9, roughness: 0.1 }), [0, 2.2, 0.38]);
-  return g;
-}
-function buildC3PO(d) {
-  const g = new THREE.Group(), gold = mat(d.body, { metalness: 0.45, roughness: 0.3, emissive: d.body, emissiveIntensity: 0.08 }), trim = mat(d.trim, { metalness: 0.4, roughness: 0.4 });
-  const eye = mat(d.eye, { emissive: d.eye, emissiveIntensity: 1.5 });
-  add(g, new THREE.BoxGeometry(0.9, 1.05, 0.5), gold, [0, 2.15, 0]);
-  add(g, new THREE.BoxGeometry(0.7, 0.45, 0.45), trim, [0, 1.45, 0]);
-  add(g, new THREE.SphereGeometry(0.34, 24, 16), gold, [0, 2.95, 0]);
-  [-1, 1].forEach((s) => {
-    add(g, new THREE.SphereGeometry(0.07, 12, 12), eye, [s * 0.12, 2.98, 0.29]);
-    add(g, new THREE.CylinderGeometry(0.11, 0.1, 0.95, 12), gold, [s * 0.6, 2.05, 0]);
-    add(g, new THREE.CylinderGeometry(0.14, 0.12, 1.2, 12), gold, [s * 0.22, 0.65, 0]);
-  });
-  return g;
-}
-const BUILDERS = { "R2": buildR2, "BB-8": buildBB8, "C-3PO": buildC3PO };
-
-function addParts(g, d, key) {
-  const trim = mat(d.trim, { metalness: 0.5 }), eye = mat(d.eye, { emissive: d.eye, emissiveIntensity: 1 });
-  const top = key === "C-3PO" ? 3.3 : key === "BB-8" ? 2.45 : 2.5;
-  if (d.parts.antena) {
-    add(g, new THREE.CylinderGeometry(0.02, 0.02, 0.6, 6), trim, [0.2, top + 0.2, 0]);
-    add(g, new THREE.SphereGeometry(0.06, 10, 10), eye, [0.2, top + 0.52, 0]);
-  }
-  if (d.parts.helices) {
-    g.userData.rotors = [];
-    [[1, 1], [1, -1], [-1, 1], [-1, -1]].forEach(([x, z]) => {
-      add(g, new THREE.CylinderGeometry(0.03, 0.03, 0.9, 6), trim, [x * 0.55, top - 0.15, z * 0.55]).rotation.z = x * 0.6;
-      const rotor = add(g, new THREE.BoxGeometry(0.9, 0.02, 0.08), mat(0x222831, { metalness: 0.6 }), [x * 0.85, top + 0.15, z * 0.85]);
-      g.userData.rotors.push(rotor);
-    });
-  }
-  if (d.parts.brazo) {
-    const arm = add(g, new THREE.CylinderGeometry(0.06, 0.06, 0.8, 8), trim, [0.75, 1.7, 0.25]); arm.rotation.z = -0.9;
-    add(g, new THREE.BoxGeometry(0.16, 0.16, 0.16), trim, [1.1, 1.95, 0.25]);
-  }
+for (const k of Object.keys(DEFAULTS)) {
+  designs[k] = {
+    ...DEFAULTS[k],
+    ...(savedDroids[k] || {}),
+    parts: { ...DEFAULTS[k].parts, ...((savedDroids[k] || {}).parts || {}) },
+  };
 }
 
 const droids = {};
-function buildDroid(key) {
-  const d = designs[key], g = BUILDERS[key](d);
-  addParts(g, d, key);
-  g.scale.setScalar(d.scale);
-  g.name = key;
-  return g;
+const bursts = [];
+
+function spawnTransformBurst(worldPos, colorHex = 0x7cf0d0) {
+  const g = new THREE.Group();
+  g.position.copy(worldPos);
+  g.position.y += 1.3;
+  const ring = new THREE.Mesh(
+    new THREE.TorusGeometry(0.4, 0.05, 10, 32),
+    new THREE.MeshBasicMaterial({ color: colorHex, transparent: true, opacity: 0.95 })
+  );
+  ring.rotation.x = Math.PI / 2;
+  g.add(ring);
+  const sparks = [];
+  for (let i = 0; i < 14; i++) {
+    const a = (i / 14) * Math.PI * 2;
+    const sp = new THREE.Mesh(
+      new THREE.SphereGeometry(0.08, 8, 8),
+      new THREE.MeshBasicMaterial({ color: i % 2 ? 0xfef08a : 0x7cf0d0, transparent: true, opacity: 1 })
+    );
+    sp.userData.vel = new THREE.Vector3(Math.cos(a) * rand(3, 6), rand(-1, 4), Math.sin(a) * rand(3, 6));
+    g.add(sp);
+    sparks.push(sp);
+  }
+  scene.add(g);
+  bursts.push({ group: g, ring, sparks, age: 0 });
 }
-function placeDroid(key) {
+
+function placeDroid(key, withBurst = false) {
   const old = droids[key];
   if (old) old.parent.remove(old);
-  const g = buildDroid(key);
-  capsules[key].group.add(g); g.position.set(0, 0.35, 0);
+  const g = window.createDroid3D(key, designs[key]);
+  capsules[key].group.add(g);
+  g.position.set(0, 0.35, 0);
   droids[key] = g;
+  if (withBurst) {
+    const wp = new THREE.Vector3();
+    capsules[key].group.getWorldPosition(wp);
+    spawnTransformBurst(wp);
+  }
+  if (appMode === "play" && playState.droidKey === key && playState.avatar) {
+    rebuildPlayAvatar(withBurst);
+  }
 }
-Object.keys(DEFAULTS).forEach(placeDroid);
+Object.keys(DEFAULTS).forEach((k) => placeDroid(k, false));
 
-// ───────────────────────── El bosque ─────────────────────────
-const trunkMat = mat(0x5b3b24, { roughness: 0.9 }), oldBark = mat(0x4a3322, { roughness: 1 });
+// ───────────────────────── Bosque Procedural y Jardín Japonés ─────────────────────────
 const blossoms = [];
 function canopy(g, color, spots, y, spread, size) {
   const m = mat(color, { roughness: 0.85 });
   for (let i = 0; i < spots; i++) add(g, new THREE.IcosahedronGeometry(size * rand(0.7, 1.1), 1), m, [rand(-spread, spread), y + rand(-spread * 0.5, spread * 0.6), rand(-spread, spread)]);
 }
-// Árboles procedurales: tronco que se abre en ramas, racimos de hojas con colores variados.
-// Se arman unas variantes por especie y se reusan (geometría compartida) para que el bosque sea liviano.
 const BARK = { sakura: 0x4a3530, ginkgo: 0x6b5a48, roble: 0x5b4632, arce: 0x5a3d2e, milenario: 0x463628 };
-const LEAF = { sakura: [0xf7c5d8, 0xf2a7c3, 0xfbe0ea, 0xffffff], ginkgo: [0xf4c430, 0xe8b020, 0xf8d860], roble: [0x3f7a35, 0x4f8a3c, 0x2f6a2e, 0x5a9440],
-               arce: [0xd2452a, 0xe8752a, 0xb8322a, 0xf09030], milenario: [0x2f6a2e, 0x3d7a34, 0x285a28, 0x4a8040] };
-// profundidad, largo del tronco, radio, apertura de ramas, ramas por nivel, tamaño de racimo, hojas por racimo
-const SHAPE = { sakura: [3, 2.4, 0.26, 0.85, 3, 0.75, 4], ginkgo: [3, 4.0, 0.28, 0.32, 3, 0.62, 4], roble: [3, 2.8, 0.46, 0.75, 3, 0.95, 4],
-                arce: [3, 2.6, 0.3, 0.65, 3, 0.8, 4], milenario: [4, 6.0, 1.5, 0.7, 3, 1.5, 4] };
+const LEAF = {
+  sakura: [0xf7c5d8, 0xf2a7c3, 0xfbe0ea, 0xffffff],
+  ginkgo: [0xf4c430, 0xe8b020, 0xf8d860],
+  roble: [0x3f7a35, 0x4f8a3c, 0x2f6a2e, 0x5a9440],
+  arce: [0xd2452a, 0xe8752a, 0xb8322a, 0xf09030],
+  milenario: [0x2f6a2e, 0x3d7a34, 0x285a28, 0x4a8040],
+};
+const SHAPE = {
+  sakura: [3, 2.4, 0.26, 0.85, 3, 0.75, 4],
+  ginkgo: [3, 4.0, 0.28, 0.32, 3, 0.62, 4],
+  roble: [3, 2.8, 0.46, 0.75, 3, 0.95, 4],
+  arce: [3, 2.6, 0.3, 0.65, 3, 0.8, 4],
+  milenario: [4, 6.0, 1.5, 0.7, 3, 1.5, 4],
+};
 const leafMat = new THREE.MeshStandardMaterial({ vertexColors: true, roughness: 0.75, envMapIntensity: ENV_SOFT });
 const barkMats = {};
 const V3 = THREE.Vector3, UP = new V3(0, 1, 0);
@@ -303,7 +529,7 @@ function blobGeo(c, size, hex) {
   for (let i = 0; i < pos.count; i++) {
     const k = 1 + rand(-0.18, 0.18);
     pos.setXYZ(i, pos.getX(i) * k, pos.getY(i) * k * 0.85, pos.getZ(i) * k);
-    const shade = 0.82 + (pos.getY(i) / size) * 0.15 + rand(-0.05, 0.05); // más claro arriba
+    const shade = 0.82 + (pos.getY(i) / size) * 0.15 + rand(-0.05, 0.05);
     col[i * 3] = base.r * shade; col[i * 3 + 1] = base.g * shade; col[i * 3 + 2] = base.b * shade;
   }
   geo.setAttribute("color", new THREE.BufferAttribute(col, 3));
@@ -313,7 +539,6 @@ function blobGeo(c, size, hex) {
 function growTree(kind) {
   const [depth, len, rad, spread, nb, leaf, perTip] = SHAPE[kind], bark = [], leaves = [], colors = LEAF[kind];
   const grow = (from, dir, length, radius, level) => {
-    // un poco de curva natural: el tramo se dobla apenas a mitad de camino
     const mid = from.clone().addScaledVector(dir, length * 0.5).add(new V3(rand(-0.12, 0.12), 0, rand(-0.12, 0.12)).multiplyScalar(length));
     const end = mid.clone().addScaledVector(dir, length * 0.5);
     bark.push(branchGeo(from, mid, radius, radius * 0.8), branchGeo(mid, end, radius * 0.8, radius * 0.62));
@@ -327,10 +552,10 @@ function growTree(kind) {
       const nd = new V3(Math.sin(tilt) * Math.cos(a), Math.cos(tilt), Math.sin(tilt) * Math.sin(a)).lerp(dir, 0.3).normalize();
       grow(end, nd, length * rand(0.58, 0.74), radius * 0.6, level + 1);
     }
-    if (level > 0 && Math.random() < 0.5) leaves.push(blobGeo(end, leaf * 0.7, colors[0])); // follaje también en ramas internas
+    if (level > 0 && Math.random() < 0.5) leaves.push(blobGeo(end, leaf * 0.7, colors[0]));
   };
   grow(new V3(0, 0, 0), new V3(rand(-0.06, 0.06), 1, rand(-0.06, 0.06)).normalize(), len, rad, 0);
-  if (kind === "milenario") { // raíces que asoman
+  if (kind === "milenario") {
     for (let i = 0; i < 7; i++) { const a = (i / 7) * 6.28 + rand(-0.3, 0.3); bark.push(branchGeo(new V3(0, 1.4, 0), new V3(Math.cos(a) * 3.2, -0.3, Math.sin(a) * 3.2), rad * 0.55, 0.12)); }
   }
   const g = new THREE.Group();
@@ -360,16 +585,14 @@ function plant(kind, x, z, s = 1) {
   g.position.set(x, 0, z); g.rotation.y = rand(0, 6.28); g.scale.setScalar(s * rand(0.85, 1.15));
   scene.add(g); return g;
 }
-// Bosque en anillos alrededor del taller, con claros y senderos
 const kinds = ["sakura", "ginkgo", "roble", "arce", "roble", "sakura", "arce", "ginkgo"];
-for (let i = 0; i < 230; i++) {
-  const a = rand(0, Math.PI * 2), r = rand(26, 140);
-  if (Math.abs(Math.sin(a * 2)) < 0.12) continue; // senderos en cruz
+for (let i = 0; i < 220; i++) {
+  const a = rand(0, Math.PI * 2), r = rand(28, 140);
+  if (Math.abs(Math.sin(a * 2)) < 0.12) continue;
   const tx = Math.cos(a) * r, tz = Math.sin(a) * r;
-  if (Math.abs(tx) < 18 && tz > 12 && tz < 46) continue; // patio libre frente al taller para construir
-  plant(kinds[i % kinds.length], Math.cos(a) * r, Math.sin(a) * r, r < 45 ? 0.9 : 1.15);
+  if (Math.abs(tx) < 22 && tz > 10 && tz < 52) continue; // Gran explanada libre frente al taller
+  plant(kinds[i % kinds.length], tx, tz, r < 45 ? 0.9 : 1.15);
 }
-// Jardín japonés: árbol milenario junto al estanque, camino de piedras y faroles
 const pond = add(scene, new THREE.CircleGeometry(9, 48), mat(0x3d86b8, { metalness: 0.4, roughness: 0.15, transparent: true, opacity: 0.88 }), [34, 0.06, -26], false);
 pond.rotation.x = -Math.PI / 2;
 plant("milenario", 48, -36, 1);
@@ -384,103 +607,159 @@ for (let i = 0; i < 18; i++) {
   const l = new THREE.PointLight(0xffd59a, 0.5, 8); l.position.set(x, 1.2, z); scene.add(l);
 });
 
-// Pétalos de sakura cayendo
-const petalCount = 500, petalGeo = new THREE.BufferGeometry(), petalPos = new Float32Array(petalCount * 3);
+const petalCount = 450, petalGeo = new THREE.BufferGeometry(), petalPos = new Float32Array(petalCount * 3);
 for (let i = 0; i < petalCount; i++) { petalPos[i * 3] = rand(-80, 80); petalPos[i * 3 + 1] = rand(0, 14); petalPos[i * 3 + 2] = rand(-80, 80); }
 petalGeo.setAttribute("position", new THREE.BufferAttribute(petalPos, 3));
 const petals = new THREE.Points(petalGeo, new THREE.PointsMaterial({ color: 0xffc4d8, size: 0.18 }));
 scene.add(petals);
 
-// ───────────────────────── Dron R2 ─────────────────────────
-let mode = "taller", drone = null, yaw = 0;
-const keys = {};
-addEventListener("keydown", (e) => { keys[e.code] = true; if (mode === "dron" && ["Space", "ArrowUp", "ArrowDown"].includes(e.code)) e.preventDefault(); });
-addEventListener("keyup", (e) => { keys[e.code] = false; });
+// ───────────────────────── Panel de Droides y Mods ─────────────────────────
+let currentDroid = "R2";
+let morphAnimId = null;
 
-function startDrone() {
-  if (mode === "construir") leaveBuild();
-  mode = "dron";
-  const d = { ...designs["R2"], parts: { ...designs["R2"].parts, helices: true } };
-  drone = BUILDERS["R2"](d); addParts(drone, d, "R2"); drone.scale.setScalar(0.8 * d.scale);
-  const p = new THREE.Vector3(); capsules["R2"].group.getWorldPosition(p);
-  drone.position.set(p.x, 3, p.z); yaw = Math.atan2(-p.x, -p.z) + Math.PI;
-  scene.add(drone); droids["R2"].visible = false;
-  controls.enabled = false;
-  setMode(); toast("🛸 R2 en modo dron. ¡A recorrer el bosque!");
-}
-function home() {
-  if (mode === "construir") leaveBuild();
-  if (drone) { scene.remove(drone); drone = null; }
-  droids["R2"].visible = true;
-  mode = "taller"; controls.enabled = true;
-  camera.position.set(0, 9, 22); controls.target.set(0, 2, 0);
-  setMode(); toast("🏠 De vuelta en la estación");
-}
-function updateDrone(dt) {
-  const turn = (keys.ArrowLeft || keys.KeyA ? 1 : 0) - (keys.ArrowRight || keys.KeyD ? 1 : 0);
-  const fwd = (keys.ArrowUp || keys.KeyW ? 1 : 0) - (keys.ArrowDown || keys.KeyS ? 1 : 0);
-  const up = (keys.Space || keys.KeyE ? 1 : 0) - (keys.ShiftLeft || keys.KeyQ ? 1 : 0);
-  const fast = keys.ShiftRight ? 2.2 : 1;
-  yaw += turn * dt * 1.8;
-  drone.position.x += Math.sin(yaw) * fwd * dt * 14 * fast;
-  drone.position.z += Math.cos(yaw) * fwd * dt * 14 * fast;
-  drone.position.y = Math.min(45, Math.max(1.2, drone.position.y + up * dt * 8));
-  drone.rotation.set(fwd * 0.18, yaw, -turn * 0.15);
-  (drone.userData.rotors || []).forEach((r, i) => (r.rotation.y += dt * (30 + i)));
-  const behind = new THREE.Vector3(-Math.sin(yaw) * 9, 4, -Math.cos(yaw) * 9).add(drone.position);
-  camera.position.lerp(behind, 0.08);
-  camera.lookAt(drone.position.x, drone.position.y + 1, drone.position.z);
-}
-
-// ───────────────────────── Panel del editor ─────────────────────────
-let current = "R2";
-const $ = (id) => document.getElementById(id);
-function renderPanel() {
-  $("pick").innerHTML = Object.keys(DEFAULTS).map((k) => `<button data-k="${k}" class="${k === current ? "on" : ""}">${k}</button>`).join("");
-  const d = designs[current];
-  $("cBody").value = d.body; $("cTrim").value = d.trim; $("cEye").value = d.eye; $("scale").value = d.scale;
-  $("parts").innerHTML = Object.entries(PART_LABELS).map(([p, l]) => `<button data-p="${p}" class="${d.parts[p] ? "on" : ""}">${l}</button>`).join("");
-}
 function focusCapsule(key) {
-  const p = new THREE.Vector3(); capsules[key].group.getWorldPosition(p);
+  const p = new THREE.Vector3();
+  capsules[key].group.getWorldPosition(p);
   controls.target.set(p.x, 2, p.z);
-  camera.position.set(p.x * 0.45, 4.5, p.z * 0.45);
+  camera.position.set(p.x * 0.45, 4.4, p.z * 0.45);
 }
-$("pick").addEventListener("click", (e) => { const k = e.target.dataset.k; if (!k) return; current = k; renderPanel(); if (mode === "taller") focusCapsule(k); });
-$("parts").addEventListener("click", (e) => { const p = e.target.dataset.p; if (!p) return; designs[current].parts[p] = !designs[current].parts[p]; placeDroid(current); renderPanel(); });
-[["cBody", "body"], ["cTrim", "trim"], ["cEye", "eye"]].forEach(([id, f]) => $(id).addEventListener("input", (e) => { designs[current][f] = e.target.value; placeDroid(current); }));
-$("scale").addEventListener("input", (e) => { designs[current].scale = Number(e.target.value); placeDroid(current); });
-$("save").onclick = () => { localStorage.setItem("taller.v1", JSON.stringify(designs)); toast("💾 Guardado"); };
-$("reset").onclick = () => { designs[current] = JSON.parse(JSON.stringify(DEFAULTS[current])); placeDroid(current); renderPanel(); toast(`↺ ${current} volvió al original`); };
-$("export").onclick = () => {
-  new THREE.GLTFExporter().parse(buildDroid(current), (glb) => {
+
+function renderDroidPanel() {
+  $("pickDroid").innerHTML = Object.keys(DEFAULTS).map((k) =>
+    `<button data-k="${k}" class="${k === currentDroid ? "on" : ""}">${k}</button>`
+  ).join("");
+  const d = designs[currentDroid];
+
+  $("modGrid").innerHTML = window.ROBOT_MODS.map((m) => `
+    <div class="mod-card ${d.mod === m.id ? "on" : ""}" data-mod="${m.id}">
+      <span class="ic">${m.icon}</span>
+      <div><b>${m.title}</b><span>${m.sub}</span></div>
+    </div>
+  `).join("");
+
+  $("transformerRow").style.display = d.mod === "transformer" ? "block" : "none";
+  $("poseSlider").value = d.pose ?? 1;
+
+  $("skinGrid").innerHTML = Object.entries(window.DROID_SKINS).map(([id, sk]) =>
+    `<button class="sm ${d.skin === id ? "on" : ""}" data-skin="${id}">${sk.title}</button>`
+  ).join("");
+
+  $("cBody").value = d.body;
+  $("cTrim").value = d.trim;
+  $("cEye").value = d.eye;
+  $("scaleDroid").value = d.scale;
+  $("lblDroidScale").textContent = Number(d.scale).toFixed(2) + "x";
+
+  $("partsGrid").innerHTML = Object.entries(PART_LABELS).map(([p, l]) =>
+    `<button class="sm ${d.parts[p] ? "on" : ""}" data-part="${p}">${l}</button>`
+  ).join("");
+}
+
+$("pickDroid").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-k]");
+  if (!b) return;
+  currentDroid = b.dataset.k;
+  renderDroidPanel();
+  if (appMode === "edit") focusCapsule(currentDroid);
+});
+
+$("modGrid").addEventListener("click", (e) => {
+  const card = e.target.closest(".mod-card");
+  if (!card) return;
+  designs[currentDroid].mod = card.dataset.mod;
+  placeDroid(currentDroid, true);
+  renderDroidPanel();
+  const m = window.ROBOT_MODS.find((x) => x.id === card.dataset.mod);
+  if (m) toast(`${m.icon} ${currentDroid} transformado en ${m.title}`);
+});
+
+function animateTransformerMorph(targetDroid) {
+  const d = designs[targetDroid];
+  const start = d.pose ?? 1;
+  const end = start > 0.5 ? 0 : 1;
+  const t0 = performance.now();
+  cancelAnimationFrame(morphAnimId);
+  function step(now) {
+    const k = Math.min(1, (now - t0) / 650);
+    const ease = k * k * (3 - 2 * k);
+    d.pose = start + (end - start) * ease;
+    $("poseSlider").value = d.pose;
+    placeDroid(targetDroid, false);
+    if (k < 1) morphAnimId = requestAnimationFrame(step);
+    else toast(end === 0 ? "🏎️ Modo Deportivo Cyber" : "🤖 Modo Robot Transformer");
+  }
+  morphAnimId = requestAnimationFrame(step);
+}
+
+$("btnMorphAnim").onclick = () => animateTransformerMorph(currentDroid);
+$("poseSlider").addEventListener("input", (e) => {
+  designs[currentDroid].pose = Number(e.target.value);
+  placeDroid(currentDroid, false);
+});
+
+$("skinGrid").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-skin]");
+  if (!b) return;
+  const skId = b.dataset.skin;
+  const sk = window.DROID_SKINS[skId];
+  if (!sk) return;
+  Object.assign(designs[currentDroid], { skin: skId, body: sk.body, trim: sk.trim, eye: sk.eye });
+  placeDroid(currentDroid, true);
+  renderDroidPanel();
+});
+
+[["cBody", "body"], ["cTrim", "trim"], ["cEye", "eye"]].forEach(([id, field]) => {
+  $(id).addEventListener("input", (e) => {
+    designs[currentDroid][field] = e.target.value;
+    placeDroid(currentDroid, false);
+  });
+});
+
+$("scaleDroid").addEventListener("input", (e) => {
+  designs[currentDroid].scale = Number(e.target.value);
+  $("lblDroidScale").textContent = Number(e.target.value).toFixed(2) + "x";
+  placeDroid(currentDroid, false);
+});
+
+$("partsGrid").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-part]");
+  if (!b) return;
+  const p = b.dataset.part;
+  designs[currentDroid].parts[p] = !designs[currentDroid].parts[p];
+  placeDroid(currentDroid, false);
+  renderDroidPanel();
+});
+
+function saveDroids() {
+  localStorage.setItem("taller.v2", JSON.stringify(designs));
+}
+$("btnSaveDroid").onclick = () => { saveDroids(); toast("💾 Diseño de la cuadrilla guardado"); };
+$("btnResetDroid").onclick = () => {
+  designs[currentDroid] = JSON.parse(JSON.stringify(DEFAULTS[currentDroid]));
+  placeDroid(currentDroid, true);
+  renderDroidPanel();
+  saveDroids();
+  toast(`↺ ${currentDroid} volvió al diseño original`);
+};
+$("btnExportGlb").onclick = () => {
+  new THREE.GLTFExporter().parse(window.createDroid3D(currentDroid, designs[currentDroid]), (glb) => {
     const a = document.createElement("a");
     a.href = URL.createObjectURL(new Blob([glb], { type: "model/gltf-binary" }));
-    a.download = `${current.toLowerCase()}-taller.glb`; a.click();
-    toast(`📦 ${current} exportado`);
+    a.download = `${currentDroid.toLowerCase()}-${designs[currentDroid].mod}.glb`;
+    a.click();
+    toast(`📦 ${currentDroid} (${designs[currentDroid].mod}) exportado a .glb`);
   }, { binary: true });
 };
-$("modeTaller").onclick = home;
-$("modeDron").onclick = () => (mode === "dron" ? null : startDrone());
-$("home").onclick = home;
-function setMode() {
-  $("modeTaller").classList.toggle("on", mode === "taller");
-  $("modeDron").classList.toggle("on", mode === "dron");
-  $("modeBuild").classList.toggle("on", mode === "construir");
-  $("hud").style.display = mode === "construir" ? "none" : "";
-  $("hud").innerHTML = mode === "dron"
-    ? "<b>W / ↑</b> avanzar · <b>S / ↓</b> atrás · <b>A D / ← →</b> girar · <b>Espacio / E</b> subir · <b>Q</b> bajar · <b>Shift der.</b> turbo"
-    : "Arrastrá para girar la vista · rueda para acercar · elegí un droide en el panel para ir a su cápsula";
-}
-let toastT;
-function toast(t) { const el = $("toast"); el.textContent = t; el.style.opacity = 1; clearTimeout(toastT); toastT = setTimeout(() => (el.style.opacity = 0), 2200); }
+$("btnPlayThis").onclick = () => {
+  playState.droidKey = currentDroid;
+  setAppMode("play");
+};
 
-
-// ───────────────────────── Construir (estilo Tycoon) ─────────────────────────
+// ───────────────────────── Objetos del Mundo y Catálogo NVIDIA (2.595) ─────────────────────────
 const EXTRAS = {
   roca(g) { add(g, new THREE.DodecahedronGeometry(0.9, 0), mat(0x8a8f96, { roughness: 1 }), [0, 0.5, 0]).scale.set(1.3, 0.8, 1); },
   arbusto(g) { canopy(g, 0x4c8a3c, 4, 0.7, 0.6, 0.7); },
-  flores(g) { [0xff6fa3, 0xffd34d, 0xb48cff, 0xffffff].forEach((c, i) => { for (let k = 0; k < 4; k++) { add(g, new THREE.SphereGeometry(0.13, 8, 6), mat(c), [rand(-0.8, 0.8), 0.35, rand(-0.8, 0.8)]); } add(g, new THREE.CylinderGeometry(0.02, 0.02, 0.3, 4), mat(0x3f7a35), [rand(-0.6, 0.6), 0.15, rand(-0.6, 0.6)]); }); },
+  flores(g) { [0xff6fa3, 0xffd34d, 0xb48cff, 0xffffff].forEach((c) => { for (let k = 0; k < 4; k++) add(g, new THREE.SphereGeometry(0.13, 8, 6), mat(c), [rand(-0.8, 0.8), 0.35, rand(-0.8, 0.8)]); add(g, new THREE.CylinderGeometry(0.02, 0.02, 0.3, 4), mat(0x3f7a35), [rand(-0.6, 0.6), 0.15, rand(-0.6, 0.6)]); }); },
   bambu(g) { for (let i = 0; i < 7; i++) { const h = rand(4, 7); add(g, new THREE.CylinderGeometry(0.09, 0.1, h, 6), mat(0x7fae4a), [rand(-0.7, 0.7), h / 2, rand(-0.7, 0.7)]); } },
   farol(g) { add(g, new THREE.BoxGeometry(0.5, 1.4, 0.5), mat(0x77736b), [0, 0.7, 0]); add(g, new THREE.BoxGeometry(0.9, 0.15, 0.9), mat(0x5f5b54), [0, 1.5, 0]); add(g, new THREE.BoxGeometry(0.3, 0.3, 0.3), mat(0xffd59a, { emissive: 0xffb860, emissiveIntensity: 1.2 }), [0, 1.2, 0]); },
   banco(g) { add(g, new THREE.BoxGeometry(2, 0.12, 0.6), mat(0x9b6b43), [0, 0.55, 0]); [-0.8, 0.8].forEach((x) => add(g, new THREE.BoxGeometry(0.12, 0.55, 0.5), mat(0x3a3a40), [x, 0.27, 0])); },
@@ -493,182 +772,862 @@ const EXTRAS = {
   solar(g) { add(g, new THREE.CylinderGeometry(0.08, 0.08, 1.2, 6), mat(0x55606f), [0, 0.6, 0]); const pnl = add(g, new THREE.BoxGeometry(2.2, 0.06, 1.4), mat(0x1d3d78, { metalness: 0.8, roughness: 0.2 }), [0, 1.25, 0]); pnl.rotation.x = -0.5; },
   capsula(g) { add(g, new THREE.CylinderGeometry(1.4, 1.5, 0.3, 32), mat(0x2b3248, { metalness: 0.8 }), [0, 0.15, 0]); add(g, new THREE.CylinderGeometry(1.4, 1.4, 3.2, 32, 1, true), mat(0xbfe6ff, { transparent: true, opacity: 0.15, side: THREE.DoubleSide }), [0, 1.9, 0], false); add(g, new THREE.TorusGeometry(1.45, 0.05, 8, 40), mat(0x7cf0d0, { emissive: 0x7cf0d0 }), [0, 0.32, 0], false).rotation.x = Math.PI / 2; },
 };
-const CATALOG = [
-  ["🌳 Naturaleza", [["sakura", "🌸", "Sakura"], ["ginkgo", "🍂", "Ginkgo"], ["roble", "🌳", "Roble"], ["arce", "🍁", "Arce"], ["milenario", "🌲", "Milenario"], ["bambu", "🎋", "Bambú"], ["arbusto", "🌿", "Arbusto"], ["flores", "🌼", "Flores"], ["roca", "🪨", "Roca"]]],
-  ["⛩️ Jardín", [["piedra", "⚪", "Camino"], ["estanque", "💧", "Estanque"], ["puente", "🌉", "Puente"], ["torii", "⛩️", "Torii"], ["farol", "🏮", "Farol"], ["banco", "🪑", "Banco"]]],
-  ["🛠️ Taller", [["capsula", "🧪", "Cápsula"], ["caja", "📦", "Caja"], ["antena", "📡", "Antena"], ["solar", "☀️", "Panel solar"]]],
-];
-// Modelos de NVIDIA SimReady (CC BY 4.0) convertidos a .glb: se cargan una vez y se clonan.
-const NV_BASE = "assets/nvidia/", nvCache = {};
-const NV_SCALE = 1.6; // vienen en metros reales; los droides del taller miden ~2,5
-let NV_LIST = [];
-function loadNV(id) {
-  nvCache[id] = nvCache[id] || new Promise((ok, fail) => new THREE.GLTFLoader().load(NV_BASE + id + ".glb", (g) => {
-    g.scene.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-    ok(g.scene);
-  }, undefined, fail));
-  return nvCache[id];
-}
-fetch(NV_BASE + "manifest.json").then((r) => r.json()).then((list) => {
-  NV_LIST = list;
-  CATALOG.push(["🔧 NVIDIA", list.map((a) => ["nv:" + a.id, a.icon, a.label])]);
-  if ($("build").classList.contains("show")) renderBuild();
-  // Para probar: #nvdemo pone en fila todos los modelos de NVIDIA frente al taller
-  if (location.hash === "#nvdemo") { list.forEach((a, i) => placeItem("nv:" + a.id, -10 + (i % 5) * 5, 18 + Math.floor(i / 5) * 4.5)); camera.position.set(4, 10, 44); controls.target.set(0, 0, 24); }
-  // piezas de NVIDIA guardadas en el jardín: se completan cuando llega su modelo
-}).catch(() => {});
 
-function makeItem(kind) {
+const WORLD_CATALOG = [
+  ["🌳 Bosque y Naturaleza", [["sakura", "🌸", "Sakura"], ["ginkgo", "🍂", "Ginkgo"], ["roble", "🌳", "Roble"], ["arce", "🍁", "Arce"], ["milenario", "🌲", "Milenario"], ["bambu", "🎋", "Bambú"], ["arbusto", "🌿", "Arbusto"], ["flores", "🌼", "Flores"], ["roca", "🪨", "Roca"]]],
+  ["⛩️ Jardín Japonés", [["torii", "⛩️", "Torii"], ["puente", "🌉", "Puente"], ["estanque", "💧", "Estanque"], ["farol", "🏮", "Farol"], ["banco", "🪑", "Banco"], ["piedra", "⚪", "Camino"]]],
+  ["🛠️ Estación", [["capsula", "🧪", "Cápsula"], ["caja", "📦", "Caja"], ["antena", "📡", "Antena"], ["solar", "☀️", "Panel solar"]]],
+];
+
+const NV_BASE = "assets/nvidia/";
+const HF_THUMBS = "https://huggingface.co/datasets/codepawl/simready-glb/resolve/main/thumbs/";
+const nvCache = {};
+const NV_SCALE = 1.65;
+let nvCatalog = [];
+let nvManifest = [];
+let nvFilterCat = " En mi Mac";
+let nvSearchQuery = "";
+let nvLimit = 36;
+
+function loadNVModel(localId) {
+  nvCache[localId] = nvCache[localId] || new Promise((ok, fail) => {
+    new THREE.GLTFLoader().load(NV_BASE + localId + ".glb", (g) => {
+      g.scene.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+      ok(g.scene);
+    }, undefined, fail);
+  });
+  return nvCache[localId];
+}
+
+function makeWorldItem(kind) {
   const g = new THREE.Group();
   if (kind.startsWith("nv:")) {
-    loadNV(kind.slice(3)).then((src) => { const c = src.clone(true); c.scale.setScalar(NV_SCALE); g.add(c); if (g.userData.ghost) ghostify(g); }).catch(() => toast("No pude cargar " + kind.slice(3)));
-  } else if (TREES[kind]) TREES[kind](g); else if (EXTRAS[kind]) EXTRAS[kind](g);
+    const id = kind.slice(3);
+    loadNVModel(id).then((src) => {
+      const c = src.clone(true);
+      c.scale.setScalar(NV_SCALE);
+      g.add(c);
+      if (g.userData.ghost) ghostify(g);
+      if (selected === g && selBox) selBox.setFromObject(g);
+    }).catch(() => toast("⚠️ No se encontró " + id + ".glb en la Mac"));
+  } else if (TREES[kind]) {
+    TREES[kind](g);
+  } else if (EXTRAS[kind]) {
+    EXTRAS[kind](g);
+  }
   g.userData.kind = kind;
   return g;
 }
 
-const built = new THREE.Group(); scene.add(built);
+function renderWorldTab() {
+  $("worldCatalog").innerHTML = WORLD_CATALOG.map(([title, items]) => `
+    <h2>${title}</h2>
+    <div class="mod-grid">
+      ${items.map(([k, ic, lbl]) => `
+        <div class="mod-card ${activeTool === k ? "on" : ""}" data-wkind="${k}">
+          <span class="ic">${ic}</span>
+          <div><b>${lbl}</b><span>Clic para poner</span></div>
+        </div>
+      `).join("")}
+    </div>
+  `).join("");
+}
+$("worldCatalog").addEventListener("click", (e) => {
+  const c = e.target.closest(".mod-card[data-wkind]");
+  if (!c) return;
+  const k = c.dataset.wkind;
+  setActiveTool(activeTool === k ? null : k);
+});
+
+// ───────────────────────── Catálogo NVIDIA 2.595 A Pedido ─────────────────────────
+async function loadNvidiaCatalog() {
+  try {
+    const r = await fetch("/api/taller/catalogo", { cache: "no-store" });
+    if (!r.ok) throw new Error("static");
+    const data = await r.json();
+    nvCatalog = data.items || [];
+    nvManifest = data.manifest || [];
+  } catch {
+    // Fallback estático si se abre sin el servidor Python
+    const [m, idx] = await Promise.all([
+      fetch(NV_BASE + "manifest.json").then((r) => r.json()).catch(() => []),
+      fetch(NV_BASE + "catalogo_index.json").then((r) => r.json()).catch(() => []),
+    ]);
+    nvManifest = m;
+    const bySource = Object.fromEntries(m.map((x) => [x.source, x]));
+    nvCatalog = idx.map((x) => {
+      const loc = bySource[x.s];
+      return {
+        source: x.s,
+        local_id: loc ? loc.id : x.s.toLowerCase(),
+        label: loc ? loc.label : x.l,
+        cat: x.c,
+        icon: loc ? loc.icon : x.i,
+        mb: x.mb,
+        thumb: HF_THUMBS + x.t,
+        listo: !!loc,
+        trayendo: false,
+      };
+    });
+  }
+  renderNvidiaTab();
+}
+
+function renderNvidiaTab() {
+  const readyCount = nvCatalog.filter((x) => x.listo).length;
+  $("nvCountBadge").textContent = `(${readyCount}/${nvCatalog.length})`;
+
+  const cats = ["✅ En mi Mac", "Todos", ...new Set(nvCatalog.map((x) => x.cat))];
+  if (nvFilterCat === " En mi Mac") nvFilterCat = "✅ En mi Mac";
+
+  $("nvCats").innerHTML = cats.map((c) => {
+    const label = c === "✅ En mi Mac" ? `✅ En mi Mac (${readyCount})` : c === "Todos" ? `🌐 Todos (${nvCatalog.length})` : c;
+    return `<button class="sm ${nvFilterCat === c ? "on" : ""}" data-nvcat="${c}">${label}</button>`;
+  }).join("");
+
+  const q = nvSearchQuery.trim().toLowerCase();
+  const filtered = nvCatalog.filter((item) => {
+    if (q) {
+      return item.label.toLowerCase().includes(q) || item.source.toLowerCase().includes(q) || item.cat.toLowerCase().includes(q);
+    }
+    if (nvFilterCat === "✅ En mi Mac") return item.listo;
+    if (nvFilterCat === "Todos") return true;
+    return item.cat === nvFilterCat;
+  });
+
+  // Ordenar: primero los que ya están en la Mac
+  filtered.sort((a, b) => (b.listo ? 1 : 0) - (a.listo ? 1 : 0));
+
+  const totalMbLocal = (nvManifest.reduce((s, x) => s + (x.kb || 0), 0) / 1024).toFixed(1);
+  $("nvStats").textContent = `${filtered.length} modelos · ${readyCount} en tu Mac (${totalMbLocal} MB)`;
+
+  const slice = filtered.slice(0, nvLimit);
+  $("nvGrid").innerHTML = slice.map((item) => {
+    const toolKey = "nv:" + item.local_id;
+    const isSelectedTool = activeTool === toolKey;
+    return `
+      <div class="nv-card ${isSelectedTool ? "active" : ""}">
+        <div class="nv-thumb">
+          <img src="${item.thumb}" alt="${item.label}" loading="lazy">
+          <span class="nv-badge ${item.listo ? "ok" : ""}">${item.listo ? "✅ Listo" : item.mb + " MB"}</span>
+        </div>
+        <div class="nv-title" title="${item.label}">${item.icon} ${item.label}</div>
+        <div class="nv-sub" title="${item.source}">${item.source}</div>
+        <div class="nv-actions">
+          ${item.listo
+            ? `<button class="${isSelectedTool ? "on" : ""}" data-nvput="${item.local_id}">📍 ${isSelectedTool ? "Poniendo…" : "Poner"}</button>
+               <button class="del danger" data-nvdel="${item.source}" title="Borrar este .glb de la Mac">🗑️</button>`
+            : `<button data-nvfetch="${item.source}">${item.trayendo ? "⏳ Bajando…" : "⬇️ Traer (" + item.mb + " MB)"}</button>`
+          }
+        </div>
+      </div>
+    `;
+  }).join("");
+
+  const moreBtn = $("btnNvMore");
+  if (filtered.length > nvLimit) {
+    moreBtn.style.display = "inline-flex";
+    moreBtn.textContent = `Mostrar más (${filtered.length - nvLimit} restantes)…`;
+  } else {
+    moreBtn.style.display = "none";
+  }
+}
+
+$("nvSearch").addEventListener("input", (e) => {
+  nvSearchQuery = e.target.value;
+  nvLimit = 36;
+  renderNvidiaTab();
+});
+$("nvCats").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-nvcat]");
+  if (!b) return;
+  nvFilterCat = b.dataset.nvcat;
+  nvLimit = 36;
+  renderNvidiaTab();
+});
+$("btnNvMore").onclick = () => {
+  nvLimit += 48;
+  renderNvidiaTab();
+};
+
+async function fetchNvidiaAsset(sourceId) {
+  const item = nvCatalog.find((x) => x.source === sourceId);
+  if (item) { item.trayendo = true; renderNvidiaTab(); }
+  toast(`⬇️ Bajando ${item ? item.label : sourceId} optimizado (.glb)…`);
+  try {
+    const r = await fetch(`/api/taller/traer?id=${encodeURIComponent(sourceId)}`, { method: "POST" });
+    const data = await r.json();
+    if (!r.ok || data.error) throw new Error(data.error || "No se pudo descargar");
+    nvManifest = data.manifest || nvManifest;
+    if (item) {
+      item.listo = true;
+      item.trayendo = false;
+      item.local_id = data.entry.id;
+    }
+    renderNvidiaTab();
+    setActiveTool("nv:" + data.entry.id);
+    toast(`✅ ${data.entry.label} listo: hacé clic en el piso para ponerlo`);
+  } catch (err) {
+    if (item) item.trayendo = false;
+    renderNvidiaTab();
+    toast("⚠️ Error al traer modelo: " + err.message);
+  }
+}
+
+async function deleteNvidiaAsset(sourceId) {
+  try {
+    const r = await fetch(`/api/taller/borrar?id=${encodeURIComponent(sourceId)}`, { method: "POST" });
+    const data = await r.json();
+    if (!r.ok || data.error) throw new Error(data.error || "Error al borrar");
+    nvManifest = data.manifest || [];
+    const item = nvCatalog.find((x) => x.source === sourceId || x.local_id === sourceId);
+    if (item) {
+      delete nvCache[item.local_id];
+      item.listo = false;
+      if (activeTool === "nv:" + item.local_id) setActiveTool(null);
+    }
+    renderNvidiaTab();
+    toast(`🗑️ Modelo eliminado de la Mac (${data.kb_liberados} KB liberados)`);
+  } catch (err) {
+    toast("⚠️ No pude borrar: " + err.message);
+  }
+}
+
+$("nvGrid").addEventListener("click", (e) => {
+  const putBtn = e.target.closest("button[data-nvput]");
+  if (putBtn) {
+    const k = "nv:" + putBtn.dataset.nvput;
+    setActiveTool(activeTool === k ? null : k);
+    return;
+  }
+  const fetchBtn = e.target.closest("button[data-nvfetch]");
+  if (fetchBtn) {
+    fetchNvidiaAsset(fetchBtn.dataset.nvfetch);
+    return;
+  }
+  const delBtn = e.target.closest("button[data-nvdel]");
+  if (delBtn) {
+    deleteNvidiaAsset(delBtn.dataset.nvdel);
+  }
+});
+
+$("btnCleanUnused").onclick = async () => {
+  const usedIds = built.children
+    .map((o) => o.userData.kind || "")
+    .filter((k) => k.startsWith("nv:"))
+    .map((k) => k.slice(3));
+  const unusedCount = nvManifest.filter((m) => !usedIds.includes(m.id)).length;
+  if (!unusedCount) {
+    toast("✨ Todos los modelos descargados están en uso en el mundo");
+    return;
+  }
+  if (!confirm(`¿Eliminar de la Mac los ${unusedCount} modelos .glb descargados que no están puestos en el escenario? (Podés volver a bajarlos en 1 segundo cuando quieras).`)) return;
+  try {
+    const r = await fetch("/api/taller/limpiar", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ usados: usedIds }),
+    });
+    const data = await r.json();
+    nvManifest = data.manifest || [];
+    const have = new Set(nvManifest.map((x) => x.source));
+    nvCatalog.forEach((x) => { x.listo = have.has(x.source); });
+    renderNvidiaTab();
+    toast(`🧹 Limpiados ${data.borrados} modelos (${data.mb_liberados} MB liberados)`);
+  } catch (err) {
+    toast("⚠️ Error limpiando: " + err.message);
+  }
+};
+
+// ───────────────────────── Modo Edición: Seleccionar, Arrastrar, Escalar y Rotar Assets ─────────────────────────
+const built = new THREE.Group();
+scene.add(built);
 const LAYOUT_KEY = "taller.layout.v1";
-let tool = null, ghost = null, selected = null, selBox = null, catIdx = 0;
-const ray = new THREE.Raycaster(), ndc = new THREE.Vector2(), groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
+
+let appMode = "edit"; // "edit" | "play"
+let activeTool = null;
+let ghost = null;
+let selected = null;
+let selBox = null;
+let draggingPlaced = false;
+const dragOffset = new THREE.Vector3();
+const ray = new THREE.Raycaster();
+const ndc = new THREE.Vector2();
+const groundPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), 0);
 
 function saveLayout() {
-  const list = built.children.filter((o) => !o.userData.imported).map((o) => ({ k: o.userData.kind, x: o.position.x, z: o.position.z, r: o.rotation.y, s: o.scale.x }));
+  const list = built.children.filter((o) => !o.userData.imported).map((o) => ({
+    k: o.userData.kind,
+    x: Number(o.position.x.toFixed(2)),
+    y: Number(o.position.y.toFixed(2)),
+    z: Number(o.position.z.toFixed(2)),
+    r: Number(o.rotation.y.toFixed(3)),
+    s: Number(o.scale.x.toFixed(2)),
+  }));
   localStorage.setItem(LAYOUT_KEY, JSON.stringify(list));
 }
-function placeItem(kind, x, z, r = 0, sc = 1) {
-  const g = makeItem(kind); g.position.set(x, 0, z); g.rotation.y = r; g.scale.setScalar(sc);
-  built.add(g); return g;
-}
-JSON.parse(localStorage.getItem(LAYOUT_KEY) || "[]").forEach((o) => placeItem(o.k, o.x, o.z, o.r, o.s));
 
-function pointOnGround(clientX, clientY) {
-  const r = canvas.getBoundingClientRect();
-  ndc.set(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
+function placeItem(kind, x, z, r = 0, sc = 1, y = 0) {
+  const g = makeWorldItem(kind);
+  g.position.set(x, y, z);
+  g.rotation.y = r;
+  g.scale.setScalar(sc);
+  built.add(g);
+  return g;
+}
+
+JSON.parse(localStorage.getItem(LAYOUT_KEY) || "[]").forEach((o) => placeItem(o.k, o.x, o.z, o.r || 0, o.s || 1, o.y || 0));
+
+function pointOnPlane(clientX, clientY, planeY = 0) {
+  const rect = canvas.getBoundingClientRect();
+  ndc.set(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
   ray.setFromCamera(ndc, camera);
+  groundPlane.constant = -planeY;
   const hit = new THREE.Vector3();
   return ray.ray.intersectPlane(groundPlane, hit) ? hit : null;
 }
-const snap = (v) => Math.round(v);
 
-function setTool(kind) {
-  tool = kind;
+function pickBuiltObject(clientX, clientY) {
+  const rect = canvas.getBoundingClientRect();
+  ndc.set(((clientX - rect.left) / rect.width) * 2 - 1, -((clientY - rect.top) / rect.height) * 2 + 1);
+  ray.setFromCamera(ndc, camera);
+  const hits = ray.intersectObjects(built.children, true);
+  if (!hits.length) return null;
+  let obj = hits[0].object;
+  while (obj && obj.parent !== built) obj = obj.parent;
+  return { obj, point: hits[0].point };
+}
+
+function ghostify(g) {
+  g.traverse((o) => {
+    if (o.isMesh && !o.userData.ghosted) {
+      o.material = o.material.clone();
+      o.material.transparent = true;
+      o.material.opacity = 0.52;
+      o.castShadow = false;
+      o.userData.ghosted = true;
+    }
+  });
+}
+
+function setActiveTool(kind) {
+  activeTool = kind;
   if (ghost) { scene.remove(ghost); ghost = null; }
   if (kind) {
-    ghost = makeItem(kind);
+    ghost = makeWorldItem(kind);
     ghost.userData.ghost = true;
     ghostify(ghost);
-    ghost.visible = false; scene.add(ghost);
-    select(null);
+    ghost.visible = false;
+    scene.add(ghost);
+    selectObject(null);
   }
-  renderBuild();
+  renderWorldTab();
+  renderNvidiaTab();
 }
-function ghostify(g) {
-  g.traverse((o) => { if (o.isMesh && !o.userData.ghosted) { o.material = o.material.clone(); o.material.transparent = true; o.material.opacity = 0.5; o.castShadow = false; o.userData.ghosted = true; } });
+
+function labelForKind(kind) {
+  if (!kind) return "Objeto";
+  if (kind.startsWith("nv:")) {
+    const id = kind.slice(3);
+    const m = nvCatalog.find((x) => x.local_id === id) || nvManifest.find((x) => x.id === id);
+    return m ? `${m.icon || "🔧"} ${m.label}` : `🔧 ${id}`;
+  }
+  for (const [, list] of WORLD_CATALOG) {
+    const found = list.find(([k]) => k === kind);
+    if (found) return `${found[1]} ${found[2]}`;
+  }
+  return kind;
 }
-function select(obj) {
+
+function selectObject(obj) {
   selected = obj;
   if (selBox) { scene.remove(selBox); selBox = null; }
-  if (obj) { selBox = new THREE.BoxHelper(obj, 0x7cf0d0); scene.add(selBox); }
+  const ins = $("inspector");
+  if (obj && appMode === "edit") {
+    selBox = new THREE.BoxHelper(obj, 0x7cf0d0);
+    scene.add(selBox);
+    ins.classList.add("show");
+    $("insTitle").textContent = labelForKind(obj.userData.kind);
+    $("rngInsScale").value = obj.scale.x;
+    $("lblInsScale").textContent = obj.scale.x.toFixed(2) + "x";
+    const deg = Math.round((((obj.rotation.y * 180) / Math.PI) % 360 + 360) % 360);
+    $("rngInsRot").value = deg;
+    $("lblInsRot").textContent = deg + "°";
+    $("rngInsY").value = obj.position.y;
+    $("lblInsY").textContent = obj.position.y.toFixed(2) + "m";
+  } else {
+    ins.classList.remove("show");
+  }
 }
-function renderBuild() {
-  $("cats").innerHTML = CATALOG.map(([name], i) => `<button data-c="${i}" class="${i === catIdx ? "on" : ""}">${name}</button>`).join("");
-  $("items").innerHTML = CATALOG[catIdx][1].map(([k, ic, label]) => `<div class="item ${k === tool ? "on" : ""}" draggable="true" data-k="${k}"><span class="ic">${ic}</span>${label}</div>`).join("");
-}
-$("cats").addEventListener("click", (e) => { const c = e.target.dataset.c; if (c == null) return; catIdx = Number(c); renderBuild(); });
-$("items").addEventListener("click", (e) => { const el = e.target.closest(".item"); if (!el) return; setTool(tool === el.dataset.k ? null : el.dataset.k); });
-$("items").addEventListener("dragstart", (e) => { const el = e.target.closest(".item"); if (el) e.dataTransfer.setData("text/taller", el.dataset.k); });
 
-let downAt = null;
-canvas.addEventListener("pointerdown", (e) => { downAt = [e.clientX, e.clientY]; });
-canvas.addEventListener("pointermove", (e) => {
-  if (mode !== "construir" || !ghost) return;
-  const p = pointOnGround(e.clientX, e.clientY);
-  ghost.visible = !!p;
-  if (p) ghost.position.set(snap(p.x), 0, snap(p.z));
+$("rngInsScale").addEventListener("input", (e) => {
+  if (!selected) return;
+  const s = Number(e.target.value);
+  selected.scale.setScalar(s);
+  $("lblInsScale").textContent = s.toFixed(2) + "x";
+  saveLayout();
 });
-canvas.addEventListener("pointerup", (e) => {
-  if (mode !== "construir" || !downAt) return;
-  const moved = Math.hypot(e.clientX - downAt[0], e.clientY - downAt[1]) > 5; downAt = null;
-  if (moved) return; // fue un arrastre para girar la vista
-  if (tool) {
-    const p = pointOnGround(e.clientX, e.clientY); if (!p) return;
-    placeItem(tool, snap(p.x), snap(p.z), ghost ? ghost.rotation.y : 0); saveLayout();
+$("rngInsRot").addEventListener("input", (e) => {
+  if (!selected) return;
+  const deg = Number(e.target.value);
+  selected.rotation.y = (deg * Math.PI) / 180;
+  $("lblInsRot").textContent = deg + "°";
+  saveLayout();
+});
+$("rngInsY").addEventListener("input", (e) => {
+  if (!selected) return;
+  const y = Number(e.target.value);
+  selected.position.y = y;
+  $("lblInsY").textContent = y.toFixed(2) + "m";
+  saveLayout();
+});
+$("btnInsDup").onclick = () => {
+  if (!selected) return;
+  const clone = placeItem(selected.userData.kind, selected.position.x + 1.5, selected.position.z + 1.5, selected.rotation.y, selected.scale.x, selected.position.y);
+  saveLayout();
+  selectObject(clone);
+  toast("📄 Objeto duplicado");
+};
+$("btnInsDel").onclick = () => {
+  if (!selected) return;
+  built.remove(selected);
+  selectObject(null);
+  saveLayout();
+  toast("🗑️ Objeto borrado");
+};
+$("btnInsClose").onclick = () => selectObject(null);
+
+// Interacción con el puntero en el lienzo (Poner, Seleccionar y Arrastrar para mover)
+let pointerDownPos = null;
+canvas.addEventListener("pointerdown", (e) => {
+  if (e.button !== 0 || appMode !== "edit") return;
+  pointerDownPos = [e.clientX, e.clientY];
+  if (!activeTool) {
+    const picked = pickBuiltObject(e.clientX, e.clientY);
+    if (picked && picked.obj) {
+      selectObject(picked.obj);
+      const p = pointOnPlane(e.clientX, e.clientY, picked.obj.position.y);
+      if (p) {
+        draggingPlaced = true;
+        controls.enabled = false;
+        dragOffset.set(picked.obj.position.x - p.x, 0, picked.obj.position.z - p.z);
+      }
+    }
+  }
+});
+
+canvas.addEventListener("pointermove", (e) => {
+  if (appMode !== "edit") return;
+  if (draggingPlaced && selected) {
+    const p = pointOnPlane(e.clientX, e.clientY, selected.position.y);
+    if (p) {
+      const snapStep = e.shiftKey ? 0.05 : 0.25;
+      selected.position.x = Math.round((p.x + dragOffset.x) / snapStep) * snapStep;
+      selected.position.z = Math.round((p.z + dragOffset.z) / snapStep) * snapStep;
+    }
     return;
   }
-  const r = canvas.getBoundingClientRect();
-  ndc.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
-  ray.setFromCamera(ndc, camera);
-  const hit = ray.intersectObjects(built.children, true)[0];
-  let obj = hit ? hit.object : null;
-  while (obj && obj.parent !== built) obj = obj.parent;
-  select(obj);
-});
-addEventListener("keydown", (e) => {
-  if (mode !== "construir") return;
-  const target = selected || ghost;
-  if (e.code === "KeyR" && target) { target.rotation.y += Math.PI / 4; if (selected) saveLayout(); }
-  if ((e.code === "BracketRight" || e.code === "BracketLeft") && selected) { selected.scale.multiplyScalar(e.code === "BracketRight" ? 1.15 : 0.87); saveLayout(); }
-  if ((e.code === "Delete" || e.code === "Backspace") && selected) { built.remove(selected); select(null); saveLayout(); e.preventDefault(); }
-  if (e.code === "Escape") { setTool(null); select(null); }
+  if (ghost) {
+    const p = pointOnPlane(e.clientX, e.clientY, 0);
+    ghost.visible = !!p;
+    if (p) {
+      ghost.position.set(Math.round(p.x * 2) / 2, 0, Math.round(p.z * 2) / 2);
+    }
+  }
 });
 
-// Soltar piezas del catálogo o modelos .glb/.gltf desde la Mac
+addEventListener("pointerup", (e) => {
+  if (appMode !== "edit") return;
+  if (draggingPlaced) {
+    draggingPlaced = false;
+    controls.enabled = true;
+    saveLayout();
+    pointerDownPos = null;
+    return;
+  }
+  if (!pointerDownPos) return;
+  const dist = Math.hypot(e.clientX - pointerDownPos[0], e.clientY - pointerDownPos[1]);
+  pointerDownPos = null;
+  if (dist > 6) return;
+
+  if (activeTool) {
+    const p = pointOnPlane(e.clientX, e.clientY, 0);
+    if (!p) return;
+    const item = placeItem(activeTool, Math.round(p.x * 2) / 2, Math.round(p.z * 2) / 2, ghost ? ghost.rotation.y : 0, 1, 0);
+    saveLayout();
+    if (!e.shiftKey) {
+      setActiveTool(null);
+      selectObject(item);
+    }
+    return;
+  }
+
+  const picked = pickBuiltObject(e.clientX, e.clientY);
+  selectObject(picked ? picked.obj : null);
+});
+
+$("btnLoadNvShowcase").onclick = () => {
+  if (!nvManifest.length) { toast("Todavía no hay modelos en manifest.json"); return; }
+  nvManifest.forEach((a, i) => {
+    placeItem("nv:" + a.id, -10 + (i % 5) * 5, 18 + Math.floor(i / 5) * 4.5);
+  });
+  saveLayout();
+  camera.position.set(4, 11, 44);
+  controls.target.set(0, 0, 24);
+  toast(`🔧 ${nvManifest.length} modelos de NVIDIA puestos frente al Taller`);
+};
+
+$("btnClearWorld").onclick = () => {
+  if (!built.children.length) return;
+  if (!confirm("¿Vaciar todos los objetos puestos en el patio del Taller?")) return;
+  while (built.children.length) built.remove(built.children[0]);
+  selectObject(null);
+  saveLayout();
+  toast("🗑️ Escenario limpio");
+};
+
+// Soltar archivos .glb/.gltf desde el Finder de la Mac
 canvas.addEventListener("dragover", (e) => { e.preventDefault(); if (e.dataTransfer.types.includes("Files")) $("drop").style.display = "flex"; });
 canvas.addEventListener("dragleave", () => ($("drop").style.display = "none"));
 canvas.addEventListener("drop", (e) => {
-  e.preventDefault(); $("drop").style.display = "none";
-  const p = pointOnGround(e.clientX, e.clientY) || new THREE.Vector3(0, 0, 20);
-  const kind = e.dataTransfer.getData("text/taller");
-  if (kind) { if (mode !== "construir") enterBuild(); placeItem(kind, snap(p.x), snap(p.z)); saveLayout(); return; }
+  e.preventDefault();
+  $("drop").style.display = "none";
+  const p = pointOnPlane(e.clientX, e.clientY, 0) || new THREE.Vector3(0, 0, 20);
   const file = [...e.dataTransfer.files].find((f) => /\.(glb|gltf)$/i.test(f.name));
-  if (!file) { toast("Por ahora entran modelos .glb o .gltf"); return; }
+  if (!file) return;
   file.arrayBuffer().then((buf) => new THREE.GLTFLoader().parse(buf, "", (gltf) => {
     const g = gltf.scene;
     const box = new THREE.Box3().setFromObject(g), size = box.getSize(new THREE.Vector3());
-    g.scale.setScalar(4 / Math.max(size.x, size.y, size.z, 0.001)); // que entre a escala del mundo (~4 m)
-    const b2 = new THREE.Box3().setFromObject(g); g.position.y -= b2.min.y;
-    const holder = new THREE.Group(); holder.add(g); holder.position.set(snap(p.x), 0, snap(p.z));
-    holder.userData = { kind: "glb", imported: true, name: file.name };
+    g.scale.setScalar(3.5 / Math.max(size.x, size.y, size.z, 0.001));
+    const b2 = new THREE.Box3().setFromObject(g);
+    g.position.y -= b2.min.y;
+    const holder = new THREE.Group();
+    holder.add(g);
+    holder.position.set(Math.round(p.x), 0, Math.round(p.z));
+    holder.userData = { kind: file.name, imported: true };
     holder.traverse((o) => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
-    built.add(holder); if (mode !== "construir") enterBuild(); select(holder);
-    toast(`📦 ${file.name} en el mundo (los modelos importados todavía no se guardan al recargar)`);
-  }, (err) => toast("No pude leer ese modelo: " + err.message)));
+    built.add(holder);
+    setAppMode("edit");
+    selectObject(holder);
+    toast(`📦 ${file.name} importado al Taller`);
+  }));
 });
 
-function enterBuild() {
-  if (mode === "dron") home();
-  mode = "construir"; controls.enabled = true;
-  $("build").classList.add("show"); renderBuild(); setMode();
-}
-function leaveBuild() { setTool(null); select(null); $("build").classList.remove("show"); }
-$("modeBuild").onclick = () => (mode === "construir" ? (leaveBuild(), (mode = "taller"), setMode()) : enterBuild());
-$("viewTop").onclick = () => { if (mode === "dron") home(); camera.position.set(38, 46, 38); controls.target.set(0, 0, 0); };
+// ───────────────────────── Modo Juego (Conducir, Volar y Transformar en Vivo) ─────────────────────────
+const playState = {
+  droidKey: "R2",
+  avatar: null,
+  yaw: 0,
+  velY: 0,
+  travel: 0,
+  camFollow: true,
+};
+const keys = {};
 
-// ───────────────────────── Loop ─────────────────────────
-function resize() { renderer.setSize(innerWidth, innerHeight, false); camera.aspect = innerWidth / innerHeight; camera.updateProjectionMatrix(); }
-addEventListener("resize", resize); resize();
+function rebuildPlayAvatar(withBurst = false) {
+  const pos = playState.avatar ? playState.avatar.position.clone() : new THREE.Vector3();
+  if (!playState.avatar) {
+    capsules[playState.droidKey].group.getWorldPosition(pos);
+    pos.z += 3.2;
+    playState.yaw = 0;
+  }
+  if (playState.avatar) scene.remove(playState.avatar);
+
+  Object.keys(droids).forEach((k) => { droids[k].visible = k !== playState.droidKey; });
+
+  const d = designs[playState.droidKey];
+  const modInfo = window.ROBOT_MODS.find((m) => m.id === d.mod) || window.ROBOT_MODS[0];
+  const av = window.createDroid3D(playState.droidKey, d);
+  if (modInfo.flies && pos.y < 2.2) pos.y = 2.6;
+  if (!modInfo.flies) pos.y = 0;
+  av.position.copy(pos);
+  av.rotation.y = playState.yaw;
+  scene.add(av);
+  playState.avatar = av;
+  if (withBurst) spawnTransformBurst(pos);
+  renderPlayDock();
+}
+
+function renderPlayDock() {
+  const d = designs[playState.droidKey];
+  $("playPickDroid").innerHTML = Object.keys(DEFAULTS).map((k) =>
+    `<button class="sm ${k === playState.droidKey ? "on" : ""}" data-pdroid="${k}">🤖 ${k}</button>`
+  ).join("");
+  $("btnPlayMorph").style.display = d.mod === "transformer" ? "inline-flex" : "none";
+  $("btnPlayCam").textContent = playState.camFollow ? "🎥 Cámara: Seguir" : "🎥 Cámara: Libre";
+  $("playModsBar").innerHTML = window.ROBOT_MODS.map((m) => `
+    <div class="pd-mod ${d.mod === m.id ? "on" : ""}" data-pmod="${m.id}">
+      <span>${m.icon} ${m.title}</span><kbd>${m.key}</kbd>
+    </div>
+  `).join("");
+}
+
+$("playPickDroid").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-pdroid]");
+  if (!b) return;
+  playState.droidKey = b.dataset.pdroid;
+  currentDroid = playState.droidKey;
+  if (playState.avatar) { scene.remove(playState.avatar); playState.avatar = null; }
+  rebuildPlayAvatar(true);
+  renderDroidPanel();
+});
+
+$("playModsBar").addEventListener("click", (e) => {
+  const card = e.target.closest(".pd-mod[data-pmod]");
+  if (!card) return;
+  designs[playState.droidKey].mod = card.dataset.pmod;
+  placeDroid(playState.droidKey, false);
+  rebuildPlayAvatar(true);
+  renderDroidPanel();
+  saveDroids();
+});
+
+$("btnPlayMorph").onclick = () => animateTransformerMorph(playState.droidKey);
+$("btnPlayCam").onclick = () => {
+  playState.camFollow = !playState.camFollow;
+  controls.enabled = !playState.camFollow;
+  renderPlayDock();
+};
+
+function updatePlayMode(dt, t) {
+  const av = playState.avatar;
+  if (!av) return;
+  const d = designs[playState.droidKey];
+  const modInfo = window.ROBOT_MODS.find((m) => m.id === d.mod) || window.ROBOT_MODS[0];
+
+  const turn = (keys.ArrowLeft || keys.KeyA ? 1 : 0) - (keys.ArrowRight || keys.KeyD ? 1 : 0);
+  const fwd = (keys.ArrowUp || keys.KeyW ? 1 : 0) - (keys.ArrowDown || keys.KeyS ? 1 : 0);
+  const up = (keys.Space || keys.KeyE ? 1 : 0) - (keys.KeyQ || keys.ControlLeft ? 1 : 0);
+  const turbo = keys.ShiftLeft || keys.ShiftRight ? 2.1 : 1;
+
+  playState.yaw += turn * dt * 2.2;
+  const speed = (modInfo.flies ? 15 : d.mod === "transformer" && (d.pose ?? 1) < 0.4 ? 18 : 10.5) * turbo;
+  const moveDist = fwd * speed * dt;
+  av.position.x += Math.sin(playState.yaw) * moveDist;
+  av.position.z += Math.cos(playState.yaw) * moveDist;
+  playState.travel += Math.abs(moveDist);
+
+  if (modInfo.flies) {
+    av.position.y = Math.min(55, Math.max(1.2, av.position.y + up * dt * 9));
+    av.rotation.set(fwd * 0.16, playState.yaw, -turn * 0.18);
+  } else {
+    if (keys.Space && av.position.y <= 0.02) playState.velY = 7.5;
+    playState.velY -= 19 * dt;
+    av.position.y = Math.max(0, av.position.y + playState.velY * dt);
+    if (av.position.y === 0) playState.velY = 0;
+    av.rotation.set(0, playState.yaw, 0);
+  }
+
+  const motion = Math.min(1, Math.abs(fwd) + Math.abs(turn) * 0.4);
+  window.animateDroid3D(av, dt, t, motion, playState.travel);
+
+  if (playState.camFollow) {
+    const camHeight = modInfo.flies ? 4.2 : 4.8;
+    const camBack = modInfo.flies ? 10.5 : 11.5;
+    const desired = new THREE.Vector3(
+      av.position.x - Math.sin(playState.yaw) * camBack,
+      av.position.y + camHeight,
+      av.position.z - Math.cos(playState.yaw) * camBack
+    );
+    camera.position.lerp(desired, 0.1);
+    camera.lookAt(av.position.x, av.position.y + 1.8, av.position.z);
+  } else {
+    controls.update();
+  }
+}
+
+// ───────────────────────── Navegación General y Atajos de Teclado ─────────────────────────
+function setAppMode(newMode) {
+  appMode = newMode;
+  $("btnModePlay").classList.toggle("on", appMode === "play");
+  $("btnModeEdit").classList.toggle("on", appMode === "edit");
+
+  if (appMode === "play") {
+    setActiveTool(null);
+    selectObject(null);
+    $("sidepanel").classList.add("collapsed");
+    $("playdock").classList.add("show");
+    controls.enabled = !playState.camFollow;
+    rebuildPlayAvatar(true);
+    toast(`🎮 Modo Juego activo: conducís a ${playState.droidKey} (1–0 cambia de Mod)`);
+  } else {
+    if (playState.avatar) {
+      scene.remove(playState.avatar);
+      playState.avatar = null;
+    }
+    Object.values(droids).forEach((g) => (g.visible = true));
+    $("playdock").classList.remove("show");
+    $("sidepanel").classList.remove("collapsed");
+    controls.enabled = true;
+    toast("🏗️ Modo Edición: tocá cualquier objeto para moverlo o cambiar su tamaño");
+  }
+  updatePanelToggleText();
+}
+
+function updatePanelToggleText() {
+  const collapsed = $("sidepanel").classList.contains("collapsed");
+  $("btnTogglePanel").textContent = collapsed ? "▸ Menú" : "▾ Menú";
+}
+
+$("btnModePlay").onclick = () => setAppMode("play");
+$("btnModeEdit").onclick = () => setAppMode("edit");
+$("btnStation").onclick = () => {
+  camera.position.set(0, 8, 20);
+  controls.target.set(0, 2, 0);
+  if (appMode === "play" && playState.avatar) {
+    playState.avatar.position.set(0, 0, 5);
+  }
+};
+$("btnTopView").onclick = () => {
+  if (appMode === "play") { playState.camFollow = false; controls.enabled = true; renderPlayDock(); }
+  camera.position.set(0, 52, 36);
+  controls.target.set(0, 0, 12);
+};
+$("btnTogglePanel").onclick = () => {
+  $("sidepanel").classList.toggle("collapsed");
+  updatePanelToggleText();
+};
+$("btnHideUI").onclick = () => {
+  document.body.classList.toggle("ui-hidden");
+};
+
+// Pestañas del panel lateral
+document.querySelector(".sp-tabs").addEventListener("click", (e) => {
+  const b = e.target.closest("button[data-tab]");
+  if (!b) return;
+  const tab = b.dataset.tab;
+  document.querySelectorAll(".sp-tabs button").forEach((x) => x.classList.toggle("on", x === b));
+  document.querySelectorAll(".sp-sec").forEach((s) => s.classList.toggle("on", s.id === "sec-" + tab));
+});
+
+addEventListener("keydown", (e) => {
+  if (e.target.tagName === "INPUT") return;
+  keys[e.code] = true;
+
+  if (e.code === "Tab") {
+    e.preventDefault();
+    setAppMode(appMode === "edit" ? "play" : "edit");
+    return;
+  }
+  if (e.code === "KeyH") {
+    document.body.classList.toggle("ui-hidden");
+    return;
+  }
+
+  if (appMode === "play") {
+    if (["Space", "ArrowUp", "ArrowDown"].includes(e.code)) e.preventDefault();
+    if (e.code === "KeyT" && designs[playState.droidKey].mod === "transformer") {
+      animateTransformerMorph(playState.droidKey);
+    }
+    const digitMatch = e.code.match(/^Digit(\d)$/);
+    if (digitMatch) {
+      const mod = window.ROBOT_MODS.find((m) => m.key === digitMatch[1]);
+      if (mod) {
+        designs[playState.droidKey].mod = mod.id;
+        placeDroid(playState.droidKey, false);
+        rebuildPlayAvatar(true);
+        renderDroidPanel();
+        saveDroids();
+        toast(`${mod.icon} ${playState.droidKey}: ${mod.title}`);
+      }
+    }
+    return;
+  }
+
+  // Atajos en Modo Edición
+  const target = selected || ghost;
+  if (e.code === "KeyR" && target) {
+    target.rotation.y += Math.PI / 4;
+    if (selected) { selectObject(selected); saveLayout(); }
+  }
+  if ((e.code === "BracketRight" || e.code === "BracketLeft") && selected) {
+    selected.scale.multiplyScalar(e.code === "BracketRight" ? 1.12 : 0.89);
+    selectObject(selected);
+    saveLayout();
+  }
+  if (e.code === "KeyD" && selected) {
+    $("btnInsDup").click();
+  }
+  if ((e.code === "Delete" || e.code === "Backspace") && selected) {
+    e.preventDefault();
+    $("btnInsDel").click();
+  }
+  if (e.code === "Escape") {
+    setActiveTool(null);
+    selectObject(null);
+  }
+});
+addEventListener("keyup", (e) => { keys[e.code] = false; });
+
+// ───────────────────────── Loop Principal de Animación ─────────────────────────
+function resize() {
+  renderer.setSize(innerWidth, innerHeight, false);
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+}
+addEventListener("resize", resize);
+resize();
+
 const clock = new THREE.Clock();
 function tick() {
   const dt = Math.min(clock.getDelta(), 0.05), t = clock.elapsedTime;
-  holoRing.rotation.x = Math.PI / 2 + Math.sin(t) * 0.3; holoRing.rotation.y = t;
+  holoRing.rotation.x = Math.PI / 2 + Math.sin(t) * 0.3;
+  holoRing.rotation.y = t;
   holo.material.opacity = 0.45 + Math.sin(t * 2) * 0.15;
   Object.values(capsules).forEach(({ ring }, i) => (ring.material.emissiveIntensity = 0.7 + Math.sin(t * 2 + i) * 0.4));
-  Object.values(droids).forEach((g, i) => { g.rotation.y = Math.sin(t * 0.4 + i) * 0.35; (g.userData.rotors || []).forEach((r) => (r.rotation.y += dt * 20)); });
+
+  // Animar droides en sus cápsulas
+  Object.values(droids).forEach((g, i) => {
+    g.rotation.y = Math.sin(t * 0.45 + i) * 0.32;
+    window.animateDroid3D(g, dt, t, 0, t * 0.5);
+  });
+
+  // Destellos de transformación 3D
+  for (let i = bursts.length - 1; i >= 0; i--) {
+    const b = bursts[i];
+    b.age += dt;
+    const p = b.age / 0.55;
+    if (p >= 1) {
+      scene.remove(b.group);
+      bursts.splice(i, 1);
+    } else {
+      b.ring.scale.setScalar(1 + p * 4.5);
+      b.ring.material.opacity = 1 - p;
+      b.sparks.forEach((sp) => {
+        sp.position.addScaledVector(sp.userData.vel, dt);
+        sp.material.opacity = 1 - p;
+      });
+    }
+  }
+
+  // Pétalos de sakura
   for (let i = 0; i < petalCount; i++) {
-    petalPos[i * 3 + 1] -= dt * 0.8; petalPos[i * 3] += Math.sin(t + i) * dt * 0.4;
+    petalPos[i * 3 + 1] -= dt * 0.8;
+    petalPos[i * 3] += Math.sin(t + i) * dt * 0.4;
     if (petalPos[i * 3 + 1] < 0) petalPos[i * 3 + 1] = rand(8, 14);
   }
   petalGeo.attributes.position.needsUpdate = true;
-  if (mode === "dron" && drone) updateDrone(dt); else controls.update();
-  if (selBox) selBox.update();
+
+  if (appMode === "play") {
+    updatePlayMode(dt, t);
+  } else {
+    controls.update();
+  }
+  if (selBox && selected) selBox.setFromObject(selected);
+
   renderer.render(scene, camera);
   requestAnimationFrame(tick);
 }
-renderPanel(); setMode(); tick();
-if (location.hash === "#construir") enterBuild();
-// Para probar: #demo pone unas piezas de ejemplo
-if (location.hash === "#demo" && !built.children.length) { enterBuild(); [["torii",0,24],["estanque",8,26],["puente",8,26],["farol",-4,22],["farol",4,22],["bambu",-8,26],["flores",-3,27],["roca",12,22],["antena",-12,18]].forEach(([k,x,z])=>placeItem(k,x,z)); camera.position.set(10,14,44); controls.target.set(0,1,24); }
+
+renderDroidPanel();
+renderWorldTab();
+loadNvidiaCatalog();
+tick();
+
+if (location.hash === "#juego") setAppMode("play");
+if (location.hash === "#nvdemo") {
+  setTimeout(() => $("btnLoadNvShowcase").click(), 600);
+}
 </script>
 </body>
 </html>
