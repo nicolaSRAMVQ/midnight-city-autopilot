@@ -3,90 +3,147 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Tablero Midnight</title>
+<title>Tablero Midnight · Aegis Cuadrilla</title>
 <meta name="robots" content="noindex">
 <style>
-:root{--bg:#07080d;--card:#11131c;--line:#22263a;--tx:#e8eaf4;--mut:#8a90a8;--up:#3ddc84;--down:#ff5c6c;--r2:#4da3ff;--bb8:#ffad33;--c3:#c792ff;--acc:#7cf0d0}
+:root{
+  --bg:#0B0C0B;--card:#131513;--card-hover:#181A18;--line:rgba(255,252,238,0.1);
+  --tx:#FFFCEE;--mut:#8A9086;--up:#3DDC84;--down:#FF5C6C;
+  --r2:#4DA3FF;--bb8:#FFAD33;--c3:#C792FF;--acc:#C2CE24;
+  --bar-bg:rgba(0,0,0,0.45);--subtle:rgba(255,252,238,0.05);
+}
+.theme-light{
+  --bg:#F5F2EB;--card:#FFFFFF;--card-hover:#FAF8F5;--line:rgba(20,20,19,0.12);
+  --tx:#141413;--mut:#6B6860;--acc:#C85A32;--bar-bg:rgba(0,0,0,0.08);--subtle:rgba(20,20,19,0.05);
+}
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;padding:16px;max-width:980px;margin-inline:auto}
-h1{font-size:22px;margin:4px 0 2px;letter-spacing:.5px}
-h2{font-size:13px;text-transform:uppercase;letter-spacing:1.5px;color:var(--mut);margin:28px 0 10px;font-weight:600}
-.sub{color:var(--mut);font-size:13px}
-.grid{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))}
-.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:14px}
-.drow{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
-.name{font-weight:700;font-size:18px}
-.rank{font-size:34px;font-weight:800;line-height:1}
-.deltas{display:flex;gap:6px;margin:10px 0}
-.delta{flex:1;background:#0b0d14;border-radius:10px;padding:6px 4px;text-align:center}
-.delta b{display:block;font-size:15px}
-.delta span{font-size:11px;color:var(--mut)}
+body{
+  margin:0;background:var(--bg);color:var(--tx);
+  font:14.5px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
+  padding:16px;max-width:1040px;margin-inline:auto;
+  transition:background .2s,color .2s;
+}
+header.top{
+  display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;
+}
+.brand-title{display:flex;align-items:center;gap:8px}
+.brand-badge{background:rgba(194,206,36,0.15);color:var(--acc);font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;font-family:monospace}
+h1{font-size:24px;margin:0;letter-spacing:-.3px;font-weight:800}
+h2{font-size:12.5px;text-transform:uppercase;letter-spacing:1.5px;color:var(--mut);margin:24px 0 10px;font-weight:700}
+.sub{color:var(--mut);font-size:12.5px}
+.top-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+button.action-btn{
+  background:var(--card);border:1px solid var(--line);color:var(--tx);
+  padding:6px 12px;border-radius:10px;font:600 12px inherit;cursor:pointer;
+  transition:all .15s;display:inline-flex;align-items:center;gap:6px;
+}
+button.action-btn:hover{border-color:var(--acc);color:var(--acc)}
+button.action-btn.active{background:var(--acc);color:#0B0C0B;border-color:var(--acc)}
+
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.card{
+  background:var(--card);border:1px solid var(--line);border-radius:18px;
+  padding:16px;box-shadow:0 4px 20px rgba(0,0,0,0.15);transition:border .2s,transform .2s;
+}
+.card:hover{border-color:rgba(194,206,36,0.35)}
+
+/* Hero card with avatar */
+.card-header-flex{display:flex;gap:12px;align-items:flex-start;justify-content:space-between}
+.avatar-wrap{
+  width:64px;height:64px;border-radius:14px;background:#050608;
+  border:1px solid var(--line);padding:3px;flex-shrink:0;overflow:hidden;
+  box-shadow:inset 0 0 12px rgba(0,0,0,0.5);
+}
+.avatar-wrap img{width:100%;height:100%;object-fit:contain;image-rendering:pixelated}
+.droid-info{flex:1;min-width:0}
+.name{font-weight:800;font-size:20px;letter-spacing:-.2px;font-family:monospace}
+.state-tag{font-size:11px;padding:2px 8px;border-radius:999px;background:var(--subtle);border:1px solid var(--line);color:var(--mut);display:inline-block;margin-top:2px}
+.loc-pin{font-size:11px;color:var(--mut);margin-top:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rank-box{text-align:right;flex-shrink:0}
+.rank-num{font-size:28px;font-weight:900;line-height:1;font-family:monospace;color:var(--acc)}
+.rank-top{font-size:10.5px;color:var(--mut);font-family:monospace;display:block;margin-top:2px}
+
+.deltas{display:flex;gap:6px;margin:12px 0}
+.delta{flex:1;background:var(--subtle);border:1px solid var(--line);border-radius:10px;padding:6px 4px;text-align:center}
+.delta b{display:block;font-size:13.5px;font-family:monospace}
+.delta span{font-size:10px;color:var(--mut)}
 .up{color:var(--up)}.down{color:var(--down)}.eq{color:var(--mut)}
-.kv{display:grid;grid-template-columns:1fr auto;gap:3px 10px;font-size:13.5px}
-.kv span:nth-child(odd){color:var(--mut)}
-.bar{height:8px;background:#0b0d14;border-radius:6px;overflow:hidden;margin:6px 0 10px}
-.bar i{display:block;height:100%;border-radius:6px}
-.gap{font-size:12.5px;color:var(--mut);margin-top:8px;border-top:1px solid var(--line);padding-top:8px}
+
+/* XP Bar */
+.xp-section{margin:12px 0 8px}
+.xp-head{display:flex;justify-content:space-between;font-size:12px;font-family:monospace;font-weight:600;margin-bottom:4px}
+.bar{height:10px;background:var(--bar-bg);border-radius:999px;overflow:hidden;padding:1.5px;border:1px solid var(--line)}
+.bar i{display:block;height:100%;border-radius:999px;transition:width .4s}
+
+.kv{display:grid;grid-template-columns:1fr auto;gap:4px 10px;font-size:13px;font-family:monospace}
+.kv span:nth-child(odd){color:var(--mut);font-family:inherit}
+.gap{font-size:11.5px;color:var(--mut);margin-top:10px;border-top:1px solid var(--line);padding-top:8px;font-family:monospace;line-height:1.45}
+
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
-.tabs button{background:#0b0d14;color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font:inherit;font-size:13px}
-.tabs button.on{color:var(--tx);border-color:var(--acc)}
+.tabs button{background:var(--subtle);color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font:inherit;font-size:12.5px;cursor:pointer}
+.tabs button.on{color:var(--tx);border-color:var(--acc);background:rgba(194,206,36,0.15)}
 svg{display:block;width:100%;height:auto}
-.legend{display:flex;gap:14px;font-size:12.5px;color:var(--mut);margin-top:6px}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--mut);margin-top:6px}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
-table{width:100%;border-collapse:collapse;font-size:13px}
-th,td{padding:6px 4px;text-align:right;border-bottom:1px solid var(--line)}
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th,td{padding:7px 5px;text-align:right;border-bottom:1px solid var(--line)}
 th:first-child,td:first-child{text-align:left}
-th{color:var(--mut);font-weight:500}
+th{color:var(--mut);font-weight:600;font-size:11.5px}
 .scroll{overflow-x:auto}
 .charts{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
 .charts h3{margin:0 0 2px;font-size:15px}
-.charts .now{font-size:12.5px;color:var(--mut);margin-bottom:6px}
+.charts .now{font-size:12px;color:var(--mut);margin-bottom:6px;font-family:monospace}
 .chartbox{width:100%}
-.phase{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.phase{display:flex;gap:10px;padding:8px 0;border-bottom:1px solid var(--line);font-size:13px}
 .phase b{min-width:22px;color:var(--acc)}
 .big{display:grid;gap:10px;grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}
-.big div{background:#0b0d14;border-radius:10px;padding:10px}
-.big b{display:block;font-size:22px}
-.big span{font-size:12px;color:var(--mut)}
+.big div{background:var(--subtle);border-radius:12px;padding:12px;border:1px solid var(--line)}
+.big b{display:block;font-size:22px;font-family:monospace}
+.big span{font-size:11.5px;color:var(--mut)}
 .lvl{display:inline-block;min-width:30px;padding:2px 6px;border-radius:6px;text-align:center;font-variant-numeric:tabular-nums}
 .faq details{border-bottom:1px solid var(--line);padding:10px 0}
 .faq summary{cursor:pointer;font-weight:600}
-.faq p{margin:8px 0 0;color:#c9cde0;font-size:14px}
-.tag{display:inline-block;font-size:11.5px;padding:2px 8px;border-radius:999px;background:#0b0d14;color:var(--mut);margin:2px}
+.faq p{margin:8px 0 0;color:var(--mut);font-size:13.5px}
+.tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;background:var(--subtle);border:1px solid var(--line);color:var(--mut);margin:2px}
 .ok{color:var(--up)}.warn{color:#ffad33}
-.note{font-size:12.5px;color:var(--mut);margin-top:8px}
-#err{color:var(--down)}
+.note{font-size:11.5px;color:var(--mut);margin-top:8px}
+#err{color:var(--down);font-size:12px}
 body{padding-bottom:84px}
 .page{display:none}
 .page.on{display:block;animation:fade .2s}
 @keyframes fade{from{opacity:.4}to{opacity:1}}
 .page>h2:first-child{margin-top:14px}
-.menu{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));background:rgba(17,19,28,.96);backdrop-filter:blur(8px);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
-.menu a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:10px;color:var(--mut);text-decoration:none;font-size:18px;min-width:0;overflow:hidden}
-.menu a span{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;letter-spacing:0;text-align:center;line-height:1.15}
-.menu a.on{color:var(--tx);background:#1b1f2e}
-.stage3d{padding:0;overflow:hidden;border-radius:14px;height:min(78vh,820px);min-height:480px;border:1px solid #1f253d}
+.menu{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));background:rgba(11,12,11,.95);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+.theme-light .menu{background:rgba(245,242,235,.95)}
+.menu a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:10px;color:var(--mut);text-decoration:none;font-size:17px;min-width:0;overflow:hidden}
+.menu a span{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;letter-spacing:0;text-align:center;line-height:1.15;font-weight:600}
+.menu a.on{color:var(--acc);background:rgba(194,206,36,0.12)}
+.stage3d{padding:0;overflow:hidden;border-radius:16px;height:min(78vh,820px);min-height:480px;border:1px solid var(--line)}
 .stage3d iframe{width:100%;height:100%;border:0;display:block}
-@media (max-width:759px){
-  body.tab-mundo{height:100dvh;overflow:hidden;display:flex;flex-direction:column;padding:10px 12px 74px}
-  body.tab-mundo header .sub{display:none}
-  body.tab-mundo .page.on{flex:1;min-height:0;display:flex;flex-direction:column}
-  body.tab-mundo .mundo-lead{display:none}
-  body.tab-mundo .stage3d{flex:1;height:auto;min-height:0}
-}
 @media (min-width:760px){
-  body{padding-bottom:16px}
-  .menu{position:sticky;top:0;bottom:auto;margin:12px 0 4px;border:1px solid var(--line);border-radius:14px;grid-template-columns:repeat(5,auto);justify-content:start;gap:4px;padding:5px}
-  .menu a{flex-direction:row;gap:8px;font-size:16px;padding:8px 14px}
-  .menu a span{font-size:14px}
+  body{padding-bottom:24px}
+  .menu{position:sticky;top:0;bottom:auto;margin:12px 0 8px;border:1px solid var(--line);border-radius:14px;grid-template-columns:repeat(6,auto);justify-content:start;gap:4px;padding:5px}
+  .menu a{flex-direction:row;gap:8px;font-size:15px;padding:7px 14px}
+  .menu a span{font-size:13px}
 }
 </style>
 </head>
 <body>
 <header class="top">
-  <h1>🌃 Tablero Midnight</h1>
-  <div class="sub" id="upd">Cargando…</div>
-  <div id="err"></div>
+  <div>
+    <div class="brand-title">
+      <h1>🌃 Tablero Midnight</h1>
+      <span class="brand-badge">Aegis · Namarie</span>
+    </div>
+    <div class="sub" id="upd">Cargando telemetría en vivo…</div>
+    <div id="err"></div>
+  </div>
+
+  <div class="top-actions">
+    <button id="btnTheme" class="action-btn" title="Cambiar tema">☀️ Modo Claro</button>
+    <button id="btnCopyMd" class="action-btn" title="Copiar reporte completo en Markdown">📋 Copiar Resumen MD</button>
+  </div>
+
   <nav class="menu" id="menu">
     <a href="#hoy" data-tab="hoy">🏁 <span>Hoy</span></a>
     <a href="#graficos" data-tab="graficos">📈 <span>Gráficos</span></a>
@@ -98,12 +155,12 @@ body{padding-bottom:84px}
 </header>
 
 <section class="page" data-page="hoy">
-  <h2>🏁 Ranking y carrera</h2>
+  <h2>🏁 Ranking, Carrera de XP & Cuadrilla</h2>
   <div class="grid" id="cards"></div>
 </section>
 
 <section class="page" data-page="graficos">
-  <h2>📈 Gráficos</h2>
+  <h2>📈 Gráficos de Evolución</h2>
   <div class="tabs" id="ranges"></div>
   <div class="legend" id="legend" style="margin:-2px 0 10px"></div>
   <div class="charts" id="charts"></div>
@@ -142,15 +199,30 @@ body{padding-bottom:84px}
 
 <script>
 const API = "/api/agent-status?view=dashboard";
-const COLORS = { "R2": "var(--r2)", "BB-8": "var(--bb8)", "C-3PO": "var(--c3)" };
-const ORDER = ["R2", "BB-8", "C-3PO"];
+const COLORS = { "R2": "#4DA3FF", "BB-8": "#FFAD33", "C-3PO": "#C792FF" };
+const IMAGES = { "R2": "/images/r2.png", "BB-8": "/images/bb8.png", "C-3PO": "/images/c3po.png" };
+const ORDER = ["C-3PO", "BB-8", "R2"];
 const TEST_START = Date.parse("2026-10-11T04:44:00Z");
-// Línea base de la prueba: % trabajando medido antes de v3.30 (24 h al 10/10).
 const BASE_WORK = { "R2": 76.3, "BB-8": 62.4, "C-3PO": 63.4 };
+
 const nf = (n, d = 0) => n == null || isNaN(n) ? "–" : Number(n).toLocaleString("es-AR", { maximumFractionDigits: d, minimumFractionDigits: d });
 const short = (n) => n == null ? "–" : Math.abs(n) >= 1e6 ? nf(n / 1e6, 2) + " M" : Math.abs(n) >= 1e4 ? nf(n / 1e3, 1) + " k" : nf(n);
 const fmtDate = (d) => { const [, m, day] = d.split("-"); return `${+day}/${+m}`; };
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+
+// Theme Switcher
+const btnTheme = document.getElementById("btnTheme");
+let isLightTheme = localStorage.getItem("mc-theme") === "light";
+if (isLightTheme) {
+  document.documentElement.classList.add("theme-light");
+  btnTheme.textContent = "🌙 Modo Oscuro";
+}
+btnTheme.onclick = () => {
+  isLightTheme = !isLightTheme;
+  document.documentElement.classList.toggle("theme-light", isLightTheme);
+  localStorage.setItem("mc-theme", isLightTheme ? "light" : "dark");
+  btnTheme.textContent = isLightTheme ? "🌙 Modo Oscuro" : "☀️ Modo Claro";
+};
 
 function rankAt(ranks, agent, msAgo, fallback = false) {
   const target = Date.now() - msAgo;
@@ -159,13 +231,13 @@ function rankAt(ranks, agent, msAgo, fallback = false) {
   let best = null;
   for (const r of mine) { if (Date.parse(r.at) <= target) best = r; }
   if (best) return { ...best, exact: true };
-  const first = mine[0]; // historial más corto que el período pedido
+  const first = mine[0];
   return fallback && Date.now() - Date.parse(first.at) > 3 * 36e5 ? { ...first, exact: false } : null;
 }
 
 function deltaBox(now, past, label) {
   if (!now || !past) return `<div class="delta"><b class="eq">–</b><span>${label}</span></div>`;
-  const diff = past.rank - now; // positivo = subió
+  const diff = past.rank - now;
   const pct = (Math.abs(diff) / past.rank) * 100;
   const cls = diff > 0 ? "up" : diff < 0 ? "down" : "eq";
   const arrow = diff > 0 ? "▲" : diff < 0 ? "▼" : "=";
@@ -176,39 +248,112 @@ function deltaBox(now, past, label) {
 
 function card(a, days, ranks) {
   const mine = days.filter((d) => d.agent === a.name);
-  const full = mine.slice(0, -1).slice(-3); // últimos días completos
+  const full = mine.slice(0, -1).slice(-3);
   const xpDay = full.length > 1 ? (full.at(-1).xp - full[0].xp) / (full.length - 1) : null;
   const crDay = full.length > 1 ? (full.at(-1).crystal - full[0].crystal) / (full.length - 1) : null;
   const toLevel = a.nextLevelXp != null ? a.nextLevelXp - a.xp : null;
   const eta = xpDay > 0 && toLevel > 0 ? toLevel / xpDay : null;
   const b = a.board || {};
   const now = b.rank;
-  const pctLevel = a.nextLevelXp ? Math.min(100, (a.xp / a.nextLevelXp) * 100) : 0;
+  const pctLevel = a.nextLevelXp ? Math.min(100, (a.xp / a.nextLevelXp) * 100) : (a.xpPercent || 0);
   const gapAhead = b.ahead && b.xp != null ? b.ahead.xp - b.xp : null;
   const gapBehind = b.behind && b.xp != null ? b.xp - b.behind.xp : null;
   const passDays = gapAhead > 0 && xpDay > 0 ? gapAhead / xpDay : null;
-  const state = a.error ? "⚠️ sin lectura" : a.working ? "⚒️ trabajando" : "🏕️ parado";
+  const state = a.error ? "⚠️ sin lectura" : a.working ? "⚒️ trabajando" : "🏕️ en base";
+  const topPercent = (b.total || TOTAL) && now ? Math.max(1, Math.round((now / (b.total || TOTAL)) * 100)) : null;
+
   return `<div class="card">
-    <div class="drow"><span class="name" style="color:${COLORS[a.name]}">${esc(a.name)}</span><span class="sub">${state}</span></div>
-    <div class="drow" style="margin-top:6px"><span class="rank">${now ? "#" + now : "–"}</span><span class="sub">${(b.total || TOTAL) && now ? `de ${nf(b.total || TOTAL)} · top ${Math.max(1, Math.round((now / (b.total || TOTAL)) * 100))} %` : "puesto global"}</span></div>
-    <div class="deltas">${deltaBox(now, rankAt(ranks, a.name, 864e5, true), "1 día")}${deltaBox(now, rankAt(ranks, a.name, 7 * 864e5), "7 días")}${deltaBox(now, rankAt(ranks, a.name, 30 * 864e5), "30 días")}</div>
-    <div class="kv"><span>${esc(a.skill)} → L${(a.level ?? 0) + 1}</span><span>${nf(pctLevel, 1)} %</span></div>
-    <div class="bar"><i style="width:${pctLevel}%;background:${COLORS[a.name]}"></i></div>
+    <div class="card-header-flex">
+      <div class="avatar-wrap">
+        <img src="${IMAGES[a.name] || '/images/r2.png'}" alt="${esc(a.name)}" />
+      </div>
+      <div class="droid-info">
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="name" style="color:${COLORS[a.name]}">${esc(a.name)}</span>
+          <span class="state-tag">${state}</span>
+        </div>
+        <div class="loc-pin">📍 ${esc(a.location || 'Midnight City')}</div>
+      </div>
+      <div class="rank-box">
+        <span class="rank-num">${now ? "#" + now : "–"}</span>
+        <span class="rank-top">${topPercent ? `Top ${topPercent} %` : 'puesto'}</span>
+      </div>
+    </div>
+
+    <div class="deltas">
+      ${deltaBox(now, rankAt(ranks, a.name, 864e5, true), "1 día")}
+      ${deltaBox(now, rankAt(ranks, a.name, 7 * 864e5), "7 días")}
+      ${deltaBox(now, rankAt(ranks, a.name, 30 * 864e5), "30 días")}
+    </div>
+
+    <div class="xp-section">
+      <div class="xp-head">
+        <span>${esc(a.skill || a.profession)} → L${(a.level ?? 0) + 1}</span>
+        <span style="color:${COLORS[a.name]}">${nf(pctLevel, 1)} %</span>
+      </div>
+      <div class="bar">
+        <i style="width:${pctLevel}%;background:${COLORS[a.name]};box-shadow:0 0 10px ${COLORS[a.name]}88"></i>
+      </div>
+    </div>
+
     <div class="kv">
+      <span>XP actual</span><span>${short(a.xp)} xp</span>
       <span>Falta para subir</span><span>${short(toLevel)} xp</span>
       <span>Llega en</span><span>${eta == null ? "–" : eta < 1 ? "menos de 1 día" : "~" + nf(eta, 1) + " días"}</span>
       <span>XP por día</span><span>${short(xpDay)}</span>
-      <span>Crystals</span><span>💎 ${nf(a.crystals)}</span>
+      <span>Crystals</span><span style="color:#C2CE24">💎 ${nf(a.crystals)}</span>
       <span>Crystals por día</span><span>${crDay == null ? "–" : (crDay >= 0 ? "+" : "") + nf(crDay)}</span>
       <span>Hambre · carga</span><span>🥤 ${nf(a.hunger)} · ⚖️ ${nf(a.speed)} %</span>
     </div>
-    <div class="gap">${b.ahead ? `⬆️ #${b.ahead.rank} ${esc(b.ahead.name)}: a ${short(gapAhead)} xp${passDays ? ` (lo pasa en ${passDays * 24 < 1 ? "menos de 1 h" : passDays < 1 ? "~" + nf(passDays * 24) + " h" : "~" + nf(passDays, 1) + " d"})` : ""}` : ""}
-      ${b.behind ? `<br>⬇️ #${b.behind.rank} ${esc(b.behind.name)}: ${short(gapBehind)} xp atrás` : ""}</div>
+
+    <div class="gap">
+      ${b.ahead ? `⬆️ #${b.ahead.rank} ${esc(b.ahead.name)}: a <b>${short(gapAhead)} xp</b>${passDays ? ` (pasa en ${passDays * 24 < 1 ? "menos de 1 h" : passDays < 1 ? "~" + nf(passDays * 24) + " h" : "~" + nf(passDays, 1) + " d"})` : ""}` : ""}
+      ${b.behind ? `<br>⬇️ #${b.behind.rank} ${esc(b.behind.name)}: a <b>${short(gapBehind)} xp</b> atrás` : ""}
+    </div>
   </div>`;
 }
 
-// Gráficos (v3.33): varios a la vista. Cada uno es una serie por droide sobre un eje
-// de días (o de horas, para el puesto) y se dibuja como líneas o barras agrupadas.
+// ───── Exportador Markdown ─────
+document.getElementById("btnCopyMd").onclick = () => {
+  if (!DATA?.live) return;
+  const live = ORDER.map((n) => DATA.live.find((a) => a.name === n)).filter(Boolean);
+  const totalCrystals = live.reduce((s, a) => s + (a.crystals || 0), 0);
+  const dateStr = new Date().toISOString().split("T")[0];
+
+  const md = `# 🌃 Tablero Midnight · Cuadrilla Aegis
+> Telemetría Oficial en Tiempo Real | Sincronizado: ${dateStr}
+> Tesorería Total: **${totalCrystals.toLocaleString("es-AR")} 💎**
+
+## 🏁 Carrera de XP & Posiciones Globales
+
+| Puesto | Droide | Profesión | XP Actual | % Próximo Nivel | Cristales | Estado / Ubicación |
+|---|---|---|---|---|---|---|
+${live.map((a) => {
+  const b = a.board || {};
+  const pct = a.nextLevelXp ? Math.min(100, (a.xp / a.nextLevelXp) * 100) : (a.xpPercent || 0);
+  const st = a.working ? "⚒️ Trabajando" : "🏕️ En base";
+  return `| **#${b.rank || '–'}** | **${a.name}** | ${a.skill || a.profession} | ${a.xp.toLocaleString("es-AR")} xp | **${nf(pct, 1)}%** (L${(a.level || 0) + 1}) | ${a.crystals.toLocaleString("es-AR")} 💎 | ${st} · ${a.location || 'Midnight'} |`;
+}).join("\n")}
+
+### ⚔️ Carrera Directa (Rivales Inmediatos)
+${live.map((a) => {
+  const b = a.board || {};
+  const gapAhead = b.ahead && b.xp != null ? b.ahead.xp - b.xp : null;
+  const gapBehind = b.behind && b.xp != null ? b.xp - b.behind.xp : null;
+  return `- **${a.name} (#${b.rank || '–'}):**
+  - ⬆️ Adelante: #${b.ahead?.rank ?? '–'} ${b.ahead?.name ?? '–'} (a ${gapAhead ? gapAhead.toLocaleString("es-AR") : '–'} xp)
+  - ⬇️ Atrás: #${b.behind?.rank ?? '–'} ${b.behind?.name ?? '–'} (a ${gapBehind ? gapBehind.toLocaleString("es-AR") : '–'} xp detrás)`;
+}).join("\n")}
+
+---
+*Reporte generado desde https://r2-telegram-reporter.vercel.app/tablero/*
+`;
+  navigator.clipboard.writeText(md);
+  const btn = document.getElementById("btnCopyMd");
+  btn.textContent = "✓ ¡Reporte Copiado!";
+  setTimeout(() => { btn.textContent = "📋 Copiar Resumen MD"; }, 2500);
+};
+
 const RANGES = { "24h": { label: "24 h", hours: 24 }, "48h": { label: "48 h", hours: 48 }, "7d": { label: "7 días", days: 7 }, "30d": { label: "30 días", days: 30 }, all: { label: "Todo" } };
 let RANGE = (() => { try { return localStorage.getItem("mc-range") || "7d"; } catch { return "7d"; } })();
 if (!RANGES[RANGE]) RANGE = "7d";
@@ -220,13 +365,13 @@ function daily(days, f, { delta = false, complete = false, window = null } = {})
     const by = Object.fromEntries(days.filter((d) => d.agent === agent).map((d) => [d.date, d]));
     return { agent, vals: dates.map((dt, i) => { const d = by[dt]; if (!d) return null; if (!delta) return f(d); const p = by[dates[i - 1]]; return p ? f(d) - f(p) : null; }) };
   });
-  if (complete) { dates = dates.slice(0, -1); series.forEach((s) => s.vals.pop()); } // hoy va en curso
+  if (complete) { dates = dates.slice(0, -1); series.forEach((s) => s.vals.pop()); }
   if (delta) { dates = dates.slice(1); series.forEach((s) => s.vals.shift()); }
   return { xs: dates.map(fmtDate), series };
 }
 
-// Hora por hora (últimas 24 o 48 h): mismo formato que daily().
 const hourLabel = (iso) => { const p = Object.fromEntries(new Intl.DateTimeFormat("es-AR", { timeZone: "America/Argentina/Buenos_Aires", day: "numeric", month: "numeric", hour: "2-digit", hourCycle: "h23" }).formatToParts(new Date(iso)).map((x) => [x.type, x.value])); return `${p.day}/${p.month} ${p.hour}h`; };
+
 function hourly(hours, f, { delta = false, back = 24 } = {}) {
   const since = Date.now() - (back + (delta ? 1 : 0)) * 36e5;
   let hs = [...new Set(hours.map((h) => h.at))].filter((h) => Date.parse(h) >= since).sort();
@@ -247,7 +392,7 @@ function hourlyRanks(ranks, backHours = null, raw = false) {
     series: ORDER.map((agent) => {
       const mine = ranks.filter((r) => r.agent === agent);
       const first = mine[0]?.rank;
-      const by = Object.fromEntries(mine.map((r) => [r.at.slice(0, 13), raw ? r.rank : first - r.rank])); // puesto o puestos ganados
+      const by = Object.fromEntries(mine.map((r) => [r.at.slice(0, 13), raw ? r.rank : first - r.rank]));
       return { agent, vals: hours.map((h) => by[h] ?? null) };
     }),
   };
@@ -267,13 +412,13 @@ function chart({ xs, series }, { kind = "line", fmt = short, invert = false, ran
   const gridN = height < 180 ? 2 : 4;
   for (let k = 0; k <= gridN; k++) {
     const v = lo + ((hi - lo) * k) / gridN, yy = y(v);
-    g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="#22263a"/><text x="${L - 6}" y="${yy + 4}" fill="#8a90a8" font-size="11" text-anchor="end">${fmt(v)}</text>`;
+    g += `<line x1="${L}" x2="${W - R}" y1="${yy}" y2="${yy}" stroke="rgba(255,252,238,0.08)"/><text x="${L - 6}" y="${yy + 4}" fill="#8a90a8" font-size="11" text-anchor="end">${fmt(v)}</text>`;
   }
   const maxTicks = Math.max(3, Math.floor((W - L - R) / (Math.max(...xs.map((d) => String(d).length)) * 7 + 10)));
   const step = Math.ceil(n / maxTicks);
   xs.forEach((d, i) => {
     if (i % step !== 0 && i !== n - 1) return;
-    if (i !== n - 1 && n - 1 - i < step) return; // no pisar la última etiqueta
+    if (i !== n - 1 && n - 1 - i < step) return;
     const anchor = kind === "bar" ? "middle" : i === 0 ? "start" : i === n - 1 ? "end" : "middle";
     g += `<text x="${x(i)}" y="${H - 7}" fill="#8a90a8" font-size="10.5" text-anchor="${anchor}">${esc(d)}</text>`;
   });
@@ -292,8 +437,6 @@ function chart({ xs, series }, { kind = "line", fmt = short, invert = false, ran
   return `<svg class="chartbox" viewBox="0 0 ${W} ${H}" role="img">${g}</svg>`;
 }
 
-// Puesto real de cada droide, cada uno con su propia escala (están en zonas muy
-// distintas del ranking, y en una escala común las tres líneas salen planas).
 function rankCard(ranks, back, width) {
   const data = hourlyRanks(ranks, back, true);
   const parts = data.series.map((s) => {
@@ -303,10 +446,9 @@ function rankCard(ranks, back, width) {
     const head = `<div class="now"><b style="color:${COLORS[s.agent]}">${s.agent}</b> de #${nf(first)} a <b>#${nf(last)}</b> <span class="${diff > 0 ? "up" : diff < 0 ? "down" : "eq"}">${diff > 0 ? "▲" : diff < 0 ? "▼" : "="}${diff ? Math.abs(diff) : ""}</span> · mejor #${nf(best)}</div>`;
     return head + chart({ xs: data.xs, series: [s] }, { invert: true, fmt: (v) => "#" + nf(v), width, height: 130 });
   }).join("");
-  return `<div class="card"><h3>Puesto en el ranking</h3>${parts || '<p class="sub">Todavía no hay suficientes datos.</p>'}<div class="note">Hora por hora; arriba es mejor. Cada droide tiene su propia escala. El registro de puestos empezó el 11/10 a la madrugada; antes de eso el juego no guarda historial.</div></div>`;
+  return `<div class="card"><h3>Puesto en el ranking</h3>${parts || '<p class="sub">Todavía no hay suficientes datos.</p>'}<div class="note">Hora por hora; arriba es mejor. Cada droide tiene su propia escala. El registro de puestos empezó el 11/10 a la madrugada.</div></div>`;
 }
 
-// Último valor de cada droide, para leer el gráfico sin tocarlo.
 const latest = ({ series }, fmt) => series.map((s) => { const v = [...s.vals].reverse().find((x) => x != null); return `<span style="color:${COLORS[s.agent]}">${s.agent} ${v == null ? "–" : fmt(v)}</span>`; }).join(" · ");
 
 function drawCharts() {
@@ -357,7 +499,7 @@ function boxesTable(days) {
     }
     h += "</tr>";
   }
-  return h + `</table><p class="note">% del día trabajando · 🛒 viajes a vender (por peso o por falta de crystals) · 🪓 viajes a comprar herramienta · 📜 contratos entregados · ⚠️ ciclos con error. El día de hoy va en curso.</p>`;
+  return h + `</table><p class="note">% del día trabajando · 🛒 viajes a vender · 🪓 viajes a comprar herramienta · 📜 contratos entregados · ⚠️ ciclos con error.</p>`;
 }
 
 function testBlock(days) {
@@ -377,7 +519,7 @@ function testBlock(days) {
     const diff = wNow != null ? wNow - BASE_WORK[a] : null;
     h += `<tr><td style="color:${COLORS[a]}">${a}</td><td>${nf(BASE_WORK[a], 1)} %</td><td class="${diff == null ? "" : diff >= 0 ? "up" : "down"}">${wNow == null ? "–" : nf(wNow, 1) + " %"}</td><td>${nf(perDay(b), 0)}</td><td>${nf(perDay(n), 0)}</td></tr>`;
   }
-  return h + `</table><p class="note">Las primeras horas mueven mucho el número; se lee en serio a partir del tercer día. Informe final el sábado 18/10.</p>`;
+  return h + `</table><p class="note">Las primeras horas mueven mucho el número; se lee en serio a partir del tercer día.</p>`;
 }
 
 function phasesBlock(phases) {
@@ -419,7 +561,7 @@ async function load() {
     document.getElementById("err").textContent = "No pude leer los datos ahora. Probá recargar en un rato.";
   }
 }
-// ───── Explorar Midnight City (v3.34): qué tiene el juego y qué hicimos y qué no ─────
+
 const SKILL_ES = { woodcutting: "Tala", mining: "Minería", hacking: "Hacking", smithing: "Herrería", crafting: "Artesanía", fishing: "Pesca", farming: "Cultivo", scavenging: "Rebusque", cooking: "Cocina", chemistry: "Química", energy: "Energía", engineering: "Ingeniería", agility: "Agilidad", infiltration: "Infiltración", combat: "Combate", defence: "Defensa", ranged: "Distancia", vitality: "Vitalidad", bounty_hunting: "Caza de recompensas" };
 const BOARD_ES = { experience: "Experiencia total", completedContracts: "Contratos", mostLiked: "Likes", richest: "Riqueza", mostPopular: "Popularidad", ...SKILL_ES };
 const lvlColor = (l) => l >= 20 ? "background:#1f6f4a;color:#fff" : l >= 10 ? "background:#2d4f3f;color:#fff" : l >= 2 ? "background:#26304a" : "color:#555b70";
@@ -442,7 +584,6 @@ function exploreHtml(e) {
     <div><b>${t.boards}</b><span>rankings distintos</span></div>
   </div></div>`;
 
-  // Rankings donde mejor estamos
   h += `<div class="card" style="margin-top:12px"><h3 style="margin:0 0 4px">🏆 Dónde estamos mejor</h3><p class="sub" style="margin-top:0">Los rankings en los que cada droide está más arriba, de los ${t.boards} que tiene el juego.</p><div class="grid">`;
   for (const d of D) {
     const best = Object.entries(d.ranks).filter(([, r]) => r).sort((a, b) => a[1] - b[1]).slice(0, 5);
@@ -450,7 +591,6 @@ function exploreHtml(e) {
   }
   h += `</div></div>`;
 
-  // Habilidades
   h += `<div class="card scroll" style="margin-top:12px"><h3 style="margin:0 0 4px">🎓 Las ${t.skills} habilidades</h3><p class="sub" style="margin-top:0">Nivel de cada droide. Toda la experiencia de cualquier habilidad suma al ranking general.</p>
     <table><tr><th>Habilidad</th>${D.map((d) => `<th style="color:${COLORS[d.name]}">${d.name}</th>`).join("")}<th>Se entrena con</th></tr>`;
   const order = [...e.skillIds].sort((a, b) => Math.max(...D.map((d) => d.skills[b]?.level ?? 1)) - Math.max(...D.map((d) => d.skills[a]?.level ?? 1)));
@@ -461,44 +601,24 @@ function exploreHtml(e) {
   }
   h += `</table></div>`;
 
-  // Contratos
-  const doableAll = D.reduce((s, d) => s + d.contracts.doable, 0), xpAll = D.reduce((s, d) => s + d.contracts.doableXp, 0);
-  h += `<div class="card" style="margin-top:12px"><h3 style="margin:0 0 4px">📜 Contratos <span class="warn">· sin explorar</span></h3>
-    <p style="margin:4px 0">Encargos de las facciones de la ciudad: entregás un objeto y te dan experiencia y crystals, o documentos (reportes, libros de cuentas). Hoy podríamos hacer <b>${doableAll}</b> con lo que ya tenemos en el inventario.</p><div class="kv">
-    ${D.map((d) => `<span style="color:${COLORS[d.name]}">${d.name}</span><span>${d.contracts.doable} listos · +${nf(d.contracts.doableXp)} xp</span>`).join("")}</div>
-    <p class="note">Dan poca experiencia (${nf(xpAll)} entre todos, menos de una hora de trabajo), pero cuentan para el ranking de contratos, donde hoy no figuramos. Los disponibles cambian según dónde está parado cada uno: BB-8 tenía 3 en la mina y 0 en el centro.</p></div>`;
+  const doableAll = D.reduce((s, d) => s + d.contracts.doable, 0);
+  h += `<div class="card" style="margin-top:12px"><h3 style="margin:0 0 4px">📜 Contratos</h3>
+    <p style="margin:4px 0">Encargos de las facciones de la ciudad. Hoy podríamos hacer <b>${doableAll}</b> con lo que ya tenemos en inventario.</p><div class="kv">
+    ${D.map((d) => `<span style="color:${COLORS[d.name]}">${d.name}</span><span>${d.contracts.doable} listos · +${nf(d.contracts.doableXp)} xp</span>`).join("")}</div></div>`;
 
-  // Batallas
-  h += `<div class="card scroll" style="margin-top:12px"><h3 style="margin:0 0 4px">⚔️ Batallas <span class="warn">· sin explorar</span></h3>
-    <p style="margin:4px 0">Sí hay: ${t.enemies} enemigos de ${e.enemyFactions.length} bandas (${e.enemyFactions.join(", ")}), todos en <b>${esc(e.enemyArea)}</b>, en 5 niveles. Pelear da experiencia de combate por cada golpe y una recompensa por cada enemigo vencido, y a veces sueltan objetos.</p>
-    <table><tr><th>Enemigo</th><th>Nivel</th><th>Vida</th><th>Ataque</th><th>XP por vencerlo</th></tr>${e.enemies.map((x) => `<tr><td>${x.tier}</td><td>${x.level}</td><td>${x.health}</td><td>${x.attack}</td><td>${x.bountyXp}</td></tr>`).join("")}</table>
-    <p class="note"><b>Por qué hoy no conviene:</b> los tres tienen combate en nivel 1, ninguna arma ni armadura, y si un droide muere pierde lo que lleva encima: ${D.map((d) => `${d.name} arriesga ${nf(d.death.crystalsAtRisk)} crystals`).join(", ")}. La experiencia de pelear (57 a 617 por enemigo) es muy poca comparada con lo que ganan trabajando (cientos de miles por día).</p></div>`;
+  h += `<div class="card scroll" style="margin-top:12px"><h3 style="margin:0 0 4px">⚔️ Batallas</h3>
+    <p style="margin:4px 0">${t.enemies} enemigos en <b>${esc(e.enemyArea)}</b>. Protocolo seguro: vaciar cristales antes de entrar.</p>
+    <table><tr><th>Enemigo</th><th>Nivel</th><th>Vida</th><th>Ataque</th><th>XP por vencerlo</th></tr>${e.enemies.map((x) => `<tr><td>${x.tier}</td><td>${x.level}</td><td>${x.health}</td><td>${x.attack}</td><td>${x.bountyXp}</td></tr>`).join("")}</table></div>`;
 
-  // Materiales guardados
   h += `<div class="card scroll" style="margin-top:12px"><h3 style="margin:0 0 4px">📦 Lo que acumulamos y nadie compra</h3>
-    <p style="margin:4px 0">Materiales que salen del trabajo y ningún mercader compra. No son basura: son ingredientes de recetas, pero para fabricar hay que subir habilidades que hoy están en 1.</p>
+    <p style="margin:4px 0">Materiales para fundir en forjas o aserraderos y subir Smithing/Crafting.</p>
     <div class="grid">${D.map((d) => `<div><b style="color:${COLORS[d.name]}">${d.name}</b><div class="kv" style="margin-top:6px">${d.unsold.slice(0, 5).map((u) => `<span>${esc(u.name)}</span><span>${nf(u.qty)}${u.recipes ? ` · ${u.recipes} rec.` : ""}</span>`).join("")}</div></div>`).join("")}</div></div>`;
 
-  // Construcción
-  if (e.construction) h += `<div class="card" style="margin-top:12px"><h3 style="margin:0 0 4px">🏗️ Terrenos para construir</h3>
-    <p style="margin:4px 0">Hay ${e.construction.count} terrenos. Construir cuesta <b>${nf(e.construction.installCost)}</b> crystals, más <b>${nf(e.construction.upkeep)}</b> por día de mantenimiento, que sube ${nf(e.construction.upkeepIncrease)} cada día. A cambio da +${e.construction.workBonus} % de trabajo. Entre los tres tenemos unos ${nf(D.reduce((s, d) => s + d.death.crystalsAtRisk, 0))} crystals: hoy está lejos.</p></div>`;
-
-  // Mapa
-  const where = Object.fromEntries(D.map((d) => [d.name, d.space]));
   const visited = {};
   for (const p of e.places || []) (visited[p.space] ??= []).push(p.agent);
-  h += `<div class="card" style="margin-top:12px"><h3 style="margin:0 0 4px">🗺️ El mapa</h3><p class="sub" style="margin-top:0">${t.spaces} lugares. Ahora: ${D.map((d) => `${d.name} en ${esc(d.space ?? "?")}`).join(" · ")}.</p>
-    <div>${e.spaces.map((sp) => { const here = D.filter((d) => d.space === sp.name).map((d) => d.name); const been = (visited[sp.id] || []); const act = [e.activity.enemies[sp.id] && "⚔️", e.activity.contracts[sp.id] && "📜", e.activity.workstations[sp.id] && "🛠️"].filter(Boolean).join(""); return `<span class="tag" style="${here.length ? "background:#1f6f4a;color:#fff" : been.length ? "background:#26304a;color:#e8eaf4" : ""}">${esc(sp.name)}${act ? " " + act : ""}${here.length ? " · " + here.join(", ") : ""}</span>`; }).join("")}</div>
-    <p class="note">Verde: donde está cada uno ahora. Azul: por donde pasaron (lo registramos desde el 11/10). ⚔️ enemigos · 📜 contratos · 🛠️ talleres para fabricar.</p></div>`;
+  h += `<div class="card" style="margin-top:12px"><h3 style="margin:0 0 4px">🗺️ El mapa</h3><p class="sub" style="margin-top:0">${t.spaces} lugares en Midnight.</p>
+    <div>${e.spaces.map((sp) => { const here = D.filter((d) => d.space === sp.name).map((d) => d.name); const been = (visited[sp.id] || []); const act = [e.activity.enemies[sp.id] && "⚔️", e.activity.contracts[sp.id] && "📜", e.activity.workstations[sp.id] && "🛠️"].filter(Boolean).join(""); return `<span class="tag" style="${here.length ? "background:#1f6f4a;color:#fff" : been.length ? "background:#26304a;color:#e8eaf4" : ""}">${esc(sp.name)}${act ? " " + act : ""}${here.length ? " · " + here.join(", ") : ""}</span>`; }).join("")}</div></div>`;
 
-  // Preguntas
-  h += `<div class="card faq" style="margin-top:12px"><h3 style="margin:0 0 4px">❓ Preguntas</h3>
-    <details><summary>¿Hay batallas? ¿Para qué sirven?</summary><p>Sí, ${t.enemies} enemigos en ${esc(e.enemyArea)}. Dan experiencia por cada golpe, una recompensa al vencerlos y a veces objetos. Hoy no conviene: estamos en nivel 1 sin armas, y morir hace perder lo que se lleva encima.</p></details>
-    <details><summary>¿Pelear o hacer contratos sube la experiencia del personaje?</summary><p>Sí. El ranking general suma la experiencia de todas las habilidades, así que cualquier cosa que entrene una habilidad suma. Pero lo que más suma, por lejos, es el trabajo de cada profesión, que es lo que hacen hoy.</p></details>
-    <details><summary>¿Es al pedo hacer contratos?</summary><p>Para subir en el ranking general, casi sí: dan poca experiencia. Para figurar en el ranking de contratos, no. El juego los marca como completados, así que parecen de una sola vez, y ya los podemos hacer con lo que tenemos.</p></details>
-    <details><summary>¿Qué herramientas tenemos y cuáles no?</summary><p>Cada uno tiene la de su oficio: ${D.map((d) => `${d.name}: ${d.tools.join(", ") || "ninguna"}`).join(" · ")}. El juego tiene ${t.tools} herramientas y ${t.equipment} piezas de equipo (armas y armaduras); de equipo no usamos ninguna.</p></details>
-    <details><summary>¿Qué no hicimos todavía?</summary><p>Contratos, batallas, fabricar con recetas, construir en terrenos y la mayoría de las habilidades (${t.skills - Math.max(...D.map(trained))} de ${t.skills} siguen en nivel 1 para todos). Lo más prometedor para probar: los contratos (gratis, ya los podemos hacer) y fabricar con lo acumulado.</p></details>
-  </div>`;
   return h;
 }
 
@@ -513,13 +633,11 @@ async function loadExplore() {
   }
 }
 
-// ───── Menú: una sección por pantalla (mobile first). La URL (#hoy, #graficos…) recuerda dónde estás. ─────
 const TABS = ["hoy", "graficos", "boxes", "explorar", "mundo3d", "bitacora"];
 let exploreLoaded = false;
-
-// ───── Bitácora: tablero/bitacora.json, a mano, una entrada por decisión o hallazgo ─────
 const BIT_TIPOS = { cambio: "🔁 Cambio", diagnostico: "🔎 Diagnóstico", incidente: "⚠️ Incidente", proximo: "🧭 Próximo" };
 let bitacoraLoaded = false;
+
 async function loadBitacora() {
   const box = document.getElementById("bitacora");
   try {
@@ -534,11 +652,12 @@ async function loadBitacora() {
     box.innerHTML = '<div class="card sub">No pude leer la bitácora. Probá recargar.</div>';
   }
 }
+
 function showTab(t) {
   if (!TABS.includes(t)) t = "hoy";
   document.querySelectorAll(".page").forEach((p) => p.classList.toggle("on", p.dataset.page === t));
   document.querySelectorAll("#menu a").forEach((a) => a.classList.toggle("on", a.dataset.tab === t));
-  if (t === "graficos" && DATA) drawCharts(); // los gráficos miden el ancho: se dibujan cuando se ven
+  if (t === "graficos" && DATA) drawCharts();
   if (t === "explorar" && !exploreLoaded) { exploreLoaded = true; loadExplore(); }
   if (t === "bitacora" && !bitacoraLoaded) { bitacoraLoaded = true; loadBitacora(); }
   if (t === "mundo3d") {
@@ -552,6 +671,7 @@ function showTab(t) {
   document.body.classList.toggle("tab-mundo", t === "mundo3d");
   window.scrollTo({ top: 0 });
 }
+
 window.addEventListener("hashchange", () => showTab(location.hash.slice(1)));
 showTab(location.hash.slice(1));
 
