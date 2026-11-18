@@ -1,5 +1,12 @@
 [
   {
+    "fecha": "2026-11-18",
+    "tipo": "cambio",
+    "titulo": "v3.47: Sprints Scrum 1-4, Historial All-Time desde Génesis (27/09) y Pestaña Skills & Personajes",
+    "detalle": "1) Sprint 1: BB-8 desactiva la compra de obsidian_pickaxe (buyTool: false), eliminando 37 viajes/día al Volcán y recuperando ~6 h/día de minería; fix del bloqueo de 2 h en crafteo al agotarse insumos y reactivación inmediata de perform_job tras ventas. 2) Sprint 2: Migración de contracts a quests oficiales (deliver_quest) con entrega en tránsito por Central Plaza. 3) Sprint 3: C-3PO suma Cooking para procesar sus 17.242 pescados crudos. 4) Tablero: archivo histórico completo desde el Día 1 (27/09/2026) fusionado con vivo sin timeouts, selector de 7 plazos (24h a Todo) y nueva sección de Skills & Ficha Profunda de cada personaje.",
+    "estado": "en producción"
+  },
+  {
     "fecha": "2026-11-10",
     "tipo": "cambio",
     "titulo": "v3.44: optimización de tiempo útil y protección de trabajo",

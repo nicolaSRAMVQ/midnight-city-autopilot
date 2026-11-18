@@ -20,13 +20,13 @@
 body{
   margin:0;background:var(--bg);color:var(--tx);
   font:14.5px/1.45 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif;
-  padding:16px;max-width:1040px;margin-inline:auto;
+  padding:16px;max-width:1100px;margin-inline:auto;
   transition:background .2s,color .2s;
 }
 header.top{
   display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:12px;
 }
-.brand-title{display:flex;align-items:center;gap:8px}
+.brand-title{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .brand-badge{background:rgba(194,206,36,0.15);color:var(--acc);font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px;font-family:monospace}
 h1{font-size:24px;margin:0;letter-spacing:-.3px;font-weight:800}
 h2{font-size:12.5px;text-transform:uppercase;letter-spacing:1.5px;color:var(--mut);margin:24px 0 10px;font-weight:700}
@@ -40,7 +40,7 @@ button.action-btn{
 button.action-btn:hover{border-color:var(--acc);color:var(--acc)}
 button.action-btn.active{background:var(--acc);color:#0B0C0B;border-color:var(--acc)}
 
-.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+.grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(310px,1fr))}
 .card{
   background:var(--card);border:1px solid var(--line);border-radius:18px;
   padding:16px;box-shadow:0 4px 20px rgba(0,0,0,0.15);transition:border .2s,transform .2s;
@@ -79,18 +79,29 @@ button.action-btn.active{background:var(--acc);color:#0B0C0B;border-color:var(--
 .kv span:nth-child(odd){color:var(--mut);font-family:inherit}
 .gap{font-size:11.5px;color:var(--mut);margin-top:10px;border-top:1px solid var(--line);padding-top:8px;font-family:monospace;line-height:1.45}
 
+/* Mini secondary skills on Hoy card */
+.sec-skills{margin-top:10px;padding-top:8px;border-top:1px solid var(--line)}
+.sec-title{font-size:11px;text-transform:uppercase;letter-spacing:.8px;color:var(--mut);font-weight:700;margin-bottom:6px;display:flex;justify-content:space-between}
+.sec-pills{display:flex;flex-wrap:wrap;gap:5px}
+.sec-pill{
+  font-size:11px;font-family:monospace;padding:3px 8px;border-radius:8px;
+  background:var(--subtle);border:1px solid var(--line);display:inline-flex;align-items:center;gap:5px;
+}
+.sec-pill b{color:var(--tx)}
+
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
-.tabs button{background:var(--subtle);color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font:inherit;font-size:12.5px;cursor:pointer}
-.tabs button.on{color:var(--tx);border-color:var(--acc);background:rgba(194,206,36,0.15)}
+.tabs button{background:var(--subtle);color:var(--mut);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font:inherit;font-size:12.5px;cursor:pointer;transition:all .15s}
+.tabs button:hover{border-color:var(--acc);color:var(--tx)}
+.tabs button.on{color:var(--tx);border-color:var(--acc);background:rgba(194,206,36,0.18);font-weight:600}
 svg{display:block;width:100%;height:auto}
-.legend{display:flex;gap:14px;font-size:12px;color:var(--mut);margin-top:6px}
+.legend{display:flex;gap:14px;font-size:12px;color:var(--mut);margin-top:6px;flex-wrap:wrap;align-items:center}
 .legend i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
 table{width:100%;border-collapse:collapse;font-size:12.5px}
 th,td{padding:7px 5px;text-align:right;border-bottom:1px solid var(--line)}
 th:first-child,td:first-child{text-align:left}
 th{color:var(--mut);font-weight:600;font-size:11.5px}
 .scroll{overflow-x:auto}
-.charts{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr))}
+.charts{display:grid;gap:12px;grid-template-columns:repeat(auto-fit,minmax(min(100%,440px),1fr))}
 .charts h3{margin:0 0 2px;font-size:15px}
 .charts .now{font-size:12px;color:var(--mut);margin-bottom:6px;font-family:monospace}
 .chartbox{width:100%}
@@ -100,30 +111,42 @@ th{color:var(--mut);font-weight:600;font-size:11.5px}
 .big div{background:var(--subtle);border-radius:12px;padding:12px;border:1px solid var(--line)}
 .big b{display:block;font-size:22px;font-family:monospace}
 .big span{font-size:11.5px;color:var(--mut)}
-.lvl{display:inline-block;min-width:30px;padding:2px 6px;border-radius:6px;text-align:center;font-variant-numeric:tabular-nums}
-.faq details{border-bottom:1px solid var(--line);padding:10px 0}
-.faq summary{cursor:pointer;font-weight:600}
-.faq p{margin:8px 0 0;color:var(--mut);font-size:13.5px}
+.lvl{display:inline-block;min-width:30px;padding:2px 6px;border-radius:6px;text-align:center;font-variant-numeric:tabular-nums;font-family:monospace;font-weight:700}
 .tag{display:inline-block;font-size:11px;padding:2px 8px;border-radius:999px;background:var(--subtle);border:1px solid var(--line);color:var(--mut);margin:2px}
 .ok{color:var(--up)}.warn{color:#ffad33}
 .note{font-size:11.5px;color:var(--mut);margin-top:8px}
+
+/* Skills Deep Sheet */
+.skill-branch{margin-top:14px}
+.skill-branch-title{font-size:11.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--acc);margin-bottom:8px;display:flex;justify-content:space-between}
+.skill-grid{display:grid;gap:8px;grid-template-columns:repeat(auto-fit,minmax(215px,1fr))}
+.skill-row{
+  background:var(--subtle);border:1px solid var(--line);border-radius:11px;padding:8px 10px;
+  display:flex;flex-direction:column;gap:4px;
+}
+.skill-row.trained{border-color:rgba(194,206,36,0.32);background:rgba(194,206,36,0.04)}
+.skill-row-top{display:flex;justify-content:space-between;align-items:center;font-size:12.5px;font-weight:600}
+.skill-row-sub{display:flex;justify-content:space-between;font-size:10.5px;color:var(--mut);font-family:monospace}
+.mini-bar{height:5px;background:var(--bar-bg);border-radius:999px;overflow:hidden}
+.mini-bar i{display:block;height:100%;border-radius:999px}
+
 #err{color:var(--down);font-size:12px}
 body{padding-bottom:84px}
 .page{display:none}
 .page.on{display:block;animation:fade .2s}
 @keyframes fade{from{opacity:.4}to{opacity:1}}
 .page>h2:first-child{margin-top:14px}
-.menu{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));background:rgba(11,12,11,.95);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
+.menu{position:fixed;left:0;right:0;bottom:0;z-index:20;display:grid;grid-template-columns:repeat(7,minmax(0,1fr));background:rgba(11,12,11,.95);backdrop-filter:blur(10px);border-top:1px solid var(--line);padding:6px 4px calc(6px + env(safe-area-inset-bottom))}
 .theme-light .menu{background:rgba(245,242,235,.95)}
-.menu a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:10px;color:var(--mut);text-decoration:none;font-size:17px;min-width:0;overflow:hidden}
+.menu a{display:flex;flex-direction:column;align-items:center;gap:2px;padding:6px 2px;border-radius:10px;color:var(--mut);text-decoration:none;font-size:16px;min-width:0;overflow:hidden}
 .menu a span{display:block;max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:10px;letter-spacing:0;text-align:center;line-height:1.15;font-weight:600}
 .menu a.on{color:var(--acc);background:rgba(194,206,36,0.12)}
 .stage3d{padding:0;overflow:hidden;border-radius:16px;height:min(78vh,820px);min-height:480px;border:1px solid var(--line)}
 .stage3d iframe{width:100%;height:100%;border:0;display:block}
 @media (min-width:760px){
   body{padding-bottom:24px}
-  .menu{position:sticky;top:0;bottom:auto;margin:12px 0 8px;border:1px solid var(--line);border-radius:14px;grid-template-columns:repeat(6,auto);justify-content:start;gap:4px;padding:5px}
-  .menu a{flex-direction:row;gap:8px;font-size:15px;padding:7px 14px}
+  .menu{position:sticky;top:0;bottom:auto;margin:12px 0 8px;border:1px solid var(--line);border-radius:14px;grid-template-columns:repeat(7,auto);justify-content:start;gap:4px;padding:5px}
+  .menu a{flex-direction:row;gap:7px;font-size:15px;padding:7px 13px}
   .menu a span{font-size:13px}
 }
 </style>
@@ -133,7 +156,7 @@ body{padding-bottom:84px}
   <div>
     <div class="brand-title">
       <h1>🌃 Tablero Midnight</h1>
-      <span class="brand-badge">Aegis · Namarie</span>
+      <span class="brand-badge">Aegis · Namarie v3.47</span>
     </div>
     <div class="sub" id="upd">Cargando telemetría en vivo…</div>
     <div id="err"></div>
@@ -147,6 +170,7 @@ body{padding-bottom:84px}
   <nav class="menu" id="menu">
     <a href="#hoy" data-tab="hoy">🏁 <span>Hoy</span></a>
     <a href="#graficos" data-tab="graficos">📈 <span>Gráficos</span></a>
+    <a href="#skills" data-tab="skills">🎓 <span>Skills</span></a>
     <a href="#boxes" data-tab="boxes">🔧 <span>Boxes</span></a>
     <a href="#explorar" data-tab="explorar">🧭 <span>Explorar</span></a>
     <a href="#mundo3d" data-tab="mundo3d">🎮 <span>Mundo</span></a>
@@ -155,21 +179,35 @@ body{padding-bottom:84px}
 </header>
 
 <section class="page" data-page="hoy">
-  <h2>🏁 Ranking, Carrera de XP & Cuadrilla</h2>
+  <h2>🏁 Ranking, Carrera de XP & Estado en Vivo</h2>
+  <div id="treasuryBar" style="margin-bottom:12px"></div>
   <div class="grid" id="cards"></div>
 </section>
 
 <section class="page" data-page="graficos">
-  <h2>📈 Gráficos de Evolución</h2>
-  <div class="tabs" id="ranges"></div>
-  <div class="legend" id="legend" style="margin:-2px 0 10px"></div>
+  <h2>📈 Gráficos de Evolución (Desde Génesis 27/09/2026)</h2>
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-bottom:8px">
+    <div class="tabs" id="ranges" style="margin-bottom:0"></div>
+    <div class="tabs" id="agentFilter" style="margin-bottom:0"></div>
+  </div>
+  <div id="rangeSummary" style="margin-bottom:12px"></div>
+  <div class="legend" id="legend" style="margin:0 0 10px"></div>
   <div class="charts" id="charts"></div>
 </section>
 
+<section class="page" data-page="skills">
+  <h2>🎓 Skills, Arsenal & Ficha Profunda de Personajes</h2>
+  <div class="tabs" id="skillTabs"></div>
+  <div id="skillsContent"><div class="card sub">Cargando fichas de personajes…</div></div>
+</section>
+
 <section class="page" data-page="boxes">
-  <h2>🔧 Boxes, últimos días</h2>
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px">
+    <h2>🔧 Boxes & Eficiencia Diaria</h2>
+    <div class="tabs" id="boxesRanges" style="margin:14px 0 6px"></div>
+  </div>
   <div class="card scroll" id="boxes"></div>
-  <h2>🧪 Prueba de ventas (desde 11/10)</h2>
+  <h2>🧪 Prueba de ventas & Sprints de Eficiencia</h2>
   <div class="card" id="test"></div>
   <h2>📚 Historial de experimentos</h2>
   <div class="card" id="phases"></div>
@@ -205,9 +243,53 @@ const ORDER = ["C-3PO", "BB-8", "R2"];
 const TEST_START = Date.parse("2026-10-11T04:44:00Z");
 const BASE_WORK = { "R2": 76.3, "BB-8": 62.4, "C-3PO": 63.4 };
 
+const SKILL_ES = {
+  woodcutting: "Tala", mining: "Minería", hacking: "Hacking", smithing: "Herrería",
+  crafting: "Artesanía", fishing: "Pesca", farming: "Cultivo", scavenging: "Rebusque",
+  cooking: "Cocina", chemistry: "Química", energy: "Energía", engineering: "Ingeniería",
+  agility: "Agilidad", infiltration: "Infiltración", combat: "Combate", defence: "Defensa",
+  ranged: "Distancia", vitality: "Vitalidad", bounty_hunting: "Caza recompensas"
+};
+const SKILL_ICON = {
+  woodcutting: "🪓", mining: "⛏️", hacking: "💻", smithing: "🔥",
+  crafting: "🪚", fishing: "🎣", farming: "🌾", scavenging: "🧲",
+  cooking: "🍳", chemistry: "⚗️", energy: "⚡", engineering: "⚙️",
+  agility: "🤸", infiltration: "🥷", combat: "⚔️", defence: "🛡️",
+  ranged: "🏹", vitality: "❤️", bounty_hunting: "🎯"
+};
+const SKILL_BRANCHES = [
+  { title: "⚒️ Oficios Primarios & Recolección", keys: ["hacking", "mining", "woodcutting", "fishing", "farming", "scavenging"] },
+  { title: "🏭 Industria, Forja & Manufactura", keys: ["smithing", "crafting", "cooking", "energy", "chemistry", "engineering"] },
+  { title: "🥷 Movilidad Urbana & Sigilo", keys: ["agility", "infiltration"] },
+  { title: "⚔️ Combate, Supervivencia & Caza", keys: ["combat", "defence", "ranged", "vitality", "bounty_hunting"] }
+];
+const SKILL_MILESTONE = {
+  smithing: "L5 Pico Hierro · L11 Lingote Cobre (48k stock) · L21 Hacha Basalto",
+  crafting: "L11 Tabla Synthwood (103k corteza) · L21 Kits Cinder",
+  cooking: "L1 Pescado Cocido (17k stock) · L11 Ensalada Kelp",
+  hacking: "L21 Módulo Cipher · L31 Lattice Cipher · L41 Alloy Decoder",
+  mining: "L31 Pico Obsidiana · L61 Pico Neón",
+  woodcutting: "L21 Hacha Basalto · L61 Hacha Neón",
+  agility: "Atajos de Skybridge y Quests de mensajería",
+  infiltration: "Acceso a bóvedas y auditorías de señal",
+  energy: "L1 Conductor de Flujo · Quests de Charging House",
+  scavenging: "L1 Aleación Recuperada · L11 Polímero",
+  fishing: "L1 Laminado Perla · Insumo gratis para Cocina",
+  farming: "L1 Hilo Biofibra · L11 Pulpa Biofibra",
+  chemistry: "L1 Reactivo Aegis (Medicina) · L11 Solvente",
+  engineering: "L1 Actuador de Tránsito · Obras",
+  combat: "Amoeba Wilds (Ash Hounds L1 → L30)",
+  defence: "Reducción de daño en Amoeba Wilds",
+  ranged: "Combate a distancia",
+  vitality: "Más HP máximo para expediciones",
+  bounty_hunting: "Quests de Evidencia y Caza de Hounds"
+};
+const BOARD_ES = { experience: "Experiencia total", completedContracts: "Contratos/Quests", mostLiked: "Likes", richest: "Riqueza", mostPopular: "Popularidad", ...SKILL_ES };
+const lvlColor = (l) => l >= 30 ? "background:#15803d;color:#fff" : l >= 12 ? "background:#1f6f4a;color:#fff" : l >= 2 ? "background:#26304a;color:#e2e8f0" : "color:#555b70";
+
 const nf = (n, d = 0) => n == null || isNaN(n) ? "–" : Number(n).toLocaleString("es-AR", { maximumFractionDigits: d, minimumFractionDigits: d });
 const short = (n) => n == null ? "–" : Math.abs(n) >= 1e6 ? nf(n / 1e6, 2) + " M" : Math.abs(n) >= 1e4 ? nf(n / 1e3, 1) + " k" : nf(n);
-const fmtDate = (d) => { const [, m, day] = d.split("-"); return `${+day}/${+m}`; };
+const fmtDate = (d) => { if (!d) return ""; const [, m, day] = d.split("-"); return `${+day}/${+m}`; };
 const esc = (s) => String(s ?? "").replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
 
 // Theme Switcher
@@ -246,6 +328,12 @@ function deltaBox(now, past, label) {
   return `<div class="delta"><b class="${cls}">${arrow}${diff ? Math.abs(diff) : ""}</b><span>${diff ? nf(pct, 1) + " % · " : ""}${lab}</span></div>`;
 }
 
+function openDroidSkills(droidName) {
+  SKILL_VIEW = droidName;
+  location.hash = "#skills";
+  showTab("skills");
+}
+
 function card(a, days, ranks) {
   const mine = days.filter((d) => d.agent === a.name);
   const full = mine.slice(0, -1).slice(-3);
@@ -262,17 +350,26 @@ function card(a, days, ranks) {
   const state = a.error ? "⚠️ sin lectura" : a.working ? "⚒️ trabajando" : "🏕️ en base";
   const topPercent = (b.total || TOTAL) && now ? Math.max(1, Math.round((now / (b.total || TOTAL)) * 100)) : null;
 
+  // Secondary trained skills
+  const secSkills = Object.entries(a.allSkills || {})
+    .filter(([k, v]) => (v.level > 1 || v.xp > 0) && !String(a.skill || "").startsWith(k))
+    .sort((x, y) => y[1].level - x[1].level || y[1].xp - x[1].xp);
+
+  const vit = a.vitals || {};
+  const tr = a.training;
+
   return `<div class="card">
     <div class="card-header-flex">
       <div class="avatar-wrap">
         <img src="${IMAGES[a.name] || '/images/r2.png'}" alt="${esc(a.name)}" />
       </div>
       <div class="droid-info">
-        <div style="display:flex;align-items:center;gap:6px">
+        <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
           <span class="name" style="color:${COLORS[a.name]}">${esc(a.name)}</span>
           <span class="state-tag">${state}</span>
+          ${a.totalLevel ? `<span class="state-tag" style="color:var(--acc);border-color:rgba(194,206,36,0.3)">Lvl Total ${a.totalLevel}</span>` : ""}
         </div>
-        <div class="loc-pin">📍 ${esc(a.location || 'Midnight City')}</div>
+        <div class="loc-pin">📍 ${esc(a.location || 'Midnight City')}${a.coords ? ` (${a.coords.x}, ${a.coords.y})` : ""}</div>
       </div>
       <div class="rank-box">
         <span class="rank-num">${now ? "#" + now : "–"}</span>
@@ -282,8 +379,8 @@ function card(a, days, ranks) {
 
     <div class="deltas">
       ${deltaBox(now, rankAt(ranks, a.name, 864e5, true), "1 día")}
-      ${deltaBox(now, rankAt(ranks, a.name, 7 * 864e5), "7 días")}
-      ${deltaBox(now, rankAt(ranks, a.name, 30 * 864e5), "30 días")}
+      ${deltaBox(now, rankAt(ranks, a.name, 7 * 864e5, true), "7 días")}
+      ${deltaBox(now, rankAt(ranks, a.name, 30 * 864e5, true), "30 días")}
     </div>
 
     <div class="xp-section">
@@ -297,17 +394,29 @@ function card(a, days, ranks) {
     </div>
 
     <div class="kv">
-      <span>XP actual</span><span>${short(a.xp)} xp</span>
-      <span>Falta para subir</span><span>${short(toLevel)} xp</span>
-      <span>Llega en</span><span>${eta == null ? "–" : eta < 1 ? "menos de 1 día" : "~" + nf(eta, 1) + " días"}</span>
-      <span>XP por día</span><span>${short(xpDay)}</span>
-      <span>Crystals</span><span style="color:#C2CE24">💎 ${nf(a.crystals)}</span>
-      <span>Crystals por día</span><span>${crDay == null ? "–" : (crDay >= 0 ? "+" : "") + nf(crDay)}</span>
-      <span>Hambre · carga</span><span>🥤 ${nf(a.hunger)} · ⚖️ ${nf(a.speed)} %</span>
+      <span>XP Oficio · Total</span><span>${short(a.xp)} · <b>${short(a.totalXp || a.xp)} xp</b></span>
+      <span>Falta para L${(a.level ?? 0) + 1}</span><span>${short(toLevel)} xp (${eta == null ? "–" : eta < 1 ? "< 1 día" : "~" + nf(eta, 1) + " d"})</span>
+      <span>Ritmo XP / día</span><span>${short(xpDay)}/d</span>
+      <span>Crystals</span><span style="color:#C2CE24">💎 ${nf(a.crystals)} (${crDay == null ? "–" : (crDay >= 0 ? "+" : "") + nf(crDay) + "/d"})</span>
+      <span>Salud · Hambre · Carga</span><span>❤️ ${nf(a.health ?? 100)}/${nf(a.maxHealth ?? 100)} · 🥤 ${nf(a.hunger)} · ⚖️ ${nf(a.speed)}%</span>
+      <span>Reserva comida</span><span>🍵 ${vit.smoothies ?? 0}${vit.rawFish ? ` · 🐟 ${short(vit.rawFish)}` : ""} (~${vit.autonomyHours ?? 0}h autonomía)</span>
+      <span>Quests · Recetas</span><span>📜 ${a.quests?.completed ?? 0} hechas (${a.quests?.readyCount ?? 0} listas) · 🛠️ ${a.crafting?.readyRecipes?.length ?? 0} activas</span>
     </div>
 
+    ${secSkills.length ? `
+    <div class="sec-skills">
+      <div class="sec-title">
+        <span>🎓 Skills Secundarias (${a.trainedCount || (secSkills.length + 1)}/19)</span>
+        <span style="color:var(--acc);cursor:pointer" onclick="openDroidSkills('${a.name}')">Ver las 19 →</span>
+      </div>
+      <div class="sec-pills">
+        ${secSkills.slice(0, 6).map(([k, v]) => `<span class="sec-pill">${SKILL_ICON[k] || "•"} ${SKILL_ES[k] || k} <b>L${v.level}</b> <span class="sub">${nf(v.inLevelPct, 0)}%</span></span>`).join("")}
+      </div>
+      ${tr ? `<div class="sub" style="margin-top:6px;font-size:11px">🔄 Último turno: <b>${SKILL_ES[tr.skill] || tr.skill}</b> (${esc(tr.lastNote || (tr.active ? "entrenando ahora" : "completado"))})</div>` : ""}
+    </div>` : ""}
+
     <div class="gap">
-      ${b.ahead ? `⬆️ #${b.ahead.rank} ${esc(b.ahead.name)}: a <b>${short(gapAhead)} xp</b>${passDays ? ` (pasa en ${passDays * 24 < 1 ? "menos de 1 h" : passDays < 1 ? "~" + nf(passDays * 24) + " h" : "~" + nf(passDays, 1) + " d"})` : ""}` : ""}
+      ${b.ahead ? `⬆️ #${b.ahead.rank} ${esc(b.ahead.name)}: a <b>${short(gapAhead)} xp</b>${passDays ? ` (pasa en ${passDays * 24 < 1 ? "< 1 h" : passDays < 1 ? "~" + nf(passDays * 24) + " h" : "~" + nf(passDays, 1) + " d"})` : ""}` : ""}
       ${b.behind ? `<br>⬇️ #${b.behind.rank} ${esc(b.behind.name)}: a <b>${short(gapBehind)} xp</b> atrás` : ""}
     </div>
   </div>`;
@@ -326,23 +435,12 @@ document.getElementById("btnCopyMd").onclick = () => {
 
 ## 🏁 Carrera de XP & Posiciones Globales
 
-| Puesto | Droide | Profesión | XP Actual | % Próximo Nivel | Cristales | Estado / Ubicación |
+| Puesto | Droide | Profesión | Nivel Total | XP Total | Cristales | Estado / Ubicación |
 |---|---|---|---|---|---|---|
 ${live.map((a) => {
   const b = a.board || {};
-  const pct = a.nextLevelXp ? Math.min(100, (a.xp / a.nextLevelXp) * 100) : (a.xpPercent || 0);
   const st = a.working ? "⚒️ Trabajando" : "🏕️ En base";
-  return `| **#${b.rank || '–'}** | **${a.name}** | ${a.skill || a.profession} | ${a.xp.toLocaleString("es-AR")} xp | **${nf(pct, 1)}%** (L${(a.level || 0) + 1}) | ${a.crystals.toLocaleString("es-AR")} 💎 | ${st} · ${a.location || 'Midnight'} |`;
-}).join("\n")}
-
-### ⚔️ Carrera Directa (Rivales Inmediatos)
-${live.map((a) => {
-  const b = a.board || {};
-  const gapAhead = b.ahead && b.xp != null ? b.ahead.xp - b.xp : null;
-  const gapBehind = b.behind && b.xp != null ? b.xp - b.behind.xp : null;
-  return `- **${a.name} (#${b.rank || '–'}):**
-  - ⬆️ Adelante: #${b.ahead?.rank ?? '–'} ${b.ahead?.name ?? '–'} (a ${gapAhead ? gapAhead.toLocaleString("es-AR") : '–'} xp)
-  - ⬇️ Atrás: #${b.behind?.rank ?? '–'} ${b.behind?.name ?? '–'} (a ${gapBehind ? gapBehind.toLocaleString("es-AR") : '–'} xp detrás)`;
+  return `| **#${b.rank || '–'}** | **${a.name}** | ${a.skill || a.profession} | Lvl ${a.totalLevel || a.level} (${a.trainedCount || 1}/19 skills) | ${(a.totalXp || a.xp).toLocaleString("es-AR")} xp | ${a.crystals.toLocaleString("es-AR")} 💎 | ${st} · ${a.location || 'Midnight'} |`;
 }).join("\n")}
 
 ---
@@ -354,28 +452,53 @@ ${live.map((a) => {
   setTimeout(() => { btn.textContent = "📋 Copiar Resumen MD"; }, 2500);
 };
 
-const RANGES = { "24h": { label: "24 h", hours: 24 }, "48h": { label: "48 h", hours: 48 }, "7d": { label: "7 días", days: 7 }, "30d": { label: "30 días", days: 30 }, all: { label: "Todo" } };
-let RANGE = (() => { try { return localStorage.getItem("mc-range") || "7d"; } catch { return "7d"; } })();
-if (!RANGES[RANGE]) RANGE = "7d";
+// ───── GRÁFICOS MULTI-PLAZO & ALL-TIME (Desde 27/09/2026) ─────
+const RANGES = {
+  "24h": { label: "24 h", hours: 24 },
+  "48h": { label: "48 h", hours: 48 },
+  "7d":  { label: "7 días", days: 7 },
+  "14d": { label: "14 días", days: 14 },
+  "30d": { label: "30 días", days: 30 },
+  "45d": { label: "45 días", days: 45 },
+  "all": { label: "Todo (Desde 27/09)" }
+};
+let RANGE = (() => { try { return localStorage.getItem("mc-range") || "all"; } catch { return "all"; } })();
+if (!RANGES[RANGE]) RANGE = "all";
+let AGENT_FILTER = "ALL"; // "ALL" | "C-3PO" | "BB-8" | "R2"
+const activeAgents = () => AGENT_FILTER === "ALL" ? ORDER : [AGENT_FILTER];
 
 function daily(days, f, { delta = false, complete = false, window = null } = {}) {
   let dates = [...new Set(days.map((d) => d.date))].sort();
   if (window) dates = dates.slice(-(window + (delta ? 1 : 0) + (complete ? 1 : 0)));
-  const series = ORDER.map((agent) => {
+  const agents = activeAgents();
+  const series = agents.map((agent) => {
     const by = Object.fromEntries(days.filter((d) => d.agent === agent).map((d) => [d.date, d]));
-    return { agent, vals: dates.map((dt, i) => { const d = by[dt]; if (!d) return null; if (!delta) return f(d); const p = by[dates[i - 1]]; return p ? f(d) - f(p) : null; }) };
+    return {
+      agent,
+      vals: dates.map((dt, i) => {
+        const d = by[dt];
+        if (!d) return null;
+        if (!delta) return f(d);
+        const p = by[dates[i - 1]];
+        return p ? f(d) - f(p) : null;
+      })
+    };
   });
-  if (complete) { dates = dates.slice(0, -1); series.forEach((s) => s.vals.pop()); }
-  if (delta) { dates = dates.slice(1); series.forEach((s) => s.vals.shift()); }
-  return { xs: dates.map(fmtDate), series };
+  if (complete && dates.length > 2) { dates = dates.slice(0, -1); series.forEach((s) => s.vals.pop()); }
+  if (delta && dates.length > 1) { dates = dates.slice(1); series.forEach((s) => s.vals.shift()); }
+  return { xs: dates.map(fmtDate), rawDates: dates, series };
 }
 
-const hourLabel = (iso) => { const p = Object.fromEntries(new Intl.DateTimeFormat("es-AR", { timeZone: "America/Argentina/Buenos_Aires", day: "numeric", month: "numeric", hour: "2-digit", hourCycle: "h23" }).formatToParts(new Date(iso)).map((x) => [x.type, x.value])); return `${p.day}/${p.month} ${p.hour}h`; };
+const hourLabel = (iso) => {
+  const p = Object.fromEntries(new Intl.DateTimeFormat("es-AR", { timeZone: "America/Argentina/Buenos_Aires", day: "numeric", month: "numeric", hour: "2-digit", hourCycle: "h23" }).formatToParts(new Date(iso)).map((x) => [x.type, x.value]));
+  return `${p.day}/${p.month} ${p.hour}h`;
+};
 
 function hourly(hours, f, { delta = false, back = 24 } = {}) {
   const since = Date.now() - (back + (delta ? 1 : 0)) * 36e5;
   let hs = [...new Set(hours.map((h) => h.at))].filter((h) => Date.parse(h) >= since).sort();
-  const series = ORDER.map((agent) => {
+  const agents = activeAgents();
+  const series = agents.map((agent) => {
     const by = Object.fromEntries(hours.filter((h) => h.agent === agent).map((h) => [h.at, h]));
     return { agent, vals: hs.map((t, i) => { const d = by[t]; if (!d) return null; if (!delta) return f(d); const p = by[hs[i - 1]]; return p ? f(d) - f(p) : null; }) };
   });
@@ -387,9 +510,10 @@ function hourlyRanks(ranks, backHours = null, raw = false) {
   if (backHours) ranks = ranks.filter((r) => Date.parse(r.at) >= Date.now() - backHours * 36e5);
   const hours = [...new Set(ranks.map((r) => r.at.slice(0, 13)))].sort();
   const label = (h) => hourLabel(h + ":00:00Z");
+  const agents = activeAgents();
   return {
     xs: hours.map(label),
-    series: ORDER.map((agent) => {
+    series: agents.map((agent) => {
       const mine = ranks.filter((r) => r.agent === agent);
       const first = mine[0]?.rank;
       const by = Object.fromEntries(mine.map((r) => [r.at.slice(0, 13), raw ? r.rank : first - r.rank]));
@@ -400,8 +524,8 @@ function hourlyRanks(ranks, backHours = null, raw = false) {
 
 function chart({ xs, series }, { kind = "line", fmt = short, invert = false, range = null, width, height = 220 }) {
   const all = series.flatMap((s) => s.vals).filter((v) => v != null);
-  if (all.length < 2 || xs.length < 2) return `<p class="sub">Todavía no hay suficientes datos. Se va llenando solo.</p>`;
-  const W = Math.max(300, Math.min(640, width || 640)), H = height, L = 50, R = 10, T = 10, B = 26;
+  if (all.length < 2 || xs.length < 2) return `<p class="sub">Todavía no hay suficientes datos en esta ventana.</p>`;
+  const W = Math.max(300, Math.min(640, width || 640)), H = height, L = 52, R = 10, T = 10, B = 26;
   let [lo, hi] = range ?? [Math.min(...all), Math.max(...all)];
   if (kind === "bar") lo = Math.min(0, lo);
   if (hi === lo) { hi += 1; lo -= 1; }
@@ -426,12 +550,18 @@ function chart({ xs, series }, { kind = "line", fmt = short, invert = false, ran
     const c = COLORS[s.agent];
     if (kind === "bar") {
       const bw = (slot * 0.8) / series.length;
-      s.vals.forEach((v, i) => { if (v == null) return; const x0 = L + slot * i + slot * 0.1 + bw * si, y0 = y(Math.max(v, 0)), y1 = y(Math.min(v, 0)); g += `<rect x="${x0}" y="${y0}" width="${Math.max(1, bw - 1)}" height="${Math.max(1, y1 - y0)}" rx="2" fill="${c}"><title>${s.agent} ${esc(xs[i])}: ${fmt(v)}</title></rect>`; });
+      s.vals.forEach((v, i) => {
+        if (v == null) return;
+        const x0 = L + slot * i + slot * 0.1 + bw * si, y0 = y(Math.max(v, 0)), y1 = y(Math.min(v, 0));
+        g += `<rect x="${x0}" y="${y0}" width="${Math.max(1, bw - 1)}" height="${Math.max(1, y1 - y0)}" rx="2" fill="${c}"><title>${s.agent} ${esc(xs[i])}: ${fmt(v)}</title></rect>`;
+      });
     } else {
-      const pts = s.vals.map((v, i) => (v == null ? null : [x(i), y(v)])).filter(Boolean);
+      const pts = s.vals.map((v, i) => (v == null ? null : [x(i), y(v), xs[i], v])).filter(Boolean);
       if (!pts.length) return;
-      g += `<polyline fill="none" stroke="${c}" stroke-width="2.5" stroke-linejoin="round" points="${pts.map((p) => p.join(",")).join(" ")}"/>`;
-      if (pts.length <= 40) g += pts.map((p) => `<circle cx="${p[0]}" cy="${p[1]}" r="2.6" fill="${c}"/>`).join("");
+      g += `<polyline fill="none" stroke="${c}" stroke-width="2.5" stroke-linejoin="round" points="${pts.map((p) => `${p[0]},${p[1]}`).join(" ")}"/>`;
+      if (pts.length <= 60) {
+        g += pts.map((p) => `<circle cx="${p[0]}" cy="${p[1]}" r="2.6" fill="${c}"><title>${s.agent} (${esc(p[2])}): ${fmt(p[3])}</title></circle>`).join("");
+      }
     }
   });
   return `<svg class="chartbox" viewBox="0 0 ${W} ${H}" role="img">${g}</svg>`;
@@ -443,71 +573,287 @@ function rankCard(ranks, back, width) {
     const vals = s.vals.filter((v) => v != null);
     if (vals.length < 2) return "";
     const first = vals[0], last = vals.at(-1), best = Math.min(...vals), diff = first - last;
-    const head = `<div class="now"><b style="color:${COLORS[s.agent]}">${s.agent}</b> de #${nf(first)} a <b>#${nf(last)}</b> <span class="${diff > 0 ? "up" : diff < 0 ? "down" : "eq"}">${diff > 0 ? "▲" : diff < 0 ? "▼" : "="}${diff ? Math.abs(diff) : ""}</span> · mejor #${nf(best)}</div>`;
+    const head = `<div class="now"><b style="color:${COLORS[s.agent]}">${s.agent}</b> de #${nf(first)} a <b>#${nf(last)}</b> <span class="${diff > 0 ? "up" : diff < 0 ? "down" : "eq"}">${diff > 0 ? "▲" : diff < 0 ? "▼" : "="}${diff ? Math.abs(diff) : ""}</span> · mejor marca #${nf(best)}</div>`;
     return head + chart({ xs: data.xs, series: [s] }, { invert: true, fmt: (v) => "#" + nf(v), width, height: 130 });
   }).join("");
-  return `<div class="card"><h3>Puesto en el ranking</h3>${parts || '<p class="sub">Todavía no hay suficientes datos.</p>'}<div class="note">Hora por hora; arriba es mejor. Cada droide tiene su propia escala. El registro de puestos empezó el 11/10 a la madrugada.</div></div>`;
+  return `<div class="card"><h3>Puesto en el ranking global</h3>${parts || '<p class="sub">Todavía no hay suficientes datos.</p>'}<div class="note">Arriba es mejor. Cada droide tiene su propia escala. Registro de puestos activo desde el 11/10.</div></div>`;
+}
+
+function renderRangeSummary(days, hoursData, ranks, r) {
+  const agents = activeAgents();
+  let datesLabel = "";
+  const cardsHtml = agents.map((agent) => {
+    if (r.hours) {
+      const since = Date.now() - r.hours * 36e5;
+      const mine = hoursData.filter((h) => h.agent === agent && Date.parse(h.at) >= since).sort((a, b) => a.at.localeCompare(b.at));
+      if (mine.length < 2) return "";
+      const xpGain = mine.at(-1).xp - mine[0].xp;
+      const crGain = mine.at(-1).crystal - mine[0].crystal;
+      const avgWork = mine.reduce((s, x) => s + (x.working_pct || 0), 0) / mine.length;
+      datesLabel = `Últimas ${r.hours} horas`;
+      return `<div style="background:var(--subtle);border:1px solid var(--line);border-radius:12px;padding:10px 12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <b style="color:${COLORS[agent]};font-family:monospace;font-size:15px">${agent}</b>
+          <span class="tag">${nf(avgWork, 1)}% trab.</span>
+        </div>
+        <div class="kv" style="font-size:12px">
+          <span>XP ganada</span><span class="up">+${short(xpGain)} xp</span>
+          <span>Crystals netos</span><span style="color:#C2CE24">${crGain >= 0 ? "+" : ""}${nf(crGain)} 💎</span>
+        </div>
+      </div>`;
+    } else {
+      let mine = days.filter((d) => d.agent === agent).sort((a, b) => a.date.localeCompare(b.date));
+      if (r.days) mine = mine.slice(-r.days);
+      if (mine.length < 2) return "";
+      const first = mine[0], last = mine.at(-1);
+      datesLabel = `${fmtDate(first.date)} al ${fmtDate(last.date)} (${mine.length} días)`;
+      const xpGain = last.xp - first.xp;
+      const xp2Gain = (last.xp2 || 0) - (first.xp2 || 0);
+      const crGain = last.crystal - first.crystal;
+      const avgWork = mine.reduce((s, x) => s + (x.working_pct || 0), 0) / mine.length;
+      return `<div style="background:var(--subtle);border:1px solid var(--line);border-radius:12px;padding:10px 12px">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">
+          <b style="color:${COLORS[agent]};font-family:monospace;font-size:15px">${agent}</b>
+          <span class="tag">${nf(avgWork, 1)}% trab. prom.</span>
+        </div>
+        <div class="kv" style="font-size:12px">
+          <span>Evolución XP Oficio</span><span class="up">${short(first.xp)} ➔ <b>${short(last.xp)}</b> (+${short(xpGain)})</span>
+          <span>XP Secundaria</span><span>+${short(Math.max(0, xp2Gain))} xp</span>
+          <span>Evolución Tesoro</span><span style="color:#C2CE24">${short(first.crystal)} ➔ <b>${nf(last.crystal)} 💎</b> (+${short(crGain)})</span>
+        </div>
+      </div>`;
+    }
+  }).filter(Boolean).join("");
+
+  if (!cardsHtml) return "";
+  return `<div class="card" style="padding:12px 14px">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:6px">
+      <b style="font-size:13px">📊 Balance del Período Seleccionado: <span style="color:var(--acc)">${r.label}</span></b>
+      <span class="sub">${datesLabel}</span>
+    </div>
+    <div class="grid" style="grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:10px">${cardsHtml}</div>
+  </div>`;
 }
 
 const latest = ({ series }, fmt) => series.map((s) => { const v = [...s.vals].reverse().find((x) => x != null); return `<span style="color:${COLORS[s.agent]}">${s.agent} ${v == null ? "–" : fmt(v)}</span>`; }).join(" · ");
 
 function drawCharts() {
-  if (!DATA?.history || DATA.history.error) {
-    document.getElementById("charts").innerHTML = `
-      <div class="card sub" style="text-align:center;padding:2.5rem 1rem;">
-        <div style="font-size:1.75rem;margin-bottom:0.75rem;">⏳</div>
-        <div style="font-size:1.05rem;font-weight:600;color:var(--ink);margin-bottom:0.35rem;">El historial tardó en responder desde la base de datos</div>
-        <p class="sub" style="margin-bottom:1.25rem;max-width:440px;margin-left:auto;margin-right:auto;">El puesto global, XP y telemetría en vivo están intactos arriba. Podés forzar la recarga del historial ahora.</p>
-        <button onclick="load()" style="background:#C2CE24;color:#0B0C0B;font-weight:700;padding:9px 22px;border-radius:10px;border:none;cursor:pointer;display:inline-flex;align-items:center;gap:8px;box-shadow:0 2px 10px rgba(194,206,36,0.25);font-size:0.9rem;">
-          🔄 Reintentar carga de gráficos
-        </button>
-      </div>`;
+  if (!DATA?.history || !DATA.history.days?.length) {
+    document.getElementById("charts").innerHTML = `<div class="card sub">Cargando historial…</div>`;
     return;
   }
   const days = DATA.history.days || [], ranks = DATA.history.ranks || [];
   const width = (document.getElementById("charts").clientWidth || 640) - 30;
-  const trips = (d) => d.sell_overload + d.sell_liquidity;
+  const trips = (d) => (d.sell_overload || 0) + (d.sell_liquidity || 0);
   const pctFmt = (v) => nf(v) + " %";
   const r = RANGES[RANGE];
   const hoursData = DATA.history.hours || [];
   const rankBack = r.hours ?? (r.days ? r.days * 24 : null);
-  const since = r.hours ? `en las últimas ${r.hours} h` : r.days ? `en los últimos ${r.days} días` : "desde el 11/10";
+  const minDateStr = fmtDate(days[0]?.date || "2026-09-27");
+  const since = r.hours ? `en las últimas ${r.hours} h` : r.days ? `en los últimos ${r.days} días` : `desde el inicio (${minDateStr})`;
+
+  document.getElementById("ranges").innerHTML = Object.entries(RANGES).map(([k, v]) => `<button data-r="${k}" class="${k === RANGE ? "on" : ""}">${v.label}</button>`).join("");
+  document.querySelectorAll("#ranges button").forEach((b) => (b.onclick = () => { RANGE = b.dataset.r; try { localStorage.setItem("mc-range", RANGE); } catch {} drawCharts(); }));
+
+  const filterOpts = [["ALL", "Todos (3)"], ["C-3PO", "C-3PO"], ["BB-8", "BB-8"], ["R2", "R2"]];
+  document.getElementById("agentFilter").innerHTML = filterOpts.map(([k, label]) => `<button data-af="${k}" class="${k === AGENT_FILTER ? "on" : ""}">${label}</button>`).join("");
+  document.querySelectorAll("#agentFilter button").forEach((b) => (b.onclick = () => { AGENT_FILTER = b.dataset.af; drawCharts(); }));
+
+  document.getElementById("rangeSummary").innerHTML = renderRangeSummary(days, hoursData, ranks, r);
+
   const specs = r.hours
     ? [
         { title: "Experiencia del oficio", note: "XP acumulada, hora por hora.", data: hourly(hoursData, (d) => d.xp, { back: r.hours }), opt: {} },
         { title: "XP ganada por hora", note: "Cuánto sumó cada hora.", data: hourly(hoursData, (d) => d.xp, { delta: true, back: r.hours }), opt: { kind: "bar" } },
         { title: "Puestos ganados en el ranking", note: `Contra el primer registro ${since}. Arriba es mejor.`, data: hourlyRanks(ranks, rankBack), opt: { fmt: (v) => (v > 0 ? "+" : "") + nf(v) } },
-        { title: "Crystals", note: "Lo que tiene guardado cada uno.", data: hourly(hoursData, (d) => d.crystal, { back: r.hours }), opt: {} },
+        { title: "Crystals acumulados", note: "Tesorería hora por hora.", data: hourly(hoursData, (d) => d.crystal, { back: r.hours }), opt: {} },
         { title: "Crystals ganados por hora", note: "Las caídas son compras (comida, herramientas).", data: hourly(hoursData, (d) => d.crystal, { delta: true, back: r.hours }), opt: { kind: "bar" } },
         { title: "% de la hora trabajando", note: "Medido cada 10 minutos.", data: hourly(hoursData, (d) => d.working_pct, { back: r.hours }), opt: { range: [0, 100], fmt: pctFmt } },
         { title: "Viajes a vender por hora", note: "Por peso o por falta de crystals.", data: hourly(hoursData, (d) => d.trips, { back: r.hours }), opt: { kind: "bar", fmt: nf } },
       ]
     : [
-        { title: "Experiencia del oficio", note: "XP acumulada en la profesión principal.", data: daily(days, (d) => d.xp, { window: r.days }), opt: {} },
+        { title: "Experiencia del oficio (Evolución)", note: `XP acumulada ${since}.`, data: daily(days, (d) => d.xp, { window: r.days }), opt: {} },
         { title: "XP ganada por día", note: "Días completos, de cierre a cierre.", data: daily(days, (d) => d.xp, { delta: true, complete: true, window: r.days }), opt: { kind: "bar" } },
-        { title: "Puestos ganados en el ranking", note: `Hora por hora, contra el primer registro ${since}. Arriba es mejor.`, data: hourlyRanks(ranks, rankBack), opt: { fmt: (v) => (v > 0 ? "+" : "") + nf(v) } },
-        { title: "Crystals", note: "Lo que tiene guardado cada uno.", data: daily(days, (d) => d.crystal, { window: r.days }), opt: {} },
-        { title: "Crystals ganados por día", note: "Días completos.", data: daily(days, (d) => d.crystal, { delta: true, complete: true, window: r.days }), opt: { kind: "bar" } },
-        { title: "% del día trabajando", note: "Medido cada 10 minutos.", data: daily(days, (d) => d.working_pct, { window: r.days }), opt: { range: [0, 100], fmt: pctFmt } },
-        { title: "Viajes a vender por día", note: "Por peso o por falta de crystals. Menos es mejor.", data: daily(days, trips, { complete: true, window: r.days }), opt: { kind: "bar", fmt: nf } },
+        { title: "Experiencia en Skills Secundarias (Multi-Skill)", note: "Suma de XP en todas las habilidades fuera de su profesión principal.", data: daily(days, (d) => d.xp2 || 0, { window: r.days }), opt: {} },
+        { title: "Puestos ganados en el ranking", note: `Contra el primer registro ${since}. Arriba es mejor.`, data: hourlyRanks(ranks, rankBack), opt: { fmt: (v) => (v > 0 ? "+" : "") + nf(v) } },
+        { title: "Crystals acumulados (Tesorería)", note: `Evolución de cristales guardados ${since}.`, data: daily(days, (d) => d.crystal, { window: r.days }), opt: {} },
+        { title: "Crystals netos ganados por día", note: "Días completos.", data: daily(days, (d) => d.crystal, { delta: true, complete: true, window: r.days }), opt: { kind: "bar" } },
+        { title: "% del día trabajando", note: "Eficiencia operativa medida cada 10 minutos.", data: daily(days, (d) => d.working_pct, { window: r.days }), opt: { range: [0, 100], fmt: pctFmt } },
+        { title: "Viajes a vender por día", note: "Por peso o liquidez. Menos viajes = más tiempo trabajando.", data: daily(days, trips, { complete: true, window: r.days }), opt: { kind: "bar", fmt: nf } },
+        { title: "Viajes al Volcán por Herramienta", note: "C-3PO bajó a 0 el 10/11 y BB-8 baja a 0 el 18/11 (Sprint 1).", data: daily(days, (d) => d.tool_trips || 0, { complete: true, window: r.days }), opt: { kind: "bar", fmt: nf } },
       ];
-  document.getElementById("ranges").innerHTML = Object.entries(RANGES).map(([k, v]) => `<button data-r="${k}" class="${k === RANGE ? "on" : ""}">${v.label}</button>`).join("");
-  document.querySelectorAll("#ranges button").forEach((b) => (b.onclick = () => { RANGE = b.dataset.r; try { localStorage.setItem("mc-range", RANGE); } catch {} drawCharts(); }));
   document.getElementById("charts").innerHTML = rankCard(ranks, rankBack, width) + specs.map((c) => `<div class="card"><h3>${c.title}</h3><div class="now">${latest(c.data, c.opt.fmt || short)}</div>${chart(c.data, { ...c.opt, width })}<div class="note">${c.note}</div></div>`).join("");
 }
 
+// ───── PESTAÑA SKILLS & FICHA PROFUNDA DE PERSONAJES ─────
+let SKILL_VIEW = "ALL"; // "ALL" | "C-3PO" | "BB-8" | "R2" | "MATRIX"
+
+function renderDroidDeepSheet(a) {
+  const c = COLORS[a.name];
+  const skills = a.allSkills || {};
+  const vit = a.vitals || {};
+  const inv = a.inventorySummary || {};
+  const q = a.quests || {};
+  const cr = a.crafting || {};
+  const tr = a.training;
+
+  const branchesHtml = SKILL_BRANCHES.map((br) => {
+    const branchLevel = br.keys.reduce((s, k) => s + (skills[k]?.level ?? 1), 0);
+    const maxBranch = br.keys.length * 99;
+    const rows = br.keys.map((k) => {
+      const sk = skills[k] || { level: 1, xp: 0, nextLevelXp: 250, inLevelPct: 0 };
+      const isTrained = sk.level > 1 || sk.xp > 0;
+      const isPrimary = String(a.skill || "").startsWith(k);
+      return `<div class="skill-row ${isTrained ? "trained" : ""}" style="${isPrimary ? `border-color:${c};background:${c}12` : ""}">
+        <div class="skill-row-top">
+          <span>${SKILL_ICON[k] || "•"} ${SKILL_ES[k] || k} ${isPrimary ? `<span class="tag" style="color:${c};border-color:${c}">Oficio</span>` : ""}</span>
+          <span class="lvl" style="${lvlColor(sk.level)}">L${sk.level}</span>
+        </div>
+        <div class="mini-bar"><i style="width:${sk.inLevelPct || 0}%;background:${isPrimary ? c : isTrained ? "#3DDC84" : "#555"}"></i></div>
+        <div class="skill-row-sub">
+          <span>${short(sk.xp)} xp</span>
+          <span>${sk.nextLevelXp ? `${nf(sk.inLevelPct, 1)}% → L${sk.level + 1} (faltan ${short(Math.max(0, sk.nextLevelXp - sk.xp))})` : "MAX"}</span>
+        </div>
+        <div style="font-size:10px;color:var(--mut);line-height:1.25">${esc(SKILL_MILESTONE[k] || "")}</div>
+      </div>`;
+    }).join("");
+    return `<div class="skill-branch">
+      <div class="skill-branch-title"><span>${br.title}</span><span>Nivel Rama: ${branchLevel} / ${maxBranch}</span></div>
+      <div class="skill-grid">${rows}</div>
+    </div>`;
+  }).join("");
+
+  return `<div class="card" style="margin-bottom:16px;border-color:${c}55">
+    <div class="card-header-flex" style="flex-wrap:wrap">
+      <div style="display:flex;gap:14px;align-items:center">
+        <div class="avatar-wrap" style="width:72px;height:72px">
+          <img src="${IMAGES[a.name]}" alt="${esc(a.name)}" />
+        </div>
+        <div>
+          <div style="display:flex;align-items:center;gap:8px;flex-wrap:wrap">
+            <span class="name" style="color:${c};font-size:24px">${esc(a.name)}</span>
+            <span class="brand-badge">Nivel Total ${a.totalLevel || a.level} / 1881</span>
+            <span class="state-tag">${a.trainedCount || 1} / 19 Skills activas</span>
+            <span class="state-tag">${a.buyTool === false ? "🛡️ Sprint 1: Sin viajes al Volcán (Ahorro +5h/d)" : "🔧 Usa herramienta de tienda"}</span>
+          </div>
+          <div class="sub" style="margin-top:4px">
+            📍 Distrito: <b>${esc(a.location)}</b> (${esc(a.spaceId || "")}${a.coords ? ` · x:${a.coords.x}, y:${a.coords.y}` : ""})
+            · Acción actual: <b>${a.activeAction ? `${a.activeAction.activity || a.activeAction.kind}` : (a.working ? "trabajando" : "en espera")}</b>
+          </div>
+        </div>
+      </div>
+      <div class="rank-box">
+        <span class="rank-num">#${a.board?.rank || "–"}</span>
+        <span class="rank-top">${short(a.totalXp || a.xp)} XP Total</span>
+      </div>
+    </div>
+
+    <div class="big" style="margin-top:14px">
+      <div><b>${short(a.xp)}</b><span>XP Oficio (${esc(a.skill)})</span></div>
+      <div><b>${short(a.secondaryXp || 0)}</b><span>XP Skills Secundarias</span></div>
+      <div><b style="color:#C2CE24">💎 ${nf(a.crystals)}</b><span>Tesorería (${inv.crystalsAtRisk || 0} en riesgo)</span></div>
+      <div><b>❤️ ${nf(a.health ?? 100)}/${nf(a.maxHealth ?? 100)}</b><span>Salud · 💊 ${vit.medicine || 0} medicinas</span></div>
+      <div><b>~${vit.autonomyHours || 0} h</b><span>Autonomía (🍵 ${vit.smoothies || 0} smoothies${vit.rawFish ? ` · 🐟 ${short(vit.rawFish)}` : ""})</span></div>
+      <div><b>📜 ${q.completed || 0}</b><span>Quests hechas · <b>${q.readyCount || 0} listas</b> (+${nf(q.readyXp || 0)} xp)</span></div>
+    </div>
+
+    ${tr ? `<div style="margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--subtle);border:1px solid var(--line);font-size:12.5px">
+      <b>🎓 Motor de Entrenamiento Secundario:</b> Plan <code>${(a.trainingPlan || []).map((s) => SKILL_ES[s] || s).join(" → ")}</code>
+      · Último turno: <b>${SKILL_ES[tr.skill] || tr.skill}</b> en <code>${esc(tr.sourceId)}</code> (L${tr.startLevel} → L${tr.targetLevel})
+      · Estado: <span style="color:var(--acc)">${esc(tr.lastNote || (tr.active ? "Activo ahora" : "Completado"))}</span>
+    </div>` : ""}
+
+    ${branchesHtml}
+
+    <div class="grid" style="margin-top:16px">
+      <div style="background:var(--subtle);border:1px solid var(--line);border-radius:12px;padding:12px">
+        <b style="font-size:13px;display:block;margin-bottom:6px">🏭 Recetas Industriales Listas en Mochila (${cr.readyRecipes?.length || 0})</b>
+        ${cr.readyRecipes?.length ? `<div class="kv" style="font-size:12px">${cr.readyRecipes.map((r) => `<span>🛠️ ${esc(r.id)} (${SKILL_ES[r.skill] || r.skill} L${r.requiredLevel})</span><span class="up">${nf(r.batches)} lotes listos</span>`).join("")}</div>` : `<div class="sub">Sin lotes listos en este momento (${cr.usable || 0} recetas desbloqueadas).</div>`}
+      </div>
+
+      <div style="background:var(--subtle);border:1px solid var(--line);border-radius:12px;padding:12px">
+        <b style="font-size:13px;display:block;margin-bottom:6px">📜 Quests Listas para Cobrar (${q.readyCount || 0})</b>
+        ${q.readyList?.length ? `<div class="kv" style="font-size:12px">${q.readyList.slice(0, 6).map((x) => `<span>${esc(x.name)} <span class="sub">(${esc(x.areaId)})</span></span><span class="up">+${x.xp} xp</span>`).join("")}</div>` : `<div class="sub">Sin quests pendientes con los ítems actuales.</div>`}
+      </div>
+
+      <div style="background:var(--subtle);border:1px solid var(--line);border-radius:12px;padding:12px">
+        <b style="font-size:13px;display:block;margin-bottom:6px">🎒 Top 10 Recursos en Mochila (${inv.distinctItems || 0} tipos · ${short(inv.totalUnits || 0)} u.)</b>
+        ${inv.topItems?.length ? `<div class="kv" style="font-size:12px">${inv.topItems.map((it) => `<span>${esc(it.name)}</span><span>${nf(it.qty)}</span>`).join("")}</div>` : `<div class="sub">Cargando inventario…</div>`}
+      </div>
+    </div>
+  </div>`;
+}
+
+function renderSkillsMatrix(live) {
+  const allSkillKeys = SKILL_BRANCHES.flatMap((b) => b.keys);
+  let rows = "";
+  for (const s of allSkillKeys) {
+    const bestLvl = Math.max(...live.map((d) => d.allSkills?.[s]?.level ?? 1));
+    const leader = live.find((d) => (d.allSkills?.[s]?.level ?? 1) === bestLvl && bestLvl > 1);
+    rows += `<tr>
+      <td><b>${SKILL_ICON[s] || ""} ${SKILL_ES[s] || s}</b><div class="sub" style="font-size:10.5px">${esc(SKILL_MILESTONE[s] || "")}</div></td>
+      ${live.map((d) => {
+        const sk = d.allSkills?.[s] || { level: 1, xp: 0, inLevelPct: 0 };
+        return `<td>
+          <span class="lvl" style="${lvlColor(sk.level)}">L${sk.level}</span>
+          <div style="font-size:10.5px;color:var(--mut);font-family:monospace;margin-top:2px">${short(sk.xp)} xp (${nf(sk.inLevelPct, 0)}%)</div>
+        </td>`;
+      }).join("")}
+      <td style="font-family:monospace">${leader ? `<b style="color:${COLORS[leader.name]}">${leader.name} (L${bestLvl})</b>` : '<span class="sub">Virgen (L1)</span>'}</td>
+    </tr>`;
+  }
+  return `<div class="card scroll">
+    <h3 style="margin:0 0 6px">🏆 Matriz Comparativa de las 19 Habilidades</h3>
+    <p class="sub" style="margin-top:0">Comparativa lado a lado de nivel, experiencia acumulada, % de avance y líder actual de la cuadrilla en cada disciplina.</p>
+    <table>
+      <tr><th>Habilidad & Desbloqueos</th>${live.map((d) => `<th style="color:${COLORS[d.name]}">${d.name} (Total L${d.totalLevel || d.level})</th>`).join("")}<th>Líder Cuadrilla</th></tr>
+      ${rows}
+    </table>
+  </div>`;
+}
+
+function drawSkillsTab() {
+  if (!DATA?.live) return;
+  const live = ORDER.map((n) => DATA.live.find((a) => a.name === n)).filter(Boolean);
+  const tabs = [
+    ["ALL", "🚀 Los 3 Personajes (Fichas Completas)"],
+    ["C-3PO", "🪓 C-3PO (Lumberjack)"],
+    ["BB-8", "⛏️ BB-8 (Miner)"],
+    ["R2", "💻 R2 (Hacker)"],
+    ["MATRIX", "📊 Matriz Comparativa 19 Skills"]
+  ];
+  document.getElementById("skillTabs").innerHTML = tabs.map(([k, label]) => `<button data-sk="${k}" class="${k === SKILL_VIEW ? "on" : ""}">${label}</button>`).join("");
+  document.querySelectorAll("#skillTabs button").forEach((b) => (b.onclick = () => { SKILL_VIEW = b.dataset.sk; drawSkillsTab(); }));
+
+  if (SKILL_VIEW === "MATRIX") {
+    document.getElementById("skillsContent").innerHTML = renderSkillsMatrix(live);
+  } else if (SKILL_VIEW === "ALL") {
+    document.getElementById("skillsContent").innerHTML = live.map(renderDroidDeepSheet).join("") + renderSkillsMatrix(live);
+  } else {
+    const target = live.find((a) => a.name === SKILL_VIEW) || live[0];
+    document.getElementById("skillsContent").innerHTML = renderDroidDeepSheet(target);
+  }
+}
+
+let BOXES_DAYS = 14;
 function boxesTable(days) {
-  const dates = [...new Set(days.map((d) => d.date))].sort().slice(-7).reverse();
+  const boxOpts = [[7, "7 días"], [14, "14 días"], [30, "30 días"], [999, "Todo (Desde 27/09)"]];
+  const brEl = document.getElementById("boxesRanges");
+  if (brEl) {
+    brEl.innerHTML = boxOpts.map(([d, label]) => `<button data-bd="${d}" class="${d === BOXES_DAYS ? "on" : ""}">${label}</button>`).join("");
+    brEl.querySelectorAll("button").forEach((b) => (b.onclick = () => { BOXES_DAYS = Number(b.dataset.bd); document.getElementById("boxes").innerHTML = boxesTable(DATA.history.days || []); }));
+  }
+  const dates = [...new Set(days.map((d) => d.date))].sort().slice(-BOXES_DAYS).reverse();
   let h = `<table><tr><th>Día</th>${ORDER.map((a) => `<th style="color:${COLORS[a]}">${a}</th>`).join("")}</tr>`;
   for (const dt of dates) {
     h += `<tr><td>${fmtDate(dt)}</td>`;
     for (const a of ORDER) {
       const d = days.find((x) => x.agent === a && x.date === dt);
-      h += d ? `<td>${nf(d.working_pct)} % · 🛒${d.sell_overload + d.sell_liquidity}${d.tool_trips ? ` · 🪓${d.tool_trips}` : ""}${d.contracts ? ` · 📜${d.contracts}` : ""}${d.errors ? ` · ⚠️${d.errors}` : ""}</td>` : "<td>–</td>";
+      h += d ? `<td><b>${nf(d.working_pct)} %</b> · 🛒${(d.sell_overload || 0) + (d.sell_liquidity || 0)}${d.tool_trips ? ` · 🪓${d.tool_trips}` : ""}${d.contracts ? ` · 📜${d.contracts}` : ""}${d.errors ? ` · ⚠️${d.errors}` : ""}</td>` : "<td>–</td>";
     }
     h += "</tr>";
   }
-  return h + `</table><p class="note">% del día trabajando · 🛒 viajes a vender · 🪓 viajes a comprar herramienta · 📜 contratos entregados · ⚠️ ciclos con error.</p>`;
+  return h + `</table><p class="note">% del día trabajando · 🛒 viajes a vender · 🪓 viajes a comprar herramienta · 📜 quests/contratos · ⚠️ ciclos con error.</p>`;
 }
 
 function testBlock(days) {
@@ -516,18 +862,18 @@ function testBlock(days) {
   const avg = (arr, f) => (arr.length ? arr.reduce((s, d) => s + f(d), 0) / arr.length : null);
   const perDay = (arr) => {
     const tot = arr.reduce((s, d) => s + d.samples, 0);
-    return tot ? (arr.reduce((s, d) => s + d.sell_overload + d.sell_liquidity, 0) * 144) / tot : null;
+    return tot ? (arr.reduce((s, d) => s + (d.sell_overload || 0) + (d.sell_liquidity || 0), 0) * 144) / tot : null;
   };
   const elapsed = (Date.now() - TEST_START) / 864e5;
-  let h = `<p class="sub">Regla nueva: solo vende por falta de liquidez si le quedan menos de 1.000 crystals. Llevamos ${nf(Math.max(0, elapsed), 1)} de 7 días.</p>
-  <table><tr><th></th><th>% trabajando antes</th><th>ahora</th><th>viajes/día antes</th><th>ahora</th></tr>`;
+  let h = `<p class="sub">Evolución desde la regla de liquidez (11/10) + Sprints de Eficiencia (C-3PO y BB-8 sin viajes al Volcán por herramientas). Llevamos ${nf(Math.max(0, elapsed), 1)} días medidos.</p>
+  <table><tr><th></th><th>% trabajando base</th><th>promedio período</th><th>viajes/día antes</th><th>ahora</th></tr>`;
   for (const a of ORDER) {
     const b = before(a), n = after(a);
     const wNow = n.length ? avg(n, (d) => d.working_pct * d.samples) / avg(n, (d) => d.samples) : null;
     const diff = wNow != null ? wNow - BASE_WORK[a] : null;
     h += `<tr><td style="color:${COLORS[a]}">${a}</td><td>${nf(BASE_WORK[a], 1)} %</td><td class="${diff == null ? "" : diff >= 0 ? "up" : "down"}">${wNow == null ? "–" : nf(wNow, 1) + " %"}</td><td>${nf(perDay(b), 0)}</td><td>${nf(perDay(n), 0)}</td></tr>`;
   }
-  return h + `</table><p class="note">Las primeras horas mueven mucho el número; se lee en serio a partir del tercer día.</p>`;
+  return h + `</table>`;
 }
 
 function phasesBlock(phases) {
@@ -545,100 +891,93 @@ async function load() {
   try {
     const r = await fetch(API, { cache: "no-store" });
     DATA = await r.json();
-    
-    // Si el historial de 7 días falló por timeout de Supabase, reintentar automáticamente con ventana reducida de 3 días
-    if (DATA?.history?.error) {
-      try {
-        const retryRes = await fetch(API + "&days=3", { cache: "no-store" });
-        const retryJson = await retryRes.json();
-        if (retryJson?.history && !retryJson.history.error) {
-          DATA.history = retryJson.history;
-        }
-      } catch (retryErr) {
-        console.warn("Reintento de historial falló:", retryErr);
-      }
-    }
 
     const h = DATA.history && !DATA.history.error ? DATA.history : {};
     const days = h.days || [], ranks = h.ranks || [];
     TOTAL = DATA.totalAgents;
     const live = ORDER.map((n) => DATA.live.find((a) => a.name === n)).filter(Boolean);
+
+    // Treasury summary bar
+    const totalCrystals = live.reduce((s, a) => s + (a.crystals || 0), 0);
+    const totalSquadXp = live.reduce((s, a) => s + (a.totalXp || a.xp || 0), 0);
+    const totalSquadLvl = live.reduce((s, a) => s + (a.totalLevel || a.level || 0), 0);
+    const totalQuestsDone = live.reduce((s, a) => s + (a.quests?.completed || 0), 0);
+    const totalQuestsReady = live.reduce((s, a) => s + (a.quests?.readyCount || 0), 0);
+    document.getElementById("treasuryBar").innerHTML = `<div class="card" style="padding:12px 16px">
+      <div class="big" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr))">
+        <div><b style="color:#C2CE24">💎 ${nf(totalCrystals)}</b><span>Tesoro Total Cuadrilla</span></div>
+        <div><b>${short(totalSquadXp)}</b><span>XP Total Combinada</span></div>
+        <div><b>Lvl ${nf(totalSquadLvl)}</b><span>Nivel Sumado Escuadrón</span></div>
+        <div><b>📜 ${totalQuestsDone}</b><span>Quests Completadas (${totalQuestsReady} listas)</span></div>
+        <div><b>${nf(TOTAL)}</b><span>Población Midnight City</span></div>
+      </div>
+    </div>`;
+
     document.getElementById("cards").innerHTML = live.map((a) => card(a, days, ranks)).join("") || '<div class="card sub">No llegaron los droides.</div>';
-    document.getElementById("legend").innerHTML = ORDER.map((a) => `<span><i style="background:${COLORS[a]}"></i>${a}</span>`).join("");
-    if (DATA.history?.error) {
-      document.getElementById("err").innerHTML = `<div style="display:inline-flex;align-items:center;gap:10px;padding:6px 14px;background:rgba(239,68,68,0.12);border:1px solid rgba(239,68,68,0.3);border-radius:8px;font-size:0.85rem;color:var(--ink);"><span>⚠️ El historial tardó demasiado. La telemetría en vivo sí está al día.</span> <button onclick="load()" style="background:#C2CE24;color:#0B0C0B;font-weight:700;padding:4px 10px;border-radius:6px;border:none;cursor:pointer;font-size:0.75rem;">Reintentar</button></div>`;
-      document.getElementById("boxes").innerHTML = '<p class="sub">Sin historial de boxes ahora.</p>';
-      document.getElementById("test").innerHTML = '<p class="sub">Sin historial de la prueba ahora.</p>';
-      document.getElementById("phases").innerHTML = '<p class="sub">Sin historial de fases ahora.</p>';
-    } else {
-      document.getElementById("err").textContent = "";
-      document.getElementById("boxes").innerHTML = boxesTable(days);
-      document.getElementById("test").innerHTML = testBlock(days);
-      document.getElementById("phases").innerHTML = phasesBlock(h.phases || []);
-    }
+    document.getElementById("legend").innerHTML = ORDER.map((a) => `<span><i style="background:${COLORS[a]}"></i>${a}</span>`).join("") + `<span class="sub" style="margin-left:auto">Historial completo cargado: ${days.length ? `${fmtDate(days[0].date)} al ${fmtDate(days.at(-1).date)} (${[...new Set(days.map(d=>d.date))].length} días)` : ""}</span>`;
+
+    document.getElementById("err").textContent = "";
+    document.getElementById("boxes").innerHTML = boxesTable(days);
+    document.getElementById("test").innerHTML = testBlock(days);
+    document.getElementById("phases").innerHTML = phasesBlock(h.phases || []);
+
     drawCharts();
+    drawSkillsTab();
     const t = new Date(DATA.timestamp).toLocaleString("es-AR", { timeZone: "America/Argentina/Buenos_Aires", day: "numeric", month: "numeric", hour: "2-digit", minute: "2-digit" });
-    document.getElementById("upd").textContent = `Datos en vivo de ${t} · se actualiza solo cada 5 minutos · * = historial más corto que el período`;
+    document.getElementById("upd").textContent = `Datos en vivo de ${t} · historial completo desde 27/09/2026 (${[...new Set(days.map(d=>d.date))].length} días) · actualiza cada 5 min`;
   } catch (e) {
     document.getElementById("err").innerHTML = '<div style="display:inline-flex;align-items:center;gap:10px;"><span>No pude leer los datos ahora.</span> <button onclick="load()" style="background:#C2CE24;color:#0B0C0B;font-weight:700;padding:4px 10px;border-radius:6px;border:none;cursor:pointer;font-size:0.75rem;">Reintentar</button></div>';
   }
 }
 
-const SKILL_ES = { woodcutting: "Tala", mining: "Minería", hacking: "Hacking", smithing: "Herrería", crafting: "Artesanía", fishing: "Pesca", farming: "Cultivo", scavenging: "Rebusque", cooking: "Cocina", chemistry: "Química", energy: "Energía", engineering: "Ingeniería", agility: "Agilidad", infiltration: "Infiltración", combat: "Combate", defence: "Defensa", ranged: "Distancia", vitality: "Vitalidad", bounty_hunting: "Caza de recompensas" };
-const BOARD_ES = { experience: "Experiencia total", completedContracts: "Contratos", mostLiked: "Likes", richest: "Riqueza", mostPopular: "Popularidad", ...SKILL_ES };
-const lvlColor = (l) => l >= 20 ? "background:#1f6f4a;color:#fff" : l >= 10 ? "background:#2d4f3f;color:#fff" : l >= 2 ? "background:#26304a" : "color:#555b70";
-
 function exploreHtml(e) {
   const t = e.totals, D = ORDER.map((n) => e.droids.find((d) => d.name === n)).filter(Boolean);
   const trained = (d) => Object.values(d.skills).filter((s) => s.level > 1).length;
   const totalTools = D.reduce((s, d) => s + d.tools.length, 0);
+  const completedAll = D.reduce((s, d) => s + (d.contracts?.completed || 0), 0);
+  const doableAll = D.reduce((s, d) => s + (d.contracts?.doable || 0), 0);
   let h = "";
 
-  h += `<div class="card"><p class="sub" style="margin-top:0">Lo que tiene el juego, y cuánto de eso usamos hoy.</p><div class="big">
+  h += `<div class="card"><p class="sub" style="margin-top:0">Lo que tiene el universo de Midnight City y cuánto de eso dominamos hoy.</p><div class="big">
     <div><b>${t.skills}</b><span>habilidades · entrenamos ${D.map((d) => `${d.name} ${trained(d)}`).join(", ")}</span></div>
-    <div><b>${t.spaces}</b><span>lugares en el mapa · cada droide vive en 1</span></div>
-    <div><b>${t.contracts}</b><span>contratos · completamos 0</span></div>
-    <div><b>${t.enemies}</b><span>enemigos · peleamos 0</span></div>
-    <div><b>${t.recipes}</b><span>recetas para fabricar · tenemos ${D.map((d) => d.recipes.usable).join(" / ")} habilitadas</span></div>
-    <div><b>${t.equipment}</b><span>armas, armaduras y equipo · usamos 0</span></div>
-    <div><b>${t.tools}</b><span>herramientas · tenemos ${totalTools} (una cada uno)</span></div>
-    <div><b>${t.constructionSites}</b><span>terrenos para construir · tenemos 0</span></div>
-    <div><b>${t.boards}</b><span>rankings distintos</span></div>
+    <div><b>${t.spaces}</b><span>distritos y edificios en el mapa</span></div>
+    <div><b>${t.contracts}</b><span>quests · completamos <b>${completedAll}</b> (${doableAll} listas)</span></div>
+    <div><b>${t.enemies}</b><span>enemigos en Amoeba Wilds</span></div>
+    <div><b>${t.recipes}</b><span>recetas · ${D.map((d) => d.recipes.usable).join(" / ")} desbloqueadas</span></div>
+    <div><b>${t.equipment}</b><span>armas, armaduras y equipo</span></div>
+    <div><b>${t.tools}</b><span>herramientas (${totalTools} en uso)</span></div>
+    <div><b>${t.constructionSites}</b><span>terrenos para construir</span></div>
+    <div><b>${t.boards}</b><span>rankings oficiales</span></div>
   </div></div>`;
 
-  h += `<div class="card" style="margin-top:12px"><h3 style="margin:0 0 4px">🏆 Dónde estamos mejor</h3><p class="sub" style="margin-top:0">Los rankings en los que cada droide está más arriba, de los ${t.boards} que tiene el juego.</p><div class="grid">`;
-  for (const d of D) {
-    const best = Object.entries(d.ranks).filter(([, r]) => r).sort((a, b) => a[1] - b[1]).slice(0, 5);
-    h += `<div><b style="color:${COLORS[d.name]}">${d.name}</b><div class="kv" style="margin-top:6px">${best.map(([b, r]) => `<span>${BOARD_ES[b] ?? b}</span><span>#${nf(r)}</span>`).join("")}</div></div>`;
-  }
-  h += `</div></div>`;
-
-  h += `<div class="card scroll" style="margin-top:12px"><h3 style="margin:0 0 4px">🎓 Las ${t.skills} habilidades</h3><p class="sub" style="margin-top:0">Nivel de cada droide. Toda la experiencia de cualquier habilidad suma al ranking general.</p>
-    <table><tr><th>Habilidad</th>${D.map((d) => `<th style="color:${COLORS[d.name]}">${d.name}</th>`).join("")}<th>Se entrena con</th></tr>`;
+  h += `<div class="card scroll" style="margin-top:12px"><h3 style="margin:0 0 4px">🎓 Las ${t.skills} habilidades del juego</h3><p class="sub" style="margin-top:0">Nivel de cada droide y fuentes disponibles en el mundo.</p>
+    <table><tr><th>Habilidad</th>${D.map((d) => `<th style="color:${COLORS[d.name]}">${d.name}</th>`).join("")}<th>Cómo se entrena en Midnight</th></tr>`;
   const order = [...e.skillIds].sort((a, b) => Math.max(...D.map((d) => d.skills[b]?.level ?? 1)) - Math.max(...D.map((d) => d.skills[a]?.level ?? 1)));
   for (const s of order) {
     const src = e.skillSources[s];
-    const how = [src.sources && `${src.sources} fuentes`, src.recipes && `${src.recipes} recetas`, src.contracts && `${src.contracts} contratos`].filter(Boolean).join(" · ") || (s === "combat" || s === "defence" || s === "ranged" || s === "vitality" ? "peleando" : "–");
-    h += `<tr><td>${SKILL_ES[s] ?? s}</td>${D.map((d) => { const l = d.skills[s]?.level ?? 1; return `<td><span class="lvl" style="${lvlColor(l)}">${l}</span></td>`; }).join("")}<td class="sub">${how}</td></tr>`;
+    const how = [src.sources && `${src.sources} fuentes`, src.recipes && `${src.recipes} recetas`, src.contracts && `${src.contracts} quests`].filter(Boolean).join(" · ") || (s === "combat" || s === "defence" || s === "ranged" || s === "vitality" ? "combate en Amoeba Wilds" : "–");
+    h += `<tr><td>${SKILL_ICON[s] || ""} ${SKILL_ES[s] ?? s}</td>${D.map((d) => { const l = d.skills[s]?.level ?? 1; return `<td><span class="lvl" style="${lvlColor(l)}">${l}</span></td>`; }).join("")}<td class="sub">${how}</td></tr>`;
   }
   h += `</table></div>`;
 
-  const doableAll = D.reduce((s, d) => s + d.contracts.doable, 0);
-  h += `<div class="card" style="margin-top:12px"><h3 style="margin:0 0 4px">📜 Contratos</h3>
-    <p style="margin:4px 0">Encargos de las facciones de la ciudad. Hoy podríamos hacer <b>${doableAll}</b> con lo que ya tenemos en inventario.</p><div class="kv">
-    ${D.map((d) => `<span style="color:${COLORS[d.name]}">${d.name}</span><span>${d.contracts.doable} listos · +${nf(d.contracts.doableXp)} xp</span>`).join("")}</div></div>`;
+  h += `<div class="card" style="margin-top:12px"><h3 style="margin:0 0 4px">📜 Quests y Encargos de Facciones (${completedAll} completadas · ${doableAll} listas en mochila)</h3>
+    <p style="margin:4px 0">Misiones que ya tienen todos los materiales listos en las mochilas para entregarse en su distrito:</p><div class="grid" style="margin-top:8px">
+    ${D.map((d) => `<div style="background:var(--subtle);padding:10px;border-radius:10px;border:1px solid var(--line)">
+      <b style="color:${COLORS[d.name]}">${d.name} (${d.contracts.completed} hechas · ${d.contracts.doable} listas · +${nf(d.contracts.doableXp)} xp)</b>
+      <div class="kv" style="margin-top:6px;font-size:12px">${(d.contracts.examples || []).map((ex) => `<span>${esc(ex.name)} <span class="sub">(${esc(ex.areaId || "")})</span></span><span class="up">+${ex.xp} xp</span>`).join("") || '<span class="sub">Al día</span><span></span>'}</div>
+    </div>`).join("")}</div></div>`;
 
-  h += `<div class="card scroll" style="margin-top:12px"><h3 style="margin:0 0 4px">⚔️ Batallas</h3>
-    <p style="margin:4px 0">${t.enemies} enemigos en <b>${esc(e.enemyArea)}</b>. Protocolo seguro: vaciar cristales antes de entrar.</p>
-    <table><tr><th>Enemigo</th><th>Nivel</th><th>Vida</th><th>Ataque</th><th>XP por vencerlo</th></tr>${e.enemies.map((x) => `<tr><td>${x.tier}</td><td>${x.level}</td><td>${x.health}</td><td>${x.attack}</td><td>${x.bountyXp}</td></tr>`).join("")}</table></div>`;
+  h += `<div class="card scroll" style="margin-top:12px"><h3 style="margin:0 0 4px">⚔️ Bestiario de Amoeba Wilds</h3>
+    <p style="margin:4px 0">${t.enemies} enemigos en <b>${esc(e.enemyArea)}</b>. Protocolo Sprint 4: transferir cristales a R2 antes de cazar para tener riesgo 0.</p>
+    <table><tr><th>Tier</th><th>Nivel</th><th>Vida</th><th>Ataque</th><th>XP Bounty</th></tr>${e.enemies.map((x) => `<tr><td>${x.tier}</td><td>${x.level}</td><td>${x.health}</td><td>${x.attack}</td><td>${x.bountyXp}</td></tr>`).join("")}</table></div>`;
 
-  h += `<div class="card scroll" style="margin-top:12px"><h3 style="margin:0 0 4px">📦 Lo que acumulamos y nadie compra</h3>
-    <p style="margin:4px 0">Materiales para fundir en forjas o aserraderos y subir Smithing/Crafting.</p>
-    <div class="grid">${D.map((d) => `<div><b style="color:${COLORS[d.name]}">${d.name}</b><div class="kv" style="margin-top:6px">${d.unsold.slice(0, 5).map((u) => `<span>${esc(u.name)}</span><span>${nf(u.qty)}${u.recipes ? ` · ${u.recipes} rec.` : ""}</span>`).join("")}</div></div>`).join("")}</div></div>`;
+  h += `<div class="card scroll" style="margin-top:12px"><h3 style="margin:0 0 4px">📦 Stock Industrial Acumulado (Listo para Forja, Aserradero y Cocina)</h3>
+    <p style="margin:4px 0">Recursos en mochila que no compran los mercaderes pero sirven para fabricar en recetas y entregar quests:</p>
+    <div class="grid">${D.map((d) => `<div><b style="color:${COLORS[d.name]}">${d.name}</b><div class="kv" style="margin-top:6px">${d.unsold.slice(0, 8).map((u) => `<span>${esc(u.name)}</span><span>${nf(u.qty)}${u.recipes ? ` · ${u.recipes} rec.` : ""}${u.contracts ? ` · ${u.contracts} q.` : ""}</span>`).join("")}</div></div>`).join("")}</div></div>`;
 
   const visited = {};
   for (const p of e.places || []) (visited[p.space] ??= []).push(p.agent);
-  h += `<div class="card" style="margin-top:12px"><h3 style="margin:0 0 4px">🗺️ El mapa</h3><p class="sub" style="margin-top:0">${t.spaces} lugares en Midnight.</p>
+  h += `<div class="card" style="margin-top:12px"><h3 style="margin:0 0 4px">🗺️ Atlas de Distritos de Midnight City</h3><p class="sub" style="margin-top:0">${t.spaces} espacios conectados.</p>
     <div>${e.spaces.map((sp) => { const here = D.filter((d) => d.space === sp.name).map((d) => d.name); const been = (visited[sp.id] || []); const act = [e.activity.enemies[sp.id] && "⚔️", e.activity.contracts[sp.id] && "📜", e.activity.workstations[sp.id] && "🛠️"].filter(Boolean).join(""); return `<span class="tag" style="${here.length ? "background:#1f6f4a;color:#fff" : been.length ? "background:#26304a;color:#e8eaf4" : ""}">${esc(sp.name)}${act ? " " + act : ""}${here.length ? " · " + here.join(", ") : ""}</span>`; }).join("")}</div></div>`;
 
   return h;
@@ -651,11 +990,11 @@ async function loadExplore() {
     if (!e.droids) throw new Error();
     document.getElementById("explore").innerHTML = exploreHtml(e);
   } catch {
-    document.getElementById("explore").innerHTML = '<div class="card sub">No pude leer el juego ahora. Probá recargar en un rato.</div>';
+    document.getElementById("explore").innerHTML = '<div class="card sub">No pude leer la exploración ahora. Probá recargar en un rato.</div>';
   }
 }
 
-const TABS = ["hoy", "graficos", "boxes", "explorar", "mundo3d", "bitacora"];
+const TABS = ["hoy", "graficos", "skills", "boxes", "explorar", "mundo3d", "bitacora"];
 let exploreLoaded = false;
 const BIT_TIPOS = { cambio: "🔁 Cambio", diagnostico: "🔎 Diagnóstico", incidente: "⚠️ Incidente", proximo: "🧭 Próximo" };
 let bitacoraLoaded = false;
@@ -680,6 +1019,7 @@ function showTab(t) {
   document.querySelectorAll(".page").forEach((p) => p.classList.toggle("on", p.dataset.page === t));
   document.querySelectorAll("#menu a").forEach((a) => a.classList.toggle("on", a.dataset.tab === t));
   if (t === "graficos" && DATA) drawCharts();
+  if (t === "skills" && DATA) drawSkillsTab();
   if (t === "explorar" && !exploreLoaded) { exploreLoaded = true; loadExplore(); }
   if (t === "bitacora" && !bitacoraLoaded) { bitacoraLoaded = true; loadBitacora(); }
   if (t === "mundo3d") {

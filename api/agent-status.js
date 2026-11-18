@@ -68,7 +68,7 @@ export default async function handler(req, res) {
       return res.status(200).json(await getExploration());
     }
     if (req.query?.view === "dashboard") {
-      const days = req.query?.days ? Math.min(Number(req.query.days), 14) : 7;
+      const days = req.query?.days ? Math.min(Number(req.query.days), 60) : 7;
       const data = await getDashboardData(days);
       if (data.history?.error) {
         res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");

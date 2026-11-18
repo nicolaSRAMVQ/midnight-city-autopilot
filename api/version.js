@@ -4,7 +4,7 @@
 
 export default function handler(req, res) {
   res.status(200).json({
-    version: "v3.46-sprints-progression",
+    version: "v3.47-alltime-skills-tablero",
     timestamp: new Date().toISOString(),
     format: "Tolkien Newsletter",
     headers: ["CRÓNICA MATINAL", "PARTE MERIDIANO", "RELATO VESPERTINO", "SUSSURRO NOCTURNO"],
@@ -27,7 +27,9 @@ export default function handler(req, res) {
       "sprint1-craft-timeout-fix",
       "sprint1-instant-work-resume",
       "sprint2-quest-engine-deliveries",
-      "sprint3-cooking-fish-reserve"
+      "sprint3-cooking-fish-reserve",
+      "alltime-genesis-history-53d",
+      "skills-deep-character-sheets"
     ],
   });
 }
