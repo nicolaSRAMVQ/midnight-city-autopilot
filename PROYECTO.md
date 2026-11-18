@@ -314,3 +314,17 @@ del cinder_axe. Verificar siempre contra `SKILL.md`, `references/` y
   - **Comida:** `FOOD_RESERVE_TARGET` duplicado de 6 a 12 smoothies, reduciendo a la mitad los viajes a la tienda.
   - **Protección de viajes:** `v3.43` en producción (el keep-alive no reconecta ni cancela si el droide está en viaje o compra).
   - **Dashboard:** optimizado a 7 días en Supabase (`midnight_dashboard`), eliminando el statement timeout (HTTP 500 code 57014).
+
+## v3.46 (18/11/2026) — Sprints Scrum de Eficiencia y Progresión Automática
+- **Sprint 1 (Cero Tiempo Muerto):**
+  - **BB-8 sin viajes al Volcán (`buyTool: false`):** se elimina la compra continua de picos que se rompen cada 40m, ahorrando ~37 viajes diarios al Volcán y recuperando ~6 horas/día de minería útil (proyección: sube de 56% a >80% de trabajo).
+  - **Fix de bloqueo de 2 horas en Crafteo:** `api/training-worker.js` detecta si `craftableBatches === 0` o si la acción de crafteo falla por falta de materiales y ejecuta inmediatamente `backToMain`, liberando al droide hacia su trabajo principal sin esperar las 2 horas de timeout.
+  - **Reanudación instantánea post-trade:** los minutos libres del worker (`api/training-worker.js`) reanudan de inmediato `perform_job` si el droide quedó ocioso tras vender o viajar, ahorrando 3-4 minutos de inactividad por cada venta.
+- **Sprint 2 (Motor de Quests & Leaderboard):**
+  - **Migración `contracts` → `quests`:** se actualiza `lib/mcity-maintenance.js` con soporte nativo para la API actual (`gameContent.quests`, `capabilities.quests`, `completedQuestIds`, acción `deliver_quest` y evento `quest_completed`).
+  - **Entregas en tránsito:** cuando los droides van a `central` a vender o comprar smoothies, entregan en el acto hasta 3 quests listas en Central Plaza / Central Workshops.
+- **Sprint 3 (Crafteo Progresivo & Cooking):**
+  - **C-3PO Cooking:** se suma `cooking` al plan de entrenamiento de C-3PO para procesar sus 17.242 pescados crudos (`cook_fish`), generando comida y subiendo Cooking a L11+.
+  - **Escalado automático a L11:** al alcanzar L11 en Smithing y Crafting, el worker engancha las recetas de volumen masivo (`refine_copper_ingot`, `refine_synthwood_board/laminate`) consumiendo el stock de 300k ítems.
+- **Sprint 4 (Expedición Segura):**
+  - Parámetros de supervivencia al 100% con medicina y traspaso de tesoro a R2 antes de misiones en Amoeba Wilds.

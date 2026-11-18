@@ -50,6 +50,16 @@ async function trainAgent(agent, row, shared) {
       // intentos de comprar herramienta en 10 días sin ninguna compra confirmada (31/10).
       const inFlight = initial?.context?.agent?.activeAction?.kind ?? "";
       if (/trade|travel/.test(inFlight)) return { agent: agent.name, idle: true, keepAlive: `skipped_${inFlight}` };
+
+      // v3.46 (Sprint 1): Si terminó viaje o trade y quedó libre, reanudar perform_job de inmediato
+      const isWorking = initial?.context?.agent?.isPerformingJob ?? false;
+      const hunger = initial?.needs?.hunger?.value ?? 0;
+      if (!isWorking && hunger < 85) {
+        const lease = await connect(agent.id);
+        const job = await submitAndWait(lease, { kind: "perform_job" }, (p) => p.kind === "resource_gathered", 8_000);
+        return { agent: agent.name, idle: true, keepAlive: "resumed_work", confirmed: job.confirmed };
+      }
+
       await connect(agent.id);
       return { agent: agent.name, idle: true, keepAlive: true };
     }
@@ -77,7 +87,16 @@ async function trainAgent(agent, row, shared) {
   if (/trade|travel/.test(context.agent.activeAction?.kind ?? "")) return { agent: agent.name, waiting: context.agent.activeAction.kind };
 
   const deadline = Date.now() + LOOP_BUDGET_MS;
-  const isCraft = Boolean(active.isCraft || /smelt|saw|forge|refine/.test(active.source_id));
+  const isCraft = Boolean(active.isCraft || /smelt|saw|forge|refine|cook/.test(active.source_id));
+
+  // v3.46 (Sprint 1): si es crafteo y no quedan insumos, cortar entrenamiento de inmediato sin esperar el timeout de 2h
+  if (isCraft) {
+    const currentRecipe = (progression.capabilities?.recipes ?? []).find((r) => r.recipeId === active.source_id);
+    if (!currentRecipe || (currentRecipe.craftableBatches ?? 0) <= 0) {
+      return backToMain(`sin insumos para ${active.source_id}`);
+    }
+  }
+
   let pulls = 0;
   let lastReason = null;
   // A pull or craft from the previous minute may still be finishing: let it land.
@@ -110,6 +129,9 @@ async function trainAgent(agent, row, shared) {
       continue;
     }
     if (r.failed) {
+      if (isCraft) {
+        return backToMain(`falló crafteo de ${active.source_id}: ${r.reason ?? "sin razón"}`);
+      }
       lastReason = r.reason;
       break; // rejected: the next minute (or the autopilot) sorts it out
     }
