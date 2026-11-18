@@ -156,7 +156,7 @@ body{padding-bottom:84px}
   <div>
     <div class="brand-title">
       <h1>🌃 Tablero Midnight</h1>
-      <span class="brand-badge">Aegis · Namarie v3.47</span>
+      <span class="brand-badge">Aegis · Namarie v3.48</span>
     </div>
     <div class="sub" id="upd">Cargando telemetría en vivo…</div>
     <div id="err"></div>
@@ -179,8 +179,13 @@ body{padding-bottom:84px}
 </header>
 
 <section class="page" data-page="hoy">
-  <h2>🏁 Ranking, Carrera de XP & Estado en Vivo</h2>
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:14px;margin-bottom:8px">
+    <h2 style="margin:0">🏁 Carrera de XP & Estado en Vivo</h2>
+    <div class="tabs" id="hoyAgentSelector" style="margin:0"></div>
+  </div>
+  <div id="hoyHiddenPill" style="margin-bottom:10px"></div>
   <div id="treasuryBar" style="margin-bottom:12px"></div>
+  <div id="hoyOverview" style="margin-bottom:14px"></div>
   <div class="grid" id="cards"></div>
 </section>
 
@@ -196,8 +201,10 @@ body{padding-bottom:84px}
 </section>
 
 <section class="page" data-page="skills">
-  <h2>🎓 Skills, Arsenal & Ficha Profunda de Personajes</h2>
-  <div class="tabs" id="skillTabs"></div>
+  <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:8px;margin-top:14px;margin-bottom:8px">
+    <h2 style="margin:0">🎓 Skills, Arsenal & Ficha Profunda</h2>
+    <div class="tabs" id="skillTabs" style="margin:0"></div>
+  </div>
   <div id="skillsContent"><div class="card sub">Cargando fichas de personajes…</div></div>
 </section>
 
@@ -329,9 +336,207 @@ function deltaBox(now, past, label) {
 }
 
 function openDroidSkills(droidName) {
-  SKILL_VIEW = droidName;
+  setSkillView(droidName);
   location.hash = "#skills";
   showTab("skills");
+}
+
+// ───── FILTROS, SELECTORES & VISTA UNIFICADA EN HOY ─────
+let HOY_LIVE = null, HOY_DAYS = null, HOY_RANKS = null;
+let HOY_FILTER = (() => { try { return localStorage.getItem("mc-hoy-filter") || "ALL"; } catch { return "ALL"; } })();
+let HIDDEN_AGENTS = new Set((() => { try { return JSON.parse(localStorage.getItem("mc-hoy-hidden") || "[]"); } catch { return []; } })());
+
+function setHoyFilter(f) {
+  HOY_FILTER = f;
+  try { localStorage.setItem("mc-hoy-filter", f); } catch {}
+  drawHoyTab();
+}
+
+function toggleHideAgent(name) {
+  if (HIDDEN_AGENTS.has(name)) {
+    HIDDEN_AGENTS.delete(name);
+  } else {
+    HIDDEN_AGENTS.add(name);
+  }
+  try { localStorage.setItem("mc-hoy-hidden", JSON.stringify([...HIDDEN_AGENTS])); } catch {}
+  drawHoyTab();
+}
+
+function showAllAgents() {
+  HIDDEN_AGENTS.clear();
+  try { localStorage.setItem("mc-hoy-hidden", "[]"); } catch {}
+  drawHoyTab();
+}
+
+function renderHoyOverview(live, days, ranks) {
+  const allSkillKeys = SKILL_BRANCHES.flatMap((b) => b.keys);
+  const leaders = [];
+  for (const s of allSkillKeys) {
+    const bestLvl = Math.max(...live.map((d) => d.allSkills?.[s]?.level ?? 1));
+    if (bestLvl > 1) {
+      const leader = live.find((d) => (d.allSkills?.[s]?.level ?? 1) === bestLvl);
+      if (leader) leaders.push({ skill: s, leader: leader.name, level: bestLvl });
+    }
+  }
+
+  const rows = live.map((a) => {
+    const mine = days.filter((d) => d.agent === a.name);
+    const full = mine.slice(0, -1).slice(-3);
+    const xpDay = full.length > 1 ? (full.at(-1).xp - full[0].xp) / (full.length - 1) : null;
+    const b = a.board || {};
+    const vit = a.vitals || {};
+    const isHidden = HIDDEN_AGENTS.has(a.name);
+
+    return `<tr style="${isHidden ? "opacity:0.45" : ""}">
+      <td>
+        <div style="display:flex;align-items:center;gap:8px">
+          <span style="display:inline-block;width:10px;height:10px;border-radius:50%;background:${COLORS[a.name]}"></span>
+          <b style="color:${COLORS[a.name]};font-size:13.5px">${a.name}</b>
+          <span class="sub" style="font-size:11px">(${esc(a.skill || a.profession)})</span>
+        </div>
+      </td>
+      <td style="font-family:monospace"><b>${b.rank ? "#" + b.rank : "–"}</b></td>
+      <td style="font-family:monospace"><span class="brand-badge" style="font-size:11px">L${a.totalLevel || a.level}</span></td>
+      <td style="font-family:monospace"><b>${short(a.totalXp || a.xp)}</b></td>
+      <td style="font-family:monospace" class="${xpDay > 0 ? "up" : ""}">${xpDay ? `+${short(xpDay)}/d` : "–"}</td>
+      <td style="font-family:monospace"><span style="color:#C2CE24">💎 ${short(a.crystals)}</span></td>
+      <td style="font-family:monospace">~${vit.autonomyHours || 0}h <span class="sub">(🍵${vit.smoothies || 0})</span></td>
+      <td><span class="state-tag" style="font-size:10.5px">${a.working ? "⚒️ Laburando" : "🏕️ En base"}</span></td>
+      <td style="font-family:monospace">📜 ${a.quests?.completed || 0} <span class="up">(+${a.quests?.readyCount || 0})</span></td>
+      <td>
+        <div style="display:inline-flex;gap:4px">
+          <button class="action-btn" style="padding:2px 7px;font-size:11px" onclick="setHoyFilter('${a.name}')" title="Ver solo ${a.name}">Ver solo</button>
+          <button class="action-btn" style="padding:2px 6px;font-size:11px" onclick="toggleHideAgent('${a.name}')" title="${isHidden ? 'Mostrar' : 'Ocultar'} en tarjetas">${isHidden ? '👁️‍🗨️' : '👁️'}</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join("");
+
+  const totalCrystals = live.reduce((s, a) => s + (a.crystals || 0), 0);
+  const totalXp = live.reduce((s, a) => s + (a.totalXp || a.xp || 0), 0);
+  const totalLvl = live.reduce((s, a) => s + (a.totalLevel || a.level || 0), 0);
+  const totalQuests = live.reduce((s, a) => s + (a.quests?.completed || 0), 0);
+  const totalQuestsReady = live.reduce((s, a) => s + (a.quests?.readyCount || 0), 0);
+
+  return `<div class="card scroll" style="margin-bottom:14px;border-color:rgba(194,206,36,0.25)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;flex-wrap:wrap;gap:8px">
+      <h3 style="margin:0;font-size:14.5px">⚡ Scoreboard Unificado de la Cuadrilla</h3>
+      <span class="sub">Métricas comparativas lado a lado · Filtra o selecciona cualquier droide</span>
+    </div>
+    <table>
+      <thead>
+        <tr>
+          <th>Droide</th>
+          <th>Puesto</th>
+          <th>Nivel Total</th>
+          <th>XP Total</th>
+          <th>Ritmo XP</th>
+          <th>Cristales</th>
+          <th>Autonomía</th>
+          <th>Estado</th>
+          <th>Quests</th>
+          <th>Acción</th>
+        </tr>
+      </thead>
+      <tbody>
+        ${rows}
+        <tr style="border-top:2px solid var(--line);font-weight:700">
+          <td><b>🌟 Cuadrilla Total</b></td>
+          <td style="font-family:monospace">–</td>
+          <td style="font-family:monospace"><span class="brand-badge">L${totalLvl}</span></td>
+          <td style="font-family:monospace">${short(totalXp)}</td>
+          <td style="font-family:monospace">–</td>
+          <td style="font-family:monospace"><span style="color:#C2CE24">💎 ${nf(totalCrystals)}</span></td>
+          <td style="font-family:monospace">–</td>
+          <td><span class="state-tag" style="color:var(--acc)">3 droides</span></td>
+          <td style="font-family:monospace">📜 ${totalQuests} (+${totalQuestsReady})</td>
+          <td><button class="action-btn" style="padding:2px 7px;font-size:11px" onclick="setHoyFilter('ALL');showAllAgents();">Mostrar todos</button></td>
+        </tr>
+      </tbody>
+    </table>
+
+    ${leaders.length ? `
+    <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--line)">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+        <span class="sub" style="font-size:11px;text-transform:uppercase;letter-spacing:1px;font-weight:700">🏆 Especialistas Líderes por Disciplina:</span>
+        <a href="#skills" onclick="setSkillView('MATRIX');" style="color:var(--acc);font-size:11.5px;text-decoration:none">Ver Matriz 19 Skills →</a>
+      </div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px">
+        ${leaders.map((l) => `<span class="sec-pill" onclick="openDroidSkills('${l.leader}')" style="cursor:pointer" title="Ver ficha de ${l.leader}">${SKILL_ICON[l.skill] || "•"} ${SKILL_ES[l.skill] || l.skill}: <b style="color:${COLORS[l.leader]}">${l.leader} (L${l.level})</b></span>`).join("")}
+      </div>
+    </div>` : ""}
+  </div>`;
+}
+
+function drawHoyTab() {
+  if (!HOY_LIVE) return;
+  const live = HOY_LIVE;
+  const days = HOY_DAYS || [];
+  const ranks = HOY_RANKS || [];
+
+  const hoyTabs = [
+    ["ALL", "🌟 Todos (Unificado)"],
+    ["C-3PO", "🪓 C-3PO"],
+    ["BB-8", "⛏️ BB-8"],
+    ["R2", "💻 R2"]
+  ];
+
+  const selEl = document.getElementById("hoyAgentSelector");
+  if (selEl) {
+    let html = `<div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">`;
+    html += hoyTabs.map(([k, label]) => `<button class="${k === HOY_FILTER ? "on" : ""}" onclick="setHoyFilter('${k}')">${label}</button>`).join("");
+    if (HOY_FILTER === "ALL") {
+      html += `<div style="display:inline-flex;align-items:center;gap:4px;margin-left:6px;padding-left:6px;border-left:1px solid var(--line)">
+        <span class="sub" style="font-size:11px">Mostrar:</span>
+        ${ORDER.map((n) => {
+          const isHidden = HIDDEN_AGENTS.has(n);
+          return `<button class="action-btn ${isHidden ? "" : "active"}" style="padding:2px 8px;font-size:11px;border-radius:999px" onclick="toggleHideAgent('${n}')" title="${isHidden ? 'Mostrar ' + n : 'Ocultar ' + n}">${isHidden ? `👁️‍🗨️ ${n}` : `👁️ ${n}`}</button>`;
+        }).join("")}
+      </div>`;
+    }
+    html += `</div>`;
+    selEl.innerHTML = html;
+  }
+
+  const pillEl = document.getElementById("hoyHiddenPill");
+  if (pillEl) {
+    if (HOY_FILTER === "ALL" && HIDDEN_AGENTS.size > 0) {
+      pillEl.innerHTML = `<div class="card" style="padding:6px 12px;background:rgba(255,173,51,0.12);border-color:rgba(255,173,51,0.3);display:flex;align-items:center;justify-content:space-between;gap:8px">
+        <span style="font-size:12px;color:var(--tx)">👁️ <b>${HIDDEN_AGENTS.size} droide(s) oculto(s):</b> ${[...HIDDEN_AGENTS].join(", ")}</span>
+        <button class="action-btn" style="padding:2px 8px;font-size:11px" onclick="showAllAgents()">Mostrar todos</button>
+      </div>`;
+    } else {
+      pillEl.innerHTML = "";
+    }
+  }
+
+  const overviewEl = document.getElementById("hoyOverview");
+  if (overviewEl) {
+    if (HOY_FILTER === "ALL") {
+      overviewEl.innerHTML = renderHoyOverview(live, days, ranks);
+    } else {
+      overviewEl.innerHTML = "";
+    }
+  }
+
+  let visibleDroids = live;
+  if (HOY_FILTER !== "ALL") {
+    visibleDroids = live.filter((a) => a.name === HOY_FILTER);
+  } else {
+    visibleDroids = live.filter((a) => !HIDDEN_AGENTS.has(a.name));
+  }
+
+  const cardsEl = document.getElementById("cards");
+  if (cardsEl) {
+    if (!visibleDroids.length) {
+      cardsEl.innerHTML = `<div class="card sub" style="text-align:center;padding:24px">
+        <p>Todos los droides están ocultos con el filtro actual.</p>
+        <button class="action-btn active" onclick="showAllAgents();setHoyFilter('ALL');" style="margin:8px auto">Mostrar todos</button>
+      </div>`;
+    } else {
+      cardsEl.innerHTML = visibleDroids.map((a) => card(a, days, ranks)).join("");
+    }
+  }
 }
 
 function card(a, days, ranks) {
@@ -371,9 +576,12 @@ function card(a, days, ranks) {
         </div>
         <div class="loc-pin">📍 ${esc(a.location || 'Midnight City')}${a.coords ? ` (${a.coords.x}, ${a.coords.y})` : ""}</div>
       </div>
-      <div class="rank-box">
-        <span class="rank-num">${now ? "#" + now : "–"}</span>
-        <span class="rank-top">${topPercent ? `Top ${topPercent} %` : 'puesto'}</span>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:5px">
+        <div class="rank-box">
+          <span class="rank-num">${now ? "#" + now : "–"}</span>
+          <span class="rank-top">${topPercent ? `Top ${topPercent} %` : 'puesto'}</span>
+        </div>
+        <button class="action-btn" style="padding:2px 7px;font-size:10.5px;border-radius:999px" onclick="toggleHideAgent('${a.name}')" title="Ocultar ${a.name} de la pantalla">👁️ Ocultar</button>
       </div>
     </div>
 
@@ -686,9 +894,75 @@ function drawCharts() {
 }
 
 // ───── PESTAÑA SKILLS & FICHA PROFUNDA DE PERSONAJES ─────
-let SKILL_VIEW = "ALL"; // "ALL" | "C-3PO" | "BB-8" | "R2" | "MATRIX"
+let SKILL_VIEW = (() => { try { return localStorage.getItem("mc-skill-view") || "ALL"; } catch { return "ALL"; } })();
+let EXPANDED_SKILL_DROIDS = new Set();
 
-function renderDroidDeepSheet(a) {
+function toggleDroidSkillsAccordion(name) {
+  if (EXPANDED_SKILL_DROIDS.has(name)) {
+    EXPANDED_SKILL_DROIDS.delete(name);
+  } else {
+    EXPANDED_SKILL_DROIDS.add(name);
+  }
+  drawSkillsTab();
+}
+
+function expandAllSkills() {
+  ORDER.forEach((n) => EXPANDED_SKILL_DROIDS.add(n));
+  drawSkillsTab();
+}
+
+function collapseAllSkills() {
+  EXPANDED_SKILL_DROIDS.clear();
+  drawSkillsTab();
+}
+
+function setSkillView(k) {
+  SKILL_VIEW = k;
+  try { localStorage.setItem("mc-skill-view", k); } catch {}
+  drawSkillsTab();
+}
+
+function renderUnifiedOperations(live) {
+  const totalCrystals = live.reduce((s, a) => s + (a.crystals || 0), 0);
+  const totalSmoothies = live.reduce((s, a) => s + (a.vitals?.smoothies || 0), 0);
+  const totalFish = live.reduce((s, a) => s + (a.vitals?.rawFish || 0), 0);
+  const totalMeds = live.reduce((s, a) => s + (a.vitals?.medicine || 0), 0);
+  const totalQuestsDone = live.reduce((s, a) => s + (a.quests?.completed || 0), 0);
+  const totalQuestsReady = live.reduce((s, a) => s + (a.quests?.readyCount || 0), 0);
+  const totalReadyXp = live.reduce((s, a) => s + (a.quests?.readyXp || 0), 0);
+
+  const resourceMap = {};
+  live.forEach((d) => {
+    (d.inventorySummary?.topItems || []).forEach((it) => {
+      resourceMap[it.name] = (resourceMap[it.name] || 0) + (it.qty || 0);
+    });
+  });
+  const topSquadItems = Object.entries(resourceMap)
+    .sort((a, b) => b[1] - a[1])
+    .slice(0, 8);
+
+  return `<div class="card" style="margin-bottom:16px;background:var(--subtle);border-color:rgba(194,206,36,0.3)">
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px">
+      <h3 style="margin:0;font-size:15px;color:var(--acc)">📦 Centro Logístico & Stock Industrial Unificado</h3>
+      <span class="sub">Recursos consolidados de las 3 mochilas para forja, aserradero y cocina</span>
+    </div>
+    <div class="big" style="grid-template-columns:repeat(auto-fit,minmax(140px,1fr));margin-bottom:12px">
+      <div><b style="color:#C2CE24">💎 ${nf(totalCrystals)}</b><span>Tesorería Cuadrilla</span></div>
+      <div><b>🍵 ${nf(totalSmoothies)} · 🐟 ${short(totalFish)}</b><span>Sustento & Peces</span></div>
+      <div><b>💊 ${nf(totalMeds)}</b><span>Kits Médicos</span></div>
+      <div><b>📜 ${totalQuestsReady} listas</b><span>+${short(totalReadyXp)} xp listos para cobrar</span></div>
+    </div>
+    ${topSquadItems.length ? `
+    <div>
+      <span class="sub" style="font-size:11px;text-transform:uppercase;letter-spacing:1px;font-weight:700">Stock Acumulado en Mochilas:</span>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;margin-top:6px">
+        ${topSquadItems.map(([name, qty]) => `<span class="sec-pill">📦 ${esc(name)}: <b>${nf(qty)}</b></span>`).join("")}
+      </div>
+    </div>` : ""}
+  </div>`;
+}
+
+function renderDroidDeepSheet(a, isExpanded = true, isAccordion = false) {
   const c = COLORS[a.name];
   const skills = a.allSkills || {};
   const vit = a.vitals || {};
@@ -742,9 +1016,12 @@ function renderDroidDeepSheet(a) {
           </div>
         </div>
       </div>
-      <div class="rank-box">
-        <span class="rank-num">#${a.board?.rank || "–"}</span>
-        <span class="rank-top">${short(a.totalXp || a.xp)} XP Total</span>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px">
+        <div class="rank-box">
+          <span class="rank-num">#${a.board?.rank || "–"}</span>
+          <span class="rank-top">${short(a.totalXp || a.xp)} XP Total</span>
+        </div>
+        ${!isAccordion ? `<button class="action-btn" style="padding:2px 8px;font-size:11px" onclick="setSkillView('ALL')">← Volver a Todos</button>` : ""}
       </div>
     </div>
 
@@ -757,6 +1034,14 @@ function renderDroidDeepSheet(a) {
       <div><b>📜 ${q.completed || 0}</b><span>Quests hechas · <b>${q.readyCount || 0} listas</b> (+${nf(q.readyXp || 0)} xp)</span></div>
     </div>
 
+    ${isAccordion ? `
+    <div style="margin-top:12px">
+      <button class="action-btn ${isExpanded ? "active" : ""}" onclick="toggleDroidSkillsAccordion('${a.name}')" style="width:100%;justify-content:center;padding:8px 14px;font-size:12.5px;font-weight:700">
+        ${isExpanded ? `▲ Plegar Ficha de ${esc(a.name)}` : `▼ Desplegar 19 Skills, Mochila & Ficha Completa de ${esc(a.name)}`}
+      </button>
+    </div>` : ""}
+
+    ${(!isAccordion || isExpanded) ? `
     ${tr ? `<div style="margin-top:12px;padding:10px 12px;border-radius:12px;background:var(--subtle);border:1px solid var(--line);font-size:12.5px">
       <b>🎓 Motor de Entrenamiento Secundario:</b> Plan <code>${(a.trainingPlan || []).map((s) => SKILL_ES[s] || s).join(" → ")}</code>
       · Último turno: <b>${SKILL_ES[tr.skill] || tr.skill}</b> en <code>${esc(tr.sourceId)}</code> (L${tr.startLevel} → L${tr.targetLevel})
@@ -780,7 +1065,7 @@ function renderDroidDeepSheet(a) {
         <b style="font-size:13px;display:block;margin-bottom:6px">🎒 Top 10 Recursos en Mochila (${inv.distinctItems || 0} tipos · ${short(inv.totalUnits || 0)} u.)</b>
         ${inv.topItems?.length ? `<div class="kv" style="font-size:12px">${inv.topItems.map((it) => `<span>${esc(it.name)}</span><span>${nf(it.qty)}</span>`).join("")}</div>` : `<div class="sub">Cargando inventario…</div>`}
       </div>
-    </div>
+    </div>` : ""}
   </div>`;
 }
 
@@ -802,7 +1087,7 @@ function renderSkillsMatrix(live) {
       <td style="font-family:monospace">${leader ? `<b style="color:${COLORS[leader.name]}">${leader.name} (L${bestLvl})</b>` : '<span class="sub">Virgen (L1)</span>'}</td>
     </tr>`;
   }
-  return `<div class="card scroll">
+  return `<div class="card scroll" style="margin-bottom:16px">
     <h3 style="margin:0 0 6px">🏆 Matriz Comparativa de las 19 Habilidades</h3>
     <p class="sub" style="margin-top:0">Comparativa lado a lado de nivel, experiencia acumulada, % de avance y líder actual de la cuadrilla en cada disciplina.</p>
     <table>
@@ -816,22 +1101,34 @@ function drawSkillsTab() {
   if (!DATA?.live) return;
   const live = ORDER.map((n) => DATA.live.find((a) => a.name === n)).filter(Boolean);
   const tabs = [
-    ["ALL", "🚀 Los 3 Personajes (Fichas Completas)"],
+    ["ALL", "🌟 Todos (Unificado & Matriz)"],
     ["C-3PO", "🪓 C-3PO (Lumberjack)"],
     ["BB-8", "⛏️ BB-8 (Miner)"],
     ["R2", "💻 R2 (Hacker)"],
-    ["MATRIX", "📊 Matriz Comparativa 19 Skills"]
+    ["MATRIX", "📊 Solo Matriz 19 Skills"]
   ];
-  document.getElementById("skillTabs").innerHTML = tabs.map(([k, label]) => `<button data-sk="${k}" class="${k === SKILL_VIEW ? "on" : ""}">${label}</button>`).join("");
-  document.querySelectorAll("#skillTabs button").forEach((b) => (b.onclick = () => { SKILL_VIEW = b.dataset.sk; drawSkillsTab(); }));
+  document.getElementById("skillTabs").innerHTML = tabs.map(([k, label]) => `<button data-sk="${k}" class="${k === SKILL_VIEW ? "on" : ""}" onclick="setSkillView('${k}')">${label}</button>`).join("");
+
+  const contentEl = document.getElementById("skillsContent");
+  if (!contentEl) return;
 
   if (SKILL_VIEW === "MATRIX") {
-    document.getElementById("skillsContent").innerHTML = renderSkillsMatrix(live);
+    contentEl.innerHTML = renderSkillsMatrix(live);
   } else if (SKILL_VIEW === "ALL") {
-    document.getElementById("skillsContent").innerHTML = live.map(renderDroidDeepSheet).join("") + renderSkillsMatrix(live);
+    let html = renderSkillsMatrix(live);
+    html += renderUnifiedOperations(live);
+    html += `<div style="display:flex;justify-content:space-between;align-items:center;margin:22px 0 10px;flex-wrap:wrap;gap:8px">
+      <h3 style="margin:0;font-size:14px;color:var(--mut);text-transform:uppercase;letter-spacing:1px">📋 Fichas Detalladas por Droide (Desplegables)</h3>
+      <div style="display:flex;gap:6px">
+        <button class="action-btn" style="padding:3px 10px;font-size:11.5px" onclick="expandAllSkills()">▼ Desplegar todos</button>
+        <button class="action-btn" style="padding:3px 10px;font-size:11.5px" onclick="collapseAllSkills()">▲ Plegar todos</button>
+      </div>
+    </div>`;
+    html += live.map((a) => renderDroidDeepSheet(a, EXPANDED_SKILL_DROIDS.has(a.name), true)).join("");
+    contentEl.innerHTML = html;
   } else {
     const target = live.find((a) => a.name === SKILL_VIEW) || live[0];
-    document.getElementById("skillsContent").innerHTML = renderDroidDeepSheet(target);
+    contentEl.innerHTML = renderDroidDeepSheet(target, true, false);
   }
 }
 
@@ -913,7 +1210,10 @@ async function load() {
       </div>
     </div>`;
 
-    document.getElementById("cards").innerHTML = live.map((a) => card(a, days, ranks)).join("") || '<div class="card sub">No llegaron los droides.</div>';
+    HOY_LIVE = live;
+    HOY_DAYS = days;
+    HOY_RANKS = ranks;
+    drawHoyTab();
     document.getElementById("legend").innerHTML = ORDER.map((a) => `<span><i style="background:${COLORS[a]}"></i>${a}</span>`).join("") + `<span class="sub" style="margin-left:auto">Historial completo cargado: ${days.length ? `${fmtDate(days[0].date)} al ${fmtDate(days.at(-1).date)} (${[...new Set(days.map(d=>d.date))].length} días)` : ""}</span>`;
 
     document.getElementById("err").textContent = "";
